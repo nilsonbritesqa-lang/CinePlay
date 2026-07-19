@@ -207,7 +207,7 @@ export default function HeroShowcase() {
   const protagonist = pool[currentIntIndex];
 
   useEffect(() => {
-    if (!protagonist || protagonist.sport) {
+    if (!protagonist) {
       setActiveTrailerKey(null);
       return;
     }
@@ -216,7 +216,11 @@ export default function HeroShowcase() {
 
     async function fetchTrailer() {
       try {
-        const res = await fetch(`/api/tmdb-video?id=${protagonist.id}&type=${protagonist.type}`);
+        const endpoint = protagonist.sport 
+          ? `/api/sports-video?id=${protagonist.id}&home=${encodeURIComponent(protagonist.homeTeam?.name || '')}&away=${encodeURIComponent(protagonist.awayTeam?.name || '')}&league=${encodeURIComponent(protagonist.league || '')}`
+          : `/api/tmdb-video?id=${protagonist.id}&type=${protagonist.type}`;
+
+        const res = await fetch(endpoint);
         const data = await res.json();
         if (data.success && data.videoKey) {
           setActiveTrailerKey(data.videoKey);

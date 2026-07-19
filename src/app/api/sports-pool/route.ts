@@ -9,8 +9,6 @@ import { NextResponse } from 'next/server';
 //   - 11  = Sul-Americana
 //   - 2   = Champions League
 //   - 3   = Europa League
-//   - 848 = Conference League
-//   - 1   = Copa do Mundo
 // ============================================================
 
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
@@ -24,23 +22,14 @@ const LEAGUES = [
   { id: 3,   name: 'Europa League',       flag: '🏅', color: '#F39C12' },
 ];
 
-// Imagens de escudos de clubes famosos como fallback visual (logos reais via TMDB/Wikipedia)
-const TEAM_POSTER_FALLBACKS: Record<string, string> = {
-  'Flamengo':      'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flamengo_braz_logo.svg/180px-Flamengo_braz_logo.svg.png',
-  'Palmeiras':     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Palmeiras_logo.svg/180px-Palmeiras_logo.svg.png',
-  'Corinthians':   'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Corinthians_crest.svg/180px-Corinthians_crest.svg.png',
-  'São Paulo':     'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Escudo_do_S%C3%A3o_Paulo_Futebol_Clube.svg/180px-Escudo_do_S%C3%A3o_Paulo_Futebol_Clube.svg.png',
-};
-
-// Imagens de backdrop temáticas de alta qualidade para jogos (Unsplash sport)
 const SPORT_BACKDROPS = [
-  'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1280&q=85', // Estadio
-  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1280&q=85', // Bola/grama
-  'https://images.unsplash.com/photo-1551958219-acbc630e2914?w=1280&q=85', // Night game
-  'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=1280&q=85', // Trophy
-  'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=1280&q=85', // Crowd stadium
-  'https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1280&q=85', // Football pitch
-  'https://images.unsplash.com/photo-1606925797300-0b35e9d1794e?w=1280&q=85', // Champions blue
+  'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1280&q=85',
+  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1280&q=85',
+  'https://images.unsplash.com/photo-1551958219-acbc630e2914?w=1280&q=85',
+  'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=1280&q=85',
+  'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=1280&q=85',
+  'https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1280&q=85',
+  'https://images.unsplash.com/photo-1606925797300-0b35e9d1794e?w=1280&q=85',
 ];
 
 async function fetchWithAPIFootball(endpoint: string, apiKey: string) {
@@ -48,7 +37,7 @@ async function fetchWithAPIFootball(endpoint: string, apiKey: string) {
     headers: {
       'x-apisports-key': apiKey,
     },
-    next: { revalidate: 1800 } // cache 30min
+    next: { revalidate: 300 } // cache 5 min para tempo real
   });
   if (!res.ok) throw new Error(`API-Football error: ${res.status}`);
   return res.json();
@@ -68,13 +57,11 @@ export async function GET() {
   const today = new Date();
   const dateStr = today.toISOString().split('T')[0];
   
-  // Próximos 7 dias
   const nextWeek = new Date(today);
   nextWeek.setDate(nextWeek.getDate() + 7);
   const nextWeekStr = nextWeek.toISOString().split('T')[0];
 
   try {
-    // Busca fixtures de hoje e amanhã para os campeonatos principais
     const fixturePromises = [
       fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=71&season=2026`, apiKey),
       fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=13&season=2026`, apiKey),
@@ -88,7 +75,7 @@ export async function GET() {
     const sportsPool: any[] = [];
     const seenIds = new Set<number>();
 
-    results.forEach((result, idx) => {
+    results.forEach((result) => {
       if (result.status === 'fulfilled' && result.value?.response) {
         result.value.response.forEach((fixture: any) => {
           const fixtureId = fixture.fixture?.id;
@@ -101,35 +88,68 @@ export async function GET() {
           const fixtureDate = new Date(fixture.fixture?.date);
           const status = fixture.fixture?.status?.short;
 
-          // Determina se está ao vivo
           const isLive = ['1H', '2H', 'HT', 'ET', 'P'].includes(status);
+          
+          // Cálculo de diferença de dias
+          const diffTime = fixtureDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           const isToday = fixtureDate.toDateString() === today.toDateString();
 
-          // Usa logos dos times como "posters"
-          const posterUrl = homeTeam?.logo || null;
+          const leagueInfo = LEAGUES.find(l => l.id === league?.id);
+          const leagueName = leagueInfo?.name || league?.name || 'Futebol';
+          const roundName = fixture.league?.round || 'Rodada Principal';
+          const subtitle = `${leagueName} - ${roundName}`;
+
+          let type = 'EXPECTATIVA';
+          let overlayBadge = '';
+          let liveScore: string | null = null;
+          let matchTitle = `${homeTeam?.name} x ${awayTeam?.name}`;
+
+          if (isLive) {
+            type = 'LIVE';
+            overlayBadge = 'AO VIVO';
+            const gHome = fixture.goals?.home ?? 0;
+            const gAway = fixture.goals?.away ?? 0;
+            liveScore = `${gHome} x ${gAway}`;
+            matchTitle = `${homeTeam?.name} ${gHome} x ${gAway} ${awayTeam?.name}`;
+          } else if (isToday) {
+            type = 'URGÊNCIA';
+            const timeStr = fixtureDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            overlayBadge = `HOJE às ${timeStr}`;
+          } else if (diffDays === 1) {
+            type = 'URGÊNCIA';
+            overlayBadge = 'É AMANHÃ';
+          } else if (diffDays >= 2 && diffDays <= 7) {
+            type = 'EXPECTATIVA';
+            overlayBadge = `FALTAM ${diffDays} DIAS`;
+          } else {
+            type = 'AGENDADO';
+            overlayBadge = `📅 ${fixtureDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`;
+          }
+
+          const posterUrl = homeTeam?.logo || awayTeam?.logo || null;
           const backdropUrl = SPORT_BACKDROPS[Math.floor(Math.random() * SPORT_BACKDROPS.length)];
 
-          const leagueInfo = LEAGUES.find(l => l.id === league?.id);
-          const label = isLive 
-            ? '🔴 Ao Vivo'
-            : isToday 
-            ? `⏰ Hoje ${fixtureDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
-            : `📅 ${fixtureDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`;
-
           sportsPool.push({
-            id: fixtureId + 1000000, // Offset para não colidir com IDs do TMDB
-            title: `${homeTeam?.name} x ${awayTeam?.name}`,
+            id: fixtureId + 1000000,
+            type,
+            title: matchTitle,
+            subtitle,
+            poster_url: posterUrl,
+            background_video_url: `/api/sports-video?id=${fixtureId}&home=${encodeURIComponent(homeTeam?.name || '')}&away=${encodeURIComponent(awayTeam?.name || '')}&league=${encodeURIComponent(leagueName)}`,
+            overlay_badge: overlayBadge,
+            live_score: liveScore,
+            
+            // Compatibilidade total com layout do front-end
             poster: posterUrl,
             backdrop: backdropUrl,
-            vote: isLive ? 10 : 9,
-            type: 'Futebol',
-            // Metadados esportivos extras
+            vote: isLive ? 10 : 9.5,
             sport: true,
-            league: leagueInfo?.name || league?.name,
+            league: leagueName,
             leagueFlag: leagueInfo?.flag || '⚽',
             leagueColor: leagueInfo?.color || '#E50914',
             isLive,
-            label,
+            label: overlayBadge,
             homeTeam: { name: homeTeam?.name, logo: homeTeam?.logo },
             awayTeam: { name: awayTeam?.name, logo: awayTeam?.logo },
             leagueLogo: league?.logo,
@@ -139,22 +159,28 @@ export async function GET() {
       }
     });
 
-    // Se não tiver jogos hoje/amanhã, injeta cards de ligas (usando logos das ligas)
+    // Fallback com marcas reais se pouca atividade em tempo real
     if (sportsPool.length < 3) {
       LEAGUES.forEach((league, idx) => {
         sportsPool.push({
           id: 9000000 + idx,
+          type: 'EXPECTATIVA',
           title: league.name,
+          subtitle: `${league.name} - Temporada 2026`,
+          poster_url: null,
+          background_video_url: `/api/sports-video?league=${encodeURIComponent(league.name)}`,
+          overlay_badge: `${league.flag} EDICÃO 2026`,
+          live_score: null,
+          
           poster: null,
           backdrop: SPORT_BACKDROPS[idx % SPORT_BACKDROPS.length],
           vote: 9.5,
-          type: 'Futebol',
           sport: true,
           league: league.name,
           leagueFlag: league.flag,
           leagueColor: league.color,
           isLive: false,
-          label: `${league.flag} Temporada 2026`,
+          label: `${league.flag} Edição 2026`,
         });
       });
     }
@@ -167,26 +193,31 @@ export async function GET() {
 
   } catch (error: any) {
     console.error('Erro API-Football:', error.message);
-    // Retorna pool de fallback mesmo em erro
     const fallback = LEAGUES.map((league, idx) => ({
       id: 9000000 + idx,
+      type: 'EXPECTATIVA',
       title: league.name,
+      subtitle: `${league.name} - Temporada 2026`,
+      poster_url: null,
+      background_video_url: `/api/sports-video?league=${encodeURIComponent(league.name)}`,
+      overlay_badge: `${league.flag} EDICÃO 2026`,
+      live_score: null,
+      
       poster: null,
       backdrop: SPORT_BACKDROPS[idx % SPORT_BACKDROPS.length],
       vote: 9.5,
-      type: 'Futebol',
       sport: true,
       league: league.name,
       leagueFlag: league.flag,
       leagueColor: league.color,
       isLive: false,
-      label: `${league.flag} Acompanhe aqui`,
+      label: `${league.flag} Edição 2026`,
     }));
 
     return NextResponse.json({
       success: false,
       error: error.message,
-      pool: fallback // Nunca retorna vazio
+      pool: fallback
     });
   }
 }
