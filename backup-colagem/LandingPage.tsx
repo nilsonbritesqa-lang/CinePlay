@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Star, Play, MessageCircle } from 'lucide-react';
-import DiscoveryEngine from './DiscoveryEngine';
+import HeroShowcase from './HeroShowcase';
 
 const CATEGORIAS = [
   { id: 'futebol', title: 'Futebol ao Vivo', desc: 'Brasileirão, Libertadores, Champions League, Sul-Americana e muito mais.', icon: '⚽', badge: 'Ao Vivo' },
@@ -14,58 +13,9 @@ const CATEGORIAS = [
   { id: 'onde-assistir', title: 'Onde Assistir', desc: 'Guias práticos de streaming e canais por conteúdo.', icon: '🔍', badge: 'Novo' },
 ];
 
+const PLATAFORMAS = ['Netflix', 'Prime Video', 'Disney+', 'HBO Max', 'Globoplay', 'Premiere', 'CazéTV', 'SporTV', 'Band', 'Record'];
+
 export default function LandingPage() {
-  const [tickerItems, setTickerItems] = useState<any[]>([
-    { id: 101, text: '⚽ Libertadores: Final Ao Vivo', badge: 'DESTAQUE', badgeColor: '#FFD700', sub: 'Futebol' },
-    { id: 102, text: '🎥 Duna: Parte Dois', badge: 'ESTREIA', badgeColor: '#E50914', sub: 'Cinema' },
-    { id: 103, text: '📺 House of the Dragon', badge: 'SÉRIE', badgeColor: '#6366F1', sub: 'HBO Max' },
-    { id: 104, text: '⚽ Brasileirão: Palmeiras x Flamengo', badge: 'HOJE 21:30', badgeColor: '#009C3B', sub: 'Futebol' },
-    { id: 105, text: '🍿 Deadpool & Wolverine', badge: 'LANÇAMENTO', badgeColor: '#E50914', sub: 'Cinema' }
-  ]);
-
-  useEffect(() => {
-    async function loadTickerData() {
-      try {
-        const [tmdbRes, sportsRes] = await Promise.all([
-          fetch('/api/tmdb-pool').then(r => r.json()).catch(() => null),
-          fetch('/api/sports-pool').then(r => r.json()).catch(() => null)
-        ]);
-
-        const list: any[] = [];
-
-        if (sportsRes?.success && sportsRes.pool?.length) {
-          sportsRes.pool.slice(0, 15).forEach((item: any) => {
-            list.push({
-              id: item.id,
-              text: `${item.leagueFlag || '⚽'} ${item.title}`,
-              badge: item.isLive ? '🔴 AO VIVO' : item.label || 'JOGO',
-              badgeColor: item.isLive ? '#E50914' : item.leagueColor || '#1A3A6B',
-              sub: item.league || 'Futebol'
-            });
-          });
-        }
-
-        if (tmdbRes?.success && tmdbRes.pool?.length) {
-          tmdbRes.pool.slice(0, 20).forEach((item: any) => {
-            list.push({
-              id: item.id,
-              text: item.title,
-              badge: item.type === 'Filme' ? '🍿 FILME' : '📺 SÉRIE',
-              badgeColor: item.type === 'Filme' ? '#E50914' : '#6366F1',
-              sub: item.vote ? `★ ${item.vote.toFixed(1)}` : 'Estreia'
-            });
-          });
-        }
-
-        if (list.length > 0) {
-          setTickerItems(list.sort(() => Math.random() - 0.5));
-        }
-      } catch (err) {
-        console.error('Erro ao ler ticker data:', err);
-      }
-    }
-    loadTickerData();
-  }, []);
   return (
     <div style={{ 
       background: '#07070D url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.015\'/%3E%3C/svg%3E")', 
@@ -186,9 +136,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Lado Direito — Discovery Engine da IA */}
+          {/* Lado Direito — Colagem Dinâmica Invadindo o Texto */}
           <div style={{ zIndex: 1 }} className="hero-visuals-container">
-            <DiscoveryEngine />
+            <HeroShowcase />
           </div>
 
         </div>
@@ -242,117 +192,15 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          3. TICKER DINÂMICO INTERATIVO
+          3. PLATAFORMAS (ticker)
       ═══════════════════════════════ */}
-      <section style={{ 
-        padding: '24px 0', 
-        borderTop: '1px solid rgba(255,255,255,0.03)', 
-        borderBottom: '1px solid rgba(255,255,255,0.03)',
-        overflow: 'hidden', 
-        background: 'rgba(10,10,20,0.45)' 
-      }}>
-        <div className="ticker-container">
-          <div className="ticker-track">
-            {/* Primeira rodada de itens */}
-            <div style={{ display: 'flex', gap: 20, paddingRight: 20 }}>
-              {tickerItems.map((item, idx) => (
-                <div
-                  key={`t1-${item.id}-${idx}`}
-                  className="ticker-item-card"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.04)',
-                    borderRadius: 30,
-                    padding: '6px 14px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span style={{
-                    fontSize: 9,
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    background: item.badgeColor || '#E50914',
-                    color: '#fff',
-                    padding: '2px 8px',
-                    borderRadius: 99,
-                  }}>
-                    {item.badge}
-                  </span>
-                  
-                  <span style={{ 
-                    fontSize: 12, 
-                    fontWeight: 600, 
-                    color: '#D1D1E9',
-                    letterSpacing: '-0.01em'
-                  }}>
-                    {item.text}
-                  </span>
-                  
-                  <span style={{ 
-                    fontSize: 10, 
-                    color: '#65657B',
-                    fontWeight: 500,
-                  }}>
-                    {item.sub}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Segunda rodada de itens (duplicada para efeito infinito) */}
-            <div style={{ display: 'flex', gap: 20 }}>
-              {tickerItems.map((item, idx) => (
-                <div
-                  key={`t2-${item.id}-${idx}`}
-                  className="ticker-item-card"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.04)',
-                    borderRadius: 30,
-                    padding: '6px 14px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span style={{
-                    fontSize: 9,
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    background: item.badgeColor || '#E50914',
-                    color: '#fff',
-                    padding: '2px 8px',
-                    borderRadius: 99,
-                  }}>
-                    {item.badge}
-                  </span>
-                  
-                  <span style={{ 
-                    fontSize: 12, 
-                    fontWeight: 600, 
-                    color: '#D1D1E9',
-                    letterSpacing: '-0.01em'
-                  }}>
-                    {item.text}
-                  </span>
-                  
-                  <span style={{ 
-                    fontSize: 10, 
-                    color: '#65657B',
-                    fontWeight: 500,
-                  }}>
-                    {item.sub}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+      <section style={{ padding: '28px 0', borderTop: '1px solid rgba(255,255,255,0.03)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', gap: 32, animation: 'ticker 18s linear infinite', whiteSpace: 'nowrap' }}>
+          {[...PLATAFORMAS, ...PLATAFORMAS].map((p, i) => (
+            <span key={i} style={{ fontSize: 12, fontWeight: 600, color: '#30303c', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+              {p}
+            </span>
+          ))}
         </div>
       </section>
 
@@ -452,31 +300,9 @@ export default function LandingPage() {
           transform: translateY(-4px) scale(1.01);
           border-color: rgba(229,9,20,0.5) !important;
         }
-        
-        .ticker-container {
-          overflow: hidden;
-          width: 100%;
-        }
-        .ticker-track {
-          display: flex;
-          width: max-content;
-          animation: tickerAnimation 48s linear infinite;
-        }
-        .ticker-container:hover .ticker-track {
-          animation-play-state: paused !important;
-        }
-        .ticker-item-card {
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .ticker-item-card:hover {
-          transform: translateY(-2px) scale(1.03);
-          background: rgba(255, 255, 255, 0.08) !important;
-          border-color: rgba(229, 9, 20, 0.45) !important;
-          box-shadow: 0 4px 20px rgba(229, 9, 20, 0.15);
-        }
-        @keyframes tickerAnimation {
-          0% { transform: translate3d(0, 0, 0); }
-          100% { transform: translate3d(-50%, 0, 0); }
+        @keyframes ticker {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
         }
       `}</style>
     </div>
