@@ -79,8 +79,8 @@ export default function HeroShowcase() {
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const lastFetchedIdRef = useRef<number | null>(null);
   
-  // Estado e Referência para Controle de Áudio
-  const [isMuted, setIsMuted] = useState(false);
+  // Estado e Referência para Controle de Áudio (inicia mutado para garantir o autoplay imediato sem controles gigantes na tela)
+  const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const toggleMute = () => {
@@ -105,6 +105,35 @@ export default function HeroShowcase() {
       }
     }
   };
+
+  // Habilita som na primeira interação do usuário na página, respeitando a política de autoplay
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      setIsMuted(false);
+      
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'unMute', args: '' }),
+          '*'
+        );
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'setVolume', args: [40] }),
+          '*'
+        );
+      }
+      
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, []);
 
   // Carregar dados iniciais
   useEffect(() => {
