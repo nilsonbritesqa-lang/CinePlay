@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Star } from 'lucide-react';
+import { Star, Volume2, VolumeX } from 'lucide-react';
 
 interface PosterItem {
   id: number;
@@ -40,33 +40,73 @@ const SPORT_STADIUMS = [
 ];
 
 /*
-  Posições horizontais fixas e planas (5 slots em arco horizontal suave)
-  O card central [index 2] é o protagonista dominante.
+  Posições horizontais fixas e planas.
+  Adicionamos slots fantasmas nas extremidades (-1 e 5) para que os cards que entram e saem do carrossel 
+  façam uma transição suave a partir de fora da tela de forma invisível.
 */
-const SLOTS_CONFIG = [
-  { left: '12%', rotateY: 20,  scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 },  // Ponta esquerda
-  { left: '30%', rotateY: 10,  scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 },  // Esquerda
-  { left: '50%', rotateY: 0,   scale: 1.05, zDepth: 40,   opacity: 1.00, zIndex: 10, w: 220, h: 320, blur: 0 }, // PROTAGONISTA CENTRO
-  { left: '70%', rotateY: -10, scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 },  // Direita
-  { left: '88%', rotateY: -20, scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 },  // Ponta direita
+const SLOTS = [
+  { left: -10, rotateY: 25,  scale: 0.50, zDepth: -150, opacity: 0,    zIndex: 1, w: 120, h: 170, blur: 5 }, // Fora à esquerda
+  { left: 12,  rotateY: 20,  scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 }, // Ponta esquerda
+  { left: 30,  rotateY: 10,  scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 }, // Esquerda
+  { left: 50,  rotateY: 0,   scale: 1.05, zDepth: 40,   opacity: 1.00, zIndex: 10, w: 220, h: 320, blur: 0 },// PROTAGONISTA CENTRO
+  { left: 70,  rotateY: -10, scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 }, // Direita
+  { left: 88,  rotateY: -20, scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 }, // Ponta direita
+  { left: 110, rotateY: -25, scale: 0.50, zDepth: -150, opacity: 0,    zIndex: 1, w: 120, h: 170, blur: 5 }, // Fora à direita
 ];
+
+// Helper para interpolar linearmente valores numéricos
+function lerp(start: number, end: number, amt: number) {
+  return (1 - amt) * start + amt * end;
+}
 
 export default function HeroShowcase() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [pool, setPool] = useState<PosterItem[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // O índice que aponta para o item atual central (protagonista) do pool
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Parallax do mouse estilo Vision Pro
+  // Progresso decimal do carrossel (ex: 2.45 representa que estamos entre o card 2 e 3)
+  const [progress, setProgress] = useState(0.0);
+
+  // Parallax estilo Vision Pro
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [targetMouse, setTargetMouse] = useState({ x: 0, y: 0 });
 
-  // Controle de drag / arraste manual
-  const dragStartRef = useRef<number | null>(null);
+  // Controle de arraste (drag)
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef<{ clientX: number; progress: number } | null>(null);
 
-  // Carregar e filtrar dados válidos
+  // Controle de Trailer Silencioso no Fundo
+  const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
+  const lastFetchedIdRef = useRef<number | null>(null);
+  
+  // Estado e Referência para Controle de Áudio
+  const [isMuted, setIsMuted] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const toggleMute = () => {
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      if (nextMuted) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'mute', args: '' }),
+          '*'
+        );
+      } else {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'unMute', args: '' }),
+          '*'
+        );
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'setVolume', args: [40] }),
+          '*'
+        );
+      }
+    }
+  };
+
+  // Carregar dados iniciais
   useEffect(() => {
     async function loadData() {
       try {
@@ -80,7 +120,6 @@ export default function HeroShowcase() {
           items.push(...tmdbRes.value.pool);
         }
         if (sportsRes.status === 'fulfilled' && sportsRes.value?.pool?.length) {
-          // Filtra itens de esporte sem imagem e sem jogo definido para manter alta qualidade
           const validSports = sportsRes.value.pool.filter((s: PosterItem) => 
             (s.poster || s.homeTeam) && !s.title.includes('Temporada')
           );
@@ -101,60 +140,26 @@ export default function HeroShowcase() {
     loadData();
   }, []);
 
-  // Rotação/Mudança automática de slide contínua para a esquerda (a cada 4.5 segundos)
+  // Rotação automática suave à esquerda (0.003 de progresso a cada frame)
   useEffect(() => {
     if (pool.length === 0) return;
-    const interval = setInterval(() => {
-      handleNext();
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [pool, currentIndex]);
+    let animId: number;
 
-  // Funções de navegação do carrossel
-  const handleNext = () => {
-    if (pool.length === 0) return;
-    setCurrentIndex(prev => (prev + 1) % pool.length);
-  };
+    const tick = () => {
+      if (!isDraggingRef.current) {
+        setProgress(prev => {
+          const next = prev + 0.0013; // Roda sozinho suavemente (velocidade reduzida para maior tempo de tela)
+          return next >= pool.length ? next - pool.length : next;
+        });
+      }
+      animId = requestAnimationFrame(tick);
+    };
 
-  const handlePrev = () => {
-    if (pool.length === 0) return;
-    setCurrentIndex(prev => (prev - 1 + pool.length) % pool.length);
-  };
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [pool]);
 
-  // Parallax do mouse
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const r = containerRef.current.getBoundingClientRect();
-    setTargetMouse({
-      x: ((e.clientX - r.left) / r.width) * 2 - 1,
-      y: ((e.clientY - r.top) / r.height) * 2 - 1,
-    });
-  };
-
-  // Eventos de Touch/Drag para rolar o carrossel
-  const onDragStart = (clientX: number) => {
-    dragStartRef.current = clientX;
-  };
-
-  const onDragMove = (clientX: number) => {
-    if (dragStartRef.current === null || pool.length === 0) return;
-    const diff = clientX - dragStartRef.current;
-    
-    // Se arrastar mais de 50px, avança ou retrocede e reseta
-    if (diff > 50) {
-      handlePrev();
-      dragStartRef.current = null;
-    } else if (diff < -50) {
-      handleNext();
-      dragStartRef.current = null;
-    }
-  };
-
-  const onDragEnd = () => {
-    dragStartRef.current = null;
-  };
-
-  // Efeito lerp para atualizar coordenadas do mouse
+  // Efeito Lerp do Parallax do Mouse
   useEffect(() => {
     let animId: number;
     const update = () => {
@@ -168,16 +173,71 @@ export default function HeroShowcase() {
     return () => cancelAnimationFrame(animId);
   }, [targetMouse]);
 
-  // Obtém o item do pool para cada slot fixo (com rotação suave)
-  const getSlotItem = (slotIdx: number): PosterItem | null => {
-    if (pool.length === 0) return null;
-    // O slot central (2) corresponde ao currentIndex.
-    // Calculamos o índice do pool baseado na distância do slot central.
-    const poolIdx = (currentIndex + (slotIdx - 2) + pool.length) % pool.length;
-    return pool[poolIdx];
+  // Buscar Trailer Silencioso do Protagonista no Youtube
+  const currentIntIndex = pool.length > 0 ? Math.round(progress) % pool.length : 0;
+  const protagonist = pool[currentIntIndex];
+
+  useEffect(() => {
+    if (!protagonist || protagonist.sport) {
+      setActiveTrailerKey(null);
+      return;
+    }
+    if (lastFetchedIdRef.current === protagonist.id) return;
+    lastFetchedIdRef.current = protagonist.id;
+
+    async function fetchTrailer() {
+      try {
+        const res = await fetch(`/api/tmdb-video?id=${protagonist.id}&type=${protagonist.type}`);
+        const data = await res.json();
+        if (data.success && data.videoKey) {
+          setActiveTrailerKey(data.videoKey);
+        } else {
+          setActiveTrailerKey(null);
+        }
+      } catch {
+        setActiveTrailerKey(null);
+      }
+    }
+    fetchTrailer();
+  }, [protagonist]);
+
+  // Tratadores de Drag do Mouse / Touch
+  const onDragStart = (clientX: number) => {
+    isDraggingRef.current = true;
+    dragStartRef.current = { clientX, progress };
   };
 
-  // Renderização do Card Esportivo Personalizado
+  const onDragMove = (clientX: number) => {
+    if (!isDraggingRef.current || dragStartRef.current === null || pool.length === 0) return;
+    const deltaX = clientX - dragStartRef.current.clientX;
+    // O sinal negativo faz com que arrastar para a esquerda mova a esteira para a esquerda (próximos cards)
+    let newProgress = dragStartRef.current.progress - (deltaX / 320);
+
+    // Módulos circulares
+    if (newProgress < 0) {
+      newProgress += pool.length;
+    }
+    newProgress = newProgress % pool.length;
+
+    setProgress(newProgress);
+  };
+
+  const onDragEnd = () => {
+    isDraggingRef.current = false;
+    dragStartRef.current = null;
+  };
+
+  // Parallax do mouse
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const r = containerRef.current.getBoundingClientRect();
+    setTargetMouse({
+      x: ((e.clientX - r.left) / r.width) * 2 - 1,
+      y: ((e.clientY - r.top) / r.height) * 2 - 1,
+    });
+  };
+
+  // Renderização do Card de Futebol Personalizado
   const renderSportCard = (item: PosterItem, isMain: boolean) => {
     const backdropImg = item.backdrop || SPORT_STADIUMS[item.id % SPORT_STADIUMS.length];
     
@@ -189,6 +249,7 @@ export default function HeroShowcase() {
         background: '#07070D',
         display: 'flex',
         flexDirection: 'column',
+        userSelect: 'none',
       }}>
         <div style={{
           position: 'absolute', inset: 0,
@@ -223,7 +284,7 @@ export default function HeroShowcase() {
                 border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 16px rgba(0,0,0,0.6)'
               }}>
                 {item.homeTeam?.logo ? (
-                  <img src={item.homeTeam.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  <img src={item.homeTeam.logo} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 ) : <span style={{ fontSize: 16 }}>⚽</span>}
               </div>
               <span style={{
@@ -250,7 +311,7 @@ export default function HeroShowcase() {
                 border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 16px rgba(0,0,0,0.6)'
               }}>
                 {item.awayTeam?.logo ? (
-                  <img src={item.awayTeam.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  <img src={item.awayTeam.logo} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 ) : <span style={{ fontSize: 16 }}>⚽</span>}
               </div>
               <span style={{
@@ -290,15 +351,15 @@ export default function HeroShowcase() {
     );
   };
 
-  const protagonist = pool[currentIndex];
   const accentColor = protagonist?.sport ? (protagonist.leagueColor || '#009C3B') : protagonist?.type === 'Série' ? '#6366F1' : '#E50914';
 
   return (
     <div
       ref={containerRef}
+      className="hero-showcase-container"
       onMouseMove={onMouseMove}
-      onMouseDown={(e) => onDragStart(e.clientX)}
-      onMouseMoveCapture={(e) => onDragMove(e.clientX)}
+      onMouseDown={(e) => { e.preventDefault(); onDragStart(e.clientX); }}
+      onMouseMoveCapture={(e) => { if (isDraggingRef.current) { e.preventDefault(); onDragMove(e.clientX); } }}
       onMouseUp={onDragEnd}
       onMouseLeave={() => { onDragEnd(); setTargetMouse({ x: 0, y: 0 }); }}
       onTouchStart={(e) => onDragStart(e.touches[0].clientX)}
@@ -311,20 +372,56 @@ export default function HeroShowcase() {
         perspective: '1200px',
         transformStyle: 'preserve-3d',
         overflow: 'visible',
-        cursor: 'grab',
+        cursor: isDraggingRef.current ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
-      {/* Imagem de Fundo Atmosférica do protagonista central */}
-      {protagonist?.backdrop && (
-        <div style={{
-          position: 'absolute', top: '-10%', left: '-15%', width: '130%', height: '120%',
-          opacity: 0.14, zIndex: 0, pointerEvents: 'none',
-          filter: 'blur(35px) saturate(1.2)',
-          backgroundImage: `url(${protagonist.backdrop})`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          transition: 'background-image 0.8s ease',
-        }} />
-      )}
+      {/* ═══════════════════════════════
+          TRAILER SILENCIOSO DE FUNDO (YOUTUBE EMBED)
+      ═══════════════════════════════ */}
+      {activeTrailerKey ? (
+        <div className="hero-video-bg">
+          {/* Máscara de fusão com o fundo para contraste do texto */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.95) 20%, rgba(7,7,13,0.3) 55%, rgba(7,7,13,0.7) 80%, #07070D 100%), linear-gradient(to bottom, #07070D 0%, transparent 15%, transparent 85%, #07070D 100%)',
+            zIndex: 1,
+          }} />
+          <iframe
+            ref={iframeRef}
+            style={{
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              transform: 'scale(1.42)',
+              filter: 'saturate(1.2)',
+            }}
+            src={`https://www.youtube.com/embed/${activeTrailerKey}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${activeTrailerKey}&playsinline=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&enablejsapi=1`}
+            allow="autoplay; encrypted-media"
+            frameBorder="0"
+            loading="lazy"
+          />
+        </div>
+      ) : protagonist?.backdrop ? (
+        <div className="hero-video-bg" style={{ filter: 'blur(12px) saturate(1.25)', opacity: 0.38 }}>
+          {/* Máscara de fusão */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.92) 22%, rgba(7,7,13,0.3) 50%, rgba(7,7,13,0.8) 80%, #07070D 100%)',
+            zIndex: 1,
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: `url(${protagonist.backdrop})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            transition: 'background-image 0.8s ease',
+          }} />
+        </div>
+      ) : null}
 
       {/* Glow de Fundo central */}
       <div style={{
@@ -343,7 +440,7 @@ export default function HeroShowcase() {
         </div>
       )}
 
-      {/* Container Principal dos Cards em Perspectiva Linear */}
+      {/* Container Principal dos Cards */}
       <div style={{
         position: 'absolute',
         width: '100%',
@@ -351,36 +448,64 @@ export default function HeroShowcase() {
         zIndex: 2,
         transformStyle: 'preserve-3d',
         transform: `rotateX(${mouse.y * -2}deg) rotateY(${mouse.x * 2.5}deg)`,
-        transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1)',
+        transition: isDraggingRef.current ? 'none' : 'transform 0.4s cubic-bezier(0.16,1,0.3,1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        userSelect: 'none',
       }}>
-        {SLOTS_CONFIG.map((pos, slotIdx) => {
-          const item = getSlotItem(slotIdx);
-          if (!item) return null;
+        {pool.map((item, idx) => {
+          // Calcula a distância angular do item em relação ao progresso atual
+          let diff = idx - progress;
+          // Ajusta a distância para o caminho circular mais curto
+          const half = pool.length / 2;
+          if (diff > half) diff -= pool.length;
+          if (diff < -half) diff += pool.length;
 
-          const isMain = slotIdx === 2;
+          // Se estiver muito longe do centro (fora dos 5 slots visíveis), não renderiza
+          if (diff < -3.2 || diff > 3.2) return null;
+
+          // Mapeia a posição do item baseando-se em sua distância d.
+          // O centro d = 0 corresponde ao slot 3 (PROTAGONISTA CENTRO)
+          const virtualSlotIdx = diff + 3; 
+          const lowerIdx = Math.floor(virtualSlotIdx);
+          const upperIdx = Math.ceil(virtualSlotIdx);
+          const fraction = virtualSlotIdx - lowerIdx;
+
+          // Interpola as propriedades visuais entre os slots adjacentes
+          const slotA = SLOTS[Math.max(0, Math.min(SLOTS.length - 1, lowerIdx))];
+          const slotB = SLOTS[Math.max(0, Math.min(SLOTS.length - 1, upperIdx))];
+
+          const interpolatedLeft = lerp(slotA.left, slotB.left, fraction);
+          const interpolatedRotateY = lerp(slotA.rotateY, slotB.rotateY, fraction);
+          const interpolatedScale = lerp(slotA.scale, slotB.scale, fraction);
+          const interpolatedZDepth = lerp(slotA.zDepth, slotB.zDepth, fraction);
+          const interpolatedOpacity = lerp(slotA.opacity, slotB.opacity, fraction);
+          const interpolatedW = lerp(slotA.w, slotB.w, fraction);
+          const interpolatedH = lerp(slotA.h, slotB.h, fraction);
+          const interpolatedBlur = lerp(slotA.blur, slotB.blur, fraction);
+          
+          const isMain = Math.abs(diff) < 0.5;
 
           return (
             <div
-              key={`slot-${item.id}-${slotIdx}`}
+              key={`inter-card-${item.id}-${idx}`}
               onClick={() => {
-                if (slotIdx === 1) handlePrev();
-                if (slotIdx === 3) handleNext();
-                if (slotIdx === 0) { handlePrev(); setTimeout(handlePrev, 150); }
-                if (slotIdx === 4) { handleNext(); setTimeout(handleNext, 150); }
+                if (!isDraggingRef.current && Math.abs(diff) > 0.4) {
+                  // Centraliza o card clicado
+                  setProgress(idx);
+                }
               }}
               style={{
                 position: 'absolute',
-                left: pos.left,
-                width: pos.w,
-                height: pos.h,
+                left: `${interpolatedLeft}%`,
+                width: interpolatedW,
+                height: interpolatedH,
                 transform: `
                   translate(-50%, -50%)
-                  translateZ(${pos.zDepth}px)
-                  rotateY(${pos.rotateY}deg)
-                  scale(${pos.scale})
+                  translateZ(${interpolatedZDepth}px)
+                  rotateY(${interpolatedRotateY}deg)
+                  scale(calc(${interpolatedScale} * var(--mobile-scale, 1)))
                 `,
                 borderRadius: isMain ? 14 : 10,
                 overflow: 'hidden',
@@ -388,19 +513,25 @@ export default function HeroShowcase() {
                 boxShadow: isMain
                   ? `0 25px 65px ${accentColor}25, 0 15px 40px rgba(0,0,0,0.9)`
                   : '0 8px 24px rgba(0,0,0,0.5)',
-                opacity: pos.opacity,
-                filter: `blur(${pos.blur}px)`,
-                transition: 'left 0.75s cubic-bezier(0.19, 1, 0.22, 1), transform 0.75s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.75s cubic-bezier(0.19, 1, 0.22, 1), filter 0.75s cubic-bezier(0.19, 1, 0.22, 1), border-color 0.4s ease, box-shadow 0.4s ease',
-                zIndex: pos.zIndex,
+                opacity: interpolatedOpacity,
+                filter: `blur(${interpolatedBlur}px)`,
+                zIndex: isMain ? 10 : Math.round(10 - Math.abs(diff) * 2),
                 cursor: isMain ? 'default' : 'pointer',
                 top: '50%',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
               }}
             >
               {item.sport ? (
                 renderSportCard(item, isMain)
               ) : (
-                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                  <img src={item.poster || ''} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'relative', width: '100%', height: '100%', userSelect: 'none' }}>
+                  <img
+                    src={item.poster || ''}
+                    alt={item.title}
+                    draggable={false}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', userSelect: 'none' }}
+                  />
                   
                   {/* Overlay Inferior */}
                   <div style={{
@@ -408,6 +539,7 @@ export default function HeroShowcase() {
                     background: 'linear-gradient(to top, rgba(7,7,13,0.98) 0%, rgba(7,7,13,0.5) 60%, transparent 100%)',
                     padding: isMain ? '12px 14px 10px' : '6px 8px',
                     fontFamily: 'Outfit, sans-serif',
+                    userSelect: 'none',
                   }}>
                     <span style={{
                       display: 'inline-flex',
@@ -443,7 +575,75 @@ export default function HeroShowcase() {
         })}
       </div>
 
+      {/* Botão de Som Premium (Mute/Unmute) */}
+      {activeTrailerKey && (
+        <button
+          onClick={toggleMute}
+          aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+          style={{
+            position: 'absolute',
+            bottom: 20,
+            right: 20,
+            zIndex: 120,
+            background: isMuted ? 'rgba(15, 15, 28, 0.72)' : 'rgba(229, 9, 20, 0.95)',
+            backdropFilter: 'blur(16px)',
+            border: isMuted ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(229, 9, 20, 0.35)',
+            borderRadius: 24,
+            padding: '8px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            color: '#fff',
+            cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            outline: 'none',
+            fontSize: 10,
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            fontFamily: 'Outfit, sans-serif',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'scale(1.04)';
+            if (isMuted) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.background = isMuted ? 'rgba(15, 15, 28, 0.72)' : 'rgba(229, 9, 20, 0.95)';
+          }}
+        >
+          {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+          <span>{isMuted ? 'Mudo' : 'Com Som'}</span>
+        </button>
+      )}
+
       <style jsx global>{`
+        .hero-video-bg {
+          position: absolute;
+          top: -110px;
+          bottom: -32px;
+          left: -110%;
+          right: -25%;
+          opacity: 0.58;
+          z-index: 0;
+          pointer-events: none;
+          overflow: hidden;
+          transition: opacity 0.8s ease;
+        }
+        @media (max-width: 1024px) {
+          .hero-video-bg {
+            left: -24px !important;
+            right: -24px !important;
+            top: -120px !important;
+            bottom: -20px !important;
+            opacity: 0.52 !important;
+          }
+          .hero-showcase-container {
+            --mobile-scale: 0.74 !important;
+            height: 380px !important;
+          }
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes livePulse {
           0%, 100% { opacity: 1; transform: scale(1); }

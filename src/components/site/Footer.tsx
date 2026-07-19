@@ -55,14 +55,14 @@ export default function Footer() {
             ))}
           </div>
 
-          {/* Plataformas */}
+          {/* Guias Populares */}
           <div>
             <h4 style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 14 }}>
-              Plataformas
+              Guias
             </h4>
-            {['Netflix', 'Max (HBO)', 'Prime Video', 'Disney+', 'Globoplay', 'Paramount+'].map(p => (
-              <Link key={p} href={`/onde-assistir?plataforma=${p.toLowerCase()}`} style={{ display: 'block', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                {p}
+            {['Lançamentos', 'Esportes do Dia', 'Melhores Séries', 'Cinema em Casa', 'Guia de TV'].map(g => (
+              <Link key={g} href={`/blog?busca=${g.toLowerCase()}`} style={{ display: 'block', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8, transition: 'color 0.2s' }}>
+                {g}
               </Link>
             ))}
           </div>

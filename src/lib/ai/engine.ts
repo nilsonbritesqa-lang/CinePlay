@@ -238,7 +238,7 @@ ${diasParaEstreia > 0 ? `Estreia em ${diasParaEstreia} dia(s).` : 'JÁ DISPONÍV
 Nota TMDB: ${filme.vote_average?.toFixed(1)}/10
 Onde assistir no Brasil: ${plataformas}
 
-Foque em: "onde assistir ${filme.title}", "está no Netflix/Prime/HBO?", recomendação.
+Foque em: "onde assistir ${filme.title}", "onde está passando?", recomendação.
 Inclua a nota, sinopse resumida, e onde encontrar.
     `.trim();
 
@@ -337,8 +337,8 @@ export async function runAgenteOndeAssistir(config: AgentConfig): Promise<PostGe
     { titulo: 'Como assistir futebol ao vivo de graça na internet', keywords: ['futebol ao vivo gratis', 'assistir futebol online'] },
     { titulo: 'Melhores aplicativos para assistir séries e filmes em 2026', keywords: ['melhor app streaming', 'streaming barato'] },
     { titulo: 'Como assistir canais abertos no celular ou smart TV', keywords: ['canais abertos online', 'tv ao vivo gratis'] },
-    { titulo: 'Netflix, Prime ou HBO: qual vale mais a pena em 2026?', keywords: ['melhor streaming brasil', 'netflix ou prime'] },
-    { titulo: 'Como cancelar assinatura de streaming (Netflix, HBO, Prime)', keywords: ['como cancelar netflix', 'cancelar streaming'] },
+    { titulo: 'Qual é o melhor serviço de streaming de vídeo em 2026?', keywords: ['melhor streaming brasil', 'streaming comparativo'] },
+    { titulo: 'Como gerenciar e cancelar assinaturas de streaming com facilidade', keywords: ['cancelar assinatura', 'cancelar streaming'] },
   ];
 
   const aProcessar = topicos.slice(0, config.posts_por_dia);
@@ -385,7 +385,7 @@ export async function runAgenteCanais(config: AgentConfig): Promise<PostGerado[]
     const contexto = `
 Escreva sobre: "${topico}"
 Formato: guia informativo completo com subtópicos.
-Mencione plataformas reais disponíveis no Brasil: Netflix, Prime Video, Max, Disney+, Globoplay, SporTV, ESPN, etc.
+Mencione plataformas de vídeo e canais esportivos disponíveis no Brasil de forma genérica.
 Inclua dicas de custo-benefício.
     `.trim();
 

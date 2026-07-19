@@ -14,22 +14,22 @@ interface MediaItem {
 }
 
 const DEFAULT_MOVIES = [
-  { title: 'Duna: Parte Dois', type: 'Filme', poster: 'https://image.tmdb.org/t/p/w500/c7D6n1clBL6Vo44x2Uo599026T.jpg', backdrop: null, platform: 'Max (HBO)', status: 'Disponível em 4K HDR' },
-  { title: 'House of the Dragon', type: 'Série', poster: 'https://image.tmdb.org/t/p/w500/t9X7imfv64es3496nQ3KyIFnN5Y.jpg', backdrop: null, platform: 'Max & Prime Video', status: 'Novos episódios aos domingos' },
+  { title: 'Duna: Parte Dois', type: 'Filme', poster: 'https://image.tmdb.org/t/p/w500/c7D6n1clBL6Vo44x2Uo599026T.jpg', backdrop: null, platform: 'Streaming Premium', status: 'Disponível em 4K HDR' },
+  { title: 'House of the Dragon', type: 'Série', poster: 'https://image.tmdb.org/t/p/w500/t9X7imfv64es3496nQ3KyIFnN5Y.jpg', backdrop: null, platform: 'Plataformas Digitais', status: 'Novos episódios listados' },
 ];
 
 const DEFAULT_SPORTS = [
-  { title: 'Flamengo x Palmeiras', type: 'Futebol', poster: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=120&auto=format&fit=crop&q=80', backdrop: null, platform: 'Premiere & Globo', status: 'Ao Vivo agora' },
-  { title: 'Real Madrid x Man City', type: 'Futebol', poster: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&auto=format&fit=crop&q=80', backdrop: null, platform: 'TNT & Max', status: 'Terça-feira às 16:00' },
+  { title: 'Flamengo x Palmeiras', type: 'Futebol', poster: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=120&auto=format&fit=crop&q=80', backdrop: null, platform: 'Pay-Per-View', status: 'Ao Vivo agora' },
+  { title: 'Real Madrid x Man City', type: 'Futebol', poster: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&auto=format&fit=crop&q=80', backdrop: null, platform: 'TV por Assinatura', status: 'Terça-feira às 16:00' },
 ];
 
 const STREAMING_PLATFORMS = [
-  { name: 'Netflix', color: '#E50914' },
-  { name: 'Prime Video', color: '#00A8E1' },
-  { name: 'Disney+', color: '#113CCF' },
-  { name: 'Max', color: '#002BE7' },
-  { name: 'Globoplay', color: '#FF3333' },
-  { name: 'Premiere', color: '#FFD700' },
+  { name: 'Streaming', color: '#E50914' },
+  { name: 'On Demand', color: '#6366F1' },
+  { name: 'TV Aberta', color: '#10B981' },
+  { name: 'TV Fechada', color: '#3B82F6' },
+  { name: 'PPV', color: '#F59E0B' },
+  { name: 'CinePlay', color: '#EC4899' },
 ];
 
 export default function DiscoveryEngine() {

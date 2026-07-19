@@ -18,20 +18,20 @@ const MOCK_POSTS_DATABASE: Record<string, PostCard & { conteudo_completo: string
       <p>A TV Globo mantém a exibição de partidas selecionadas aos domingos e quartas-feiras na TV aberta. Já na TV fechada, os canais SporTV e Premiere continuam cobrindo a maioria dos jogos no formato pay-per-view.</p>
 
       <h2>Onde Assistir Online via Streaming</h2>
-      <p>Para quem prefere acompanhar pelo celular ou computador, as opções oficiais incluem o Globoplay (com sinal da TV Globo ao vivo em praças selecionadas) e o CazéTV no YouTube, que transmite jogos como mandante de equipes parceiras de forma gratuita.</p>
+      <p>Para quem prefere acompanhar pelo celular ou computador, as opções oficiais incluem aplicativos digitais integrados (com sinal da TV Globo ao vivo em praças selecionadas) e o CazéTV no YouTube, que transmite jogos como mandante de equipes parceiras de forma gratuita.</p>
     `
   },
-  'melhores-series-netflix-julho-2026': {
-    id: '2', slug: 'melhores-series-netflix-julho-2026', titulo: 'As Melhores Séries da Netflix em Julho de 2026', resumo: 'Confira quais são as séries mais aclamadas que chegaram à Netflix neste mês e por que você precisa assistir.', imagem_capa_url: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&auto=format&fit=crop&q=80', categoria: 'series', publicado_em: new Date().toISOString(), visualizacoes: 8720, tempo_leitura_min: 4, gerado_por_ia: true,
+  'melhores-series-streaming-julho-2026': {
+    id: '2', slug: 'melhores-series-streaming-julho-2026', titulo: 'As Melhores Séries no Streaming em Julho de 2026', resumo: 'Confira quais são as séries mais aclamadas que chegaram aos catálogos de streaming neste mês e por que você precisa assistir.', imagem_capa_url: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&auto=format&fit=crop&q=80', categoria: 'series', publicado_em: new Date().toISOString(), visualizacoes: 8720, tempo_leitura_min: 4, gerado_por_ia: true,
     conteudo_completo: `
       <h2>Estreias Imperdíveis de Julho de 2026</h2>
-      <p>A Netflix inicia o segundo semestre de 2026 com lançamentos de peso. De ficção científica a dramas inspirados em fatos reais, há opções imperdíveis para todos os gostos.</p>
+      <p>Os serviços de streaming iniciam o segundo semestre de 2026 com lançamentos de peso. De ficção científica a dramas inspirados em fatos reais, há opções imperdíveis para todos os gostos.</p>
       
       <h2>Destaques da Ficção Científica</h2>
       <p>O grande destaque do mês fica por conta da nova série cyberpunk que aborda as relações humanas e transição tecnológica em um futuro distópico. Com efeitos especiais de ponta e roteiro afiado.</p>
 
       <h2>Como Assistir em Ultra HD 4K</h2>
-      <p>Lembre-se que para assistir a estes lançamentos com a melhor qualidade de imagem e som Dolby Atmos, é necessário possuir o plano Premium da Netflix e uma conexão estável à internet.</p>
+      <p>Lembre-se que para assistir a estes lançamentos com a melhor qualidade de imagem e som Dolby Atmos, é necessário possuir planos compatíveis com transmissão 4K Ultra HD e uma conexão estável à internet.</p>
     `
   }
 };

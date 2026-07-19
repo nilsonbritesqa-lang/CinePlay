@@ -254,155 +254,287 @@ export default function LandingPage() {
       {/* ═══════════════════════════════
           3. TICKER VISUAL — PÔSTERES EM MOVIMENTO
       ═══════════════════════════════ */}
+      {/* Tickers Duplicados Rodando em Direções Opostas */}
       <section style={{ 
-        padding: '16px 0', 
+        padding: '24px 0', 
         borderTop: '1px solid rgba(255,255,255,0.03)', 
         borderBottom: '1px solid rgba(255,255,255,0.03)',
         overflow: 'hidden', 
-        background: 'rgba(8,8,16,0.5)' 
+        background: 'rgba(8,8,16,0.3)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16
       }}>
         {tickerItems.length > 0 && (
-          <div className="ticker-container">
-            <div className="ticker-track">
-              {/* Rodada 1 */}
-              <div style={{ display: 'flex', gap: 12, paddingRight: 12 }}>
-                {tickerItems.map((item, idx) => {
-                  const isSport = item.type === 'sport';
-                  const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
+          <>
+            {/* Esteira 1: Roda para a Esquerda */}
+            <div className="ticker-container">
+              <div className="ticker-track">
+                {/* Rodada 1 */}
+                <div style={{ display: 'flex', gap: 12, paddingRight: 12 }}>
+                  {tickerItems.slice(0, Math.floor(tickerItems.length / 2)).map((item, idx) => {
+                    const isSport = item.type === 'sport';
+                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
 
-                  return (
-                    <div
-                      key={`t1-${item.id}-${idx}`}
-                      className="ticker-poster-card"
-                      style={{
-                        position: 'relative',
-                        width: 90,
-                        height: 130,
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        cursor: 'pointer',
-                        background: '#07070D',
-                      }}
-                    >
-                      {isSport ? (
-                        <>
-                          {/* Estádio de Fundo */}
-                          <div style={{
-                            position: 'absolute', inset: 0,
-                            backgroundImage: `url(${backdropImg})`,
-                            backgroundSize: 'cover', backgroundPosition: 'center',
-                            opacity: 0.35, filter: 'blur(0.5px)'
-                          }} />
-                          
-                          {/* Escudos dos Times */}
-                          <div style={{
-                            position: 'absolute', top: '22%', left: 0, right: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            zIndex: 2, padding: '0 4px'
-                          }}>
-                            <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                            <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
-                            <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                          </div>
-                        </>
-                      ) : (
-                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      )}
-
-                      {/* Overlay Inferior */}
-                      <div style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
-                        padding: '6px 5px 5px',
-                        zIndex: 3,
-                      }}>
-                        <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
-                          {item.badge}
-                        </span>
-                        <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
-                          {item.title}
-                        </span>
-                        {item.vote > 0 && (
-                          <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                    return (
+                      <div
+                        key={`t1-a-${item.id}-${idx}`}
+                        className="ticker-poster-card"
+                        style={{
+                          position: 'relative',
+                          width: 90,
+                          height: 130,
+                          borderRadius: 8,
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          cursor: 'pointer',
+                          background: '#07070D',
+                        }}
+                      >
+                        {isSport ? (
+                          <>
+                            <div style={{
+                              position: 'absolute', inset: 0,
+                              backgroundImage: `url(${backdropImg})`,
+                              backgroundSize: 'cover', backgroundPosition: 'center',
+                              opacity: 0.35, filter: 'blur(0.5px)'
+                            }} />
+                            <div style={{
+                              position: 'absolute', top: '22%', left: 0, right: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                              zIndex: 2, padding: '0 4px'
+                            }}>
+                              <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
+                              <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                            </div>
+                          </>
+                        ) : (
+                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         )}
+
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
+                          padding: '6px 5px 5px',
+                          zIndex: 3,
+                        }}>
+                          <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
+                            {item.badge}
+                          </span>
+                          <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                            {item.title}
+                          </span>
+                          {item.vote > 0 && (
+                            <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+                {/* Rodada 2 */}
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {tickerItems.slice(0, Math.floor(tickerItems.length / 2)).map((item, idx) => {
+                    const isSport = item.type === 'sport';
+                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
 
-              {/* Rodada 2 (duplicada para loop infinito) */}
-              <div style={{ display: 'flex', gap: 12 }}>
-                {tickerItems.map((item, idx) => {
-                  const isSport = item.type === 'sport';
-                  const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
-
-                  return (
-                    <div
-                      key={`t2-${item.id}-${idx}`}
-                      className="ticker-poster-card"
-                      style={{
-                        position: 'relative',
-                        width: 90,
-                        height: 130,
-                        borderRadius: 8,
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        cursor: 'pointer',
-                        background: '#07070D',
-                      }}
-                    >
-                      {isSport ? (
-                        <>
-                          {/* Estádio de Fundo */}
-                          <div style={{
-                            position: 'absolute', inset: 0,
-                            backgroundImage: `url(${backdropImg})`,
-                            backgroundSize: 'cover', backgroundPosition: 'center',
-                            opacity: 0.35, filter: 'blur(0.5px)'
-                          }} />
-                          
-                          {/* Escudos dos Times */}
-                          <div style={{
-                            position: 'absolute', top: '22%', left: 0, right: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            zIndex: 2, padding: '0 4px'
-                          }}>
-                            <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                            <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
-                            <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                          </div>
-                        </>
-                      ) : (
-                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      )}
-
-                      {/* Overlay Inferior */}
-                      <div style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
-                        padding: '6px 5px 5px',
-                        zIndex: 3,
-                      }}>
-                        <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
-                          {item.badge}
-                        </span>
-                        <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
-                          {item.title}
-                        </span>
-                        {item.vote > 0 && (
-                          <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                    return (
+                      <div
+                        key={`t1-b-${item.id}-${idx}`}
+                        className="ticker-poster-card"
+                        style={{
+                          position: 'relative',
+                          width: 90,
+                          height: 130,
+                          borderRadius: 8,
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          cursor: 'pointer',
+                          background: '#07070D',
+                        }}
+                      >
+                        {isSport ? (
+                          <>
+                            <div style={{
+                              position: 'absolute', inset: 0,
+                              backgroundImage: `url(${backdropImg})`,
+                              backgroundSize: 'cover', backgroundPosition: 'center',
+                              opacity: 0.35, filter: 'blur(0.5px)'
+                            }} />
+                            <div style={{
+                              position: 'absolute', top: '22%', left: 0, right: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                              zIndex: 2, padding: '0 4px'
+                            }}>
+                              <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
+                              <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                            </div>
+                          </>
+                        ) : (
+                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         )}
+
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
+                          padding: '6px 5px 5px',
+                          zIndex: 3,
+                        }}>
+                          <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
+                            {item.badge}
+                          </span>
+                          <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                            {item.title}
+                          </span>
+                          {item.vote > 0 && (
+                            <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
+
+            {/* Esteira 2: Roda para a Direita */}
+            <div className="ticker-container">
+              <div className="ticker-track-reverse">
+                {/* Rodada 1 */}
+                <div style={{ display: 'flex', gap: 12, paddingRight: 12 }}>
+                  {tickerItems.slice(Math.floor(tickerItems.length / 2)).map((item, idx) => {
+                    const isSport = item.type === 'sport';
+                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
+
+                    return (
+                      <div
+                        key={`t2-a-${item.id}-${idx}`}
+                        className="ticker-poster-card"
+                        style={{
+                          position: 'relative',
+                          width: 90,
+                          height: 130,
+                          borderRadius: 8,
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          cursor: 'pointer',
+                          background: '#07070D',
+                        }}
+                      >
+                        {isSport ? (
+                          <>
+                            <div style={{
+                              position: 'absolute', inset: 0,
+                              backgroundImage: `url(${backdropImg})`,
+                              backgroundSize: 'cover', backgroundPosition: 'center',
+                              opacity: 0.35, filter: 'blur(0.5px)'
+                            }} />
+                            <div style={{
+                              position: 'absolute', top: '22%', left: 0, right: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                              zIndex: 2, padding: '0 4px'
+                            }}>
+                              <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
+                              <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                            </div>
+                          </>
+                        ) : (
+                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        )}
+
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
+                          padding: '6px 5px 5px',
+                          zIndex: 3,
+                        }}>
+                          <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
+                            {item.badge}
+                          </span>
+                          <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                            {item.title}
+                          </span>
+                          {item.vote > 0 && (
+                            <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Rodada 2 */}
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {tickerItems.slice(Math.floor(tickerItems.length / 2)).map((item, idx) => {
+                    const isSport = item.type === 'sport';
+                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
+
+                    return (
+                      <div
+                        key={`t2-b-${item.id}-${idx}`}
+                        className="ticker-poster-card"
+                        style={{
+                          position: 'relative',
+                          width: 90,
+                          height: 130,
+                          borderRadius: 8,
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          cursor: 'pointer',
+                          background: '#07070D',
+                        }}
+                      >
+                        {isSport ? (
+                          <>
+                            <div style={{
+                              position: 'absolute', inset: 0,
+                              backgroundImage: `url(${backdropImg})`,
+                              backgroundSize: 'cover', backgroundPosition: 'center',
+                              opacity: 0.35, filter: 'blur(0.5px)'
+                            }} />
+                            <div style={{
+                              position: 'absolute', top: '22%', left: 0, right: 0,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                              zIndex: 2, padding: '0 4px'
+                            }}>
+                              <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
+                              <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                            </div>
+                          </>
+                        ) : (
+                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        )}
+
+                        <div style={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
+                          padding: '6px 5px 5px',
+                          zIndex: 3,
+                        }}>
+                          <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
+                            {item.badge}
+                          </span>
+                          <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                            {item.title}
+                          </span>
+                          {item.vote > 0 && (
+                            <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </section>
 
@@ -512,7 +644,13 @@ export default function LandingPage() {
           width: max-content;
           animation: tickerAnimation 80s linear infinite;
         }
-        .ticker-container:hover .ticker-track {
+        .ticker-track-reverse {
+          display: flex;
+          width: max-content;
+          animation: tickerAnimationReverse 80s linear infinite;
+        }
+        .ticker-container:hover .ticker-track,
+        .ticker-container:hover .ticker-track-reverse {
           animation-play-state: paused !important;
         }
         .ticker-poster-card {
@@ -528,6 +666,10 @@ export default function LandingPage() {
         @keyframes tickerAnimation {
           0% { transform: translate3d(0, 0, 0); }
           100% { transform: translate3d(-50%, 0, 0); }
+        }
+        @keyframes tickerAnimationReverse {
+          0% { transform: translate3d(-50%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
         }
       `}</style>
     </div>

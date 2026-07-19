@@ -36,7 +36,7 @@ const INICIAL_AGENTES = [
       { status: 'sucesso', msg: 'Gerou: Onde assistir Deadpool & Wolverine', ago: '4h' },
     ],
     apis: ['TMDB (filmes)', 'TMDB (onde assistir)'],
-    keywords: ['onde assistir', 'estreias', 'está no Netflix', 'está no Prime'],
+    keywords: ['onde assistir', 'estreias', 'onde ver online', 'estreia hoje'],
   },
   {
     id: '3', nome: 'Agente Séries', tipo: '📺', categoria: 'series',
