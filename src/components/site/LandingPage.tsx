@@ -28,21 +28,31 @@ export default function LandingPage() {
         const list: any[] = [];
 
         if (sportsRes?.success && sportsRes.pool?.length) {
-          sportsRes.pool.slice(0, 10).forEach((item: any) => {
-            list.push({
-              id: `sport-${item.id}`,
-              title: item.title,
-              poster: item.poster || null,
-              badge: item.isLive ? '🔴 Ao Vivo' : item.league || 'Futebol',
-              badgeColor: item.isLive ? '#E50914' : item.leagueColor || '#009C3B',
-              type: 'sport',
-              vote: item.vote,
-            });
+          sportsRes.pool.forEach((item: any) => {
+            // Só adiciona se tiver os times definidos
+            if (item.homeTeam && item.awayTeam) {
+              list.push({
+                id: `sport-${item.id}`,
+                title: item.title,
+                poster: item.poster || null,
+                backdrop: item.backdrop || null,
+                badge: item.isLive ? '🔴 Ao Vivo' : item.league || 'Futebol',
+                badgeColor: item.isLive ? '#E50914' : item.leagueColor || '#009C3B',
+                type: 'sport',
+                vote: item.vote,
+                homeTeam: item.homeTeam,
+                awayTeam: item.awayTeam,
+                league: item.league,
+                leagueColor: item.leagueColor,
+                isLive: item.isLive,
+                label: item.label
+              });
+            }
           });
         }
 
         if (tmdbRes?.success && tmdbRes.pool?.length) {
-          tmdbRes.pool.slice(0, 40).forEach((item: any) => {
+          tmdbRes.pool.forEach((item: any) => {
             if (item.poster) {
               list.push({
                 id: `tmdb-${item.id}`,
@@ -50,7 +60,7 @@ export default function LandingPage() {
                 poster: item.poster,
                 badge: item.type,
                 badgeColor: item.type === 'Filme' ? '#E50914' : '#6366F1',
-                type: item.type === 'Filme' ? 'movie' : 'series',
+                type: 'movie',
                 vote: item.vote,
               });
             }
@@ -256,87 +266,140 @@ export default function LandingPage() {
             <div className="ticker-track">
               {/* Rodada 1 */}
               <div style={{ display: 'flex', gap: 12, paddingRight: 12 }}>
-                {tickerItems.map((item, idx) => (
-                  <div
-                    key={`t1-${item.id}-${idx}`}
-                    className="ticker-poster-card"
-                    style={{
-                      position: 'relative',
-                      width: 90,
-                      height: 130,
-                      borderRadius: 8,
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {item.poster ? (
-                      <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                        {item.type === 'sport' ? '⚽' : '🎬'}
-                      </div>
-                    )}
-                    <div style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0,
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
-                      padding: '6px 5px 5px',
-                    }}>
-                      <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
-                        {item.badge}
-                      </span>
-                      <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
-                        {item.title}
-                      </span>
-                      {item.vote > 0 && (
-                        <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                {tickerItems.map((item, idx) => {
+                  const isSport = item.type === 'sport';
+                  const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
+
+                  return (
+                    <div
+                      key={`t1-${item.id}-${idx}`}
+                      className="ticker-poster-card"
+                      style={{
+                        position: 'relative',
+                        width: 90,
+                        height: 130,
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        cursor: 'pointer',
+                        background: '#07070D',
+                      }}
+                    >
+                      {isSport ? (
+                        <>
+                          {/* Estádio de Fundo */}
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            backgroundImage: `url(${backdropImg})`,
+                            backgroundSize: 'cover', backgroundPosition: 'center',
+                            opacity: 0.35, filter: 'blur(0.5px)'
+                          }} />
+                          
+                          {/* Escudos dos Times */}
+                          <div style={{
+                            position: 'absolute', top: '22%', left: 0, right: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            zIndex: 2, padding: '0 4px'
+                          }}>
+                            <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                            <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
+                            <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                          </div>
+                        </>
+                      ) : (
+                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       )}
+
+                      {/* Overlay Inferior */}
+                      <div style={{
+                        position: 'absolute', bottom: 0, left: 0, right: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
+                        padding: '6px 5px 5px',
+                        zIndex: 3,
+                      }}>
+                        <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
+                          {item.badge}
+                        </span>
+                        <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                          {item.title}
+                        </span>
+                        {item.vote > 0 && (
+                          <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
               {/* Rodada 2 (duplicada para loop infinito) */}
               <div style={{ display: 'flex', gap: 12 }}>
-                {tickerItems.map((item, idx) => (
-                  <div
-                    key={`t2-${item.id}-${idx}`}
-                    className="ticker-poster-card"
-                    style={{
-                      position: 'relative',
-                      width: 90,
-                      height: 130,
-                      borderRadius: 8,
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {item.poster ? (
-                      <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                        {item.type === 'sport' ? '⚽' : '🎬'}
-                      </div>
-                    )}
-                    <div style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0,
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
-                      padding: '6px 5px 5px',
-                    }}>
-                      <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
-                        {item.badge}
-                      </span>
-                      <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
-                        {item.title}
-                      </span>
-                      {item.vote > 0 && (
-                        <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                {tickerItems.map((item, idx) => {
+                  const isSport = item.type === 'sport';
+                  const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
+
+                  return (
+                    <div
+                      key={`t2-${item.id}-${idx}`}
+                      className="ticker-poster-card"
+                      style={{
+                        position: 'relative',
+                        width: 90,
+                        height: 130,
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        cursor: 'pointer',
+                        background: '#07070D',
+                      }}
+                    >
+                      {isSport ? (
+                        <>
+                          {/* Estádio de Fundo */}
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            backgroundImage: `url(${backdropImg})`,
+                            backgroundSize: 'cover', backgroundPosition: 'center',
+                            opacity: 0.35, filter: 'blur(0.5px)'
+                          }} />
+                          
+                          {/* Escudos dos Times */}
+                          <div style={{
+                            position: 'absolute', top: '22%', left: 0, right: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            zIndex: 2, padding: '0 4px'
+                          }}>
+                            <img src={item.homeTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                            <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
+                            <img src={item.awayTeam?.logo} alt="" style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
+                          </div>
+                        </>
+                      ) : (
+                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       )}
+
+                      {/* Overlay Inferior */}
+                      <div style={{
+                        position: 'absolute', bottom: 0, left: 0, right: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
+                        padding: '6px 5px 5px',
+                        zIndex: 3,
+                      }}>
+                        <span style={{ display: 'block', fontSize: 6, fontWeight: 800, textTransform: 'uppercase', color: item.badgeColor || '#E50914', letterSpacing: '0.04em', marginBottom: 1 }}>
+                          {item.badge}
+                        </span>
+                        <span style={{ display: 'block', fontSize: 8, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                          {item.title}
+                        </span>
+                        {item.vote > 0 && (
+                          <span style={{ fontSize: 7, color: '#F59E0B', fontWeight: 600 }}>★ {item.vote.toFixed(1)}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
