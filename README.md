@@ -16,8 +16,8 @@ O **CinePlay** é um guia inteligente de alta conversão focado em ajudar usuár
    - Focado exclusivamente no ecossistema CinePlay: se o usuário perguntar algo fora do contexto, o bot redireciona educadamente e envia o link direto para o WhatsApp de vendas.
    - Painel administrativo exclusivo para configurar instruções (memória do bot), número do WhatsApp, mensagens pré-preenchidas e textos de CTA.
 
-3. **Ticker de Plataformas de Transmissão:**
-   - Barra horizontal dinâmica com as principais logos de streaming do mercado (Netflix, Prime Video, Disney+, Max, Premiere, etc.).
+3. **Ticker de Canais de Transmissão:**
+   - Barra horizontal dinâmica exibindo as principais categorias e modalidades de transmissão de mídia (TV Aberta, TV Fechada, PPV, Streaming, etc.).
 
 4. **Painel de Controle de CTAs e Links:**
    - Controle dinâmico para gerenciar patrocinadores, anúncios e links de redirecionamento de alta visibilidade.
@@ -44,24 +44,24 @@ npm install
 Copie o arquivo de exemplo ou crie o `.env.local` na raiz com as chaves apropriadas:
 ```env
 # SUPABASE
-NEXT_PUBLIC_SUPABASE_URL=https://hjmsabirunfywjxfsuly.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_MQQZHy7leLXxbFET4OpvLA_EKOuCRGV
-SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key_aqui
-DATABASE_URL=postgresql://postgres:ColoqueEssaTemporaria8@db.hjmsabirunfywjxfsuly.supabase.co:5432/postgres
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_anon_key_publica_aqui
+SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key_privada_aqui
+DATABASE_URL=postgresql://postgres:sua_senha_do_banco@db.seu-projeto.supabase.co:5432/postgres
 
 # CHAVES DE IA
 GEMINI_API_KEY=sua_chave_gemini_aqui
 GROQ_API_KEY=sua_chave_groq_aqui
 
 # TMDB & DADOS DE MÍDIA
-TMDB_API_KEY=4d7f4fdd687f45db81e0386006ac5a4b
-TMDB_READ_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ZDdmNGZkZDY4N2Y0NWRiODFlMDM4NjAwNmFjNWE0YiIsIm5iZiI6MTc4NDI2NjkwOC45NjYsInN1YiI6IjZhNTljMDljMzgzMWQxY2FiMTc4ZDFiZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.5zqE_qkOZygbiv03eOVonxFJBU-l2nGeZTie41G7vMM
+TMDB_API_KEY=sua_chave_tmdb_api_aqui
+TMDB_READ_TOKEN=seu_token_leitura_tmdb_aqui
 
 # API-FOOTBALL (Cobertura de jogos ao vivo)
-API_FOOTBALL_KEY=e736ed896fe94399c868cb3329ada2fe
+API_FOOTBALL_KEY=sua_chave_api_football_aqui
 
 # ADMIN SECRET
-ADMIN_SECRET=cineplay-admin-2026
+ADMIN_SECRET=sua_chave_secreta_admin_aqui
 ```
 
 ---
