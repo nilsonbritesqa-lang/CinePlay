@@ -41,42 +41,70 @@ export default function AdminSidebar() {
       }}>
         {/* Header */}
         <div style={{
-          padding: collapsed ? '20px 14px' : '20px 20px',
+          padding: collapsed ? '16px 10px' : '20px 20px',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
+          flexDirection: collapsed ? 'column' : 'row',
           alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'space-between',
-          gap: 10,
+          justifyContent: 'space-between',
+          gap: collapsed ? 14 : 10,
           flexShrink: 0,
         }}>
-          {!collapsed && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {collapsed ? (
+            <>
               <img
                 src="/logo-cineplay.png"
                 alt="CinePlay"
                 style={{
-                  height: 22,
+                  height: 32,
                   width: 'auto',
                   display: 'block',
                   objectFit: 'contain',
                 }}
               />
-              <div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.06em' }}>ADMIN PANEL</div>
+              <button
+                onClick={() => setCollapsed(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer',
+                  width: 28, height: 28, borderRadius: 6,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <Menu size={14} />
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                <img
+                  src="/logo-cineplay.png"
+                  alt="CinePlay"
+                  style={{
+                    height: 72,
+                    width: 'auto',
+                    display: 'block',
+                    objectFit: 'contain',
+                  }}
+                />
+                <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', paddingLeft: 2 }}>
+                  Painel Administrativo
+                </div>
               </div>
-            </div>
+              <button
+                onClick={() => setCollapsed(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer',
+                  width: 28, height: 28, borderRadius: 6,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'var(--text-muted)', flexShrink: 0,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <X size={14} />
+              </button>
+            </>
           )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              background: 'rgba(255,255,255,0.06)', border: 'none', cursor: 'pointer',
-              width: 30, height: 30, borderRadius: 8,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--text-muted)', flexShrink: 0,
-            }}
-          >
-            {collapsed ? <Menu size={14} /> : <X size={14} />}
-          </button>
         </div>
 
         {/* Nav */}

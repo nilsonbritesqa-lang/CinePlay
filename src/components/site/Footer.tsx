@@ -25,7 +25,7 @@ export default function Footer() {
                 src="/logo-cineplay.png"
                 alt="CinePlay Logo"
                 style={{
-                  height: 24,
+                  height: 96,
                   width: 'auto',
                   display: 'block',
                   objectFit: 'contain',

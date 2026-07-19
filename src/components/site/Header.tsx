@@ -30,18 +30,20 @@ export default function LPHeader() {
     }}>
       <div style={{
         maxWidth: 1200, margin: '0 auto', padding: '0 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 54,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60,
       }}>
         {/* Logo Premium */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', position: 'relative', zIndex: 210 }}>
           <img
             src="/logo-cineplay.png"
             alt="CinePlay Logo"
             style={{
-              height: 24,
+              height: 72,
               width: 'auto',
               display: 'block',
               objectFit: 'contain',
+              filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.6))',
+              transform: 'translateY(10px)',
             }}
           />
         </Link>
