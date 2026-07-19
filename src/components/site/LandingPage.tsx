@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Star, Play, MessageCircle } from 'lucide-react';
-import DiscoveryEngine from './DiscoveryEngine';
+import HeroShowcase from './HeroShowcase';
 
 const CATEGORIAS = [
   { id: 'futebol', title: 'Futebol ao Vivo', desc: 'Brasileirão, Libertadores, Champions League, Sul-Americana e muito mais.', icon: '⚽', badge: 'Ao Vivo' },
@@ -186,9 +186,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Lado Direito — Discovery Engine da IA */}
+          {/* Lado Direito — Colagem Dinâmica Invadindo o Texto */}
           <div style={{ zIndex: 1 }} className="hero-visuals-container">
-            <DiscoveryEngine />
+            <HeroShowcase />
           </div>
 
         </div>

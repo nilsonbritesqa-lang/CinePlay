@@ -76,11 +76,11 @@ export async function GET() {
   try {
     // Busca fixtures de hoje e amanhã para os campeonatos principais
     const fixturePromises = [
-      fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=71&season=2025`, apiKey),
-      fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=13&season=2025`, apiKey),
-      fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=2&season=2024`, apiKey),
-      fetchWithAPIFootball(`/fixtures?from=${dateStr}&to=${nextWeekStr}&league=71&season=2025`, apiKey),
-      fetchWithAPIFootball(`/fixtures?from=${dateStr}&to=${nextWeekStr}&league=13&season=2025`, apiKey),
+      fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=71&season=2026`, apiKey),
+      fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=13&season=2026`, apiKey),
+      fetchWithAPIFootball(`/fixtures?date=${dateStr}&league=2&season=2025`, apiKey),
+      fetchWithAPIFootball(`/fixtures?from=${dateStr}&to=${nextWeekStr}&league=71&season=2026`, apiKey),
+      fetchWithAPIFootball(`/fixtures?from=${dateStr}&to=${nextWeekStr}&league=13&season=2026`, apiKey),
     ];
 
     const results = await Promise.allSettled(fixturePromises);
@@ -154,7 +154,7 @@ export async function GET() {
           leagueFlag: league.flag,
           leagueColor: league.color,
           isLive: false,
-          label: `${league.flag} Temporada 2025`,
+          label: `${league.flag} Temporada 2026`,
         });
       });
     }

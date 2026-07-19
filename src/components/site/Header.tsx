@@ -31,7 +31,7 @@ export default function LPHeader() {
     }}>
       <div style={{
         maxWidth: 1200, margin: '0 auto', padding: '0 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68,
       }}>
         {/* Logo Premium */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', position: 'relative', zIndex: 210 }}>
@@ -39,12 +39,11 @@ export default function LPHeader() {
             src="/logo-cineplay.png"
             alt="CinePlay Logo"
             style={{
-              height: 72,
+              height: 52,
               width: 'auto',
               display: 'block',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.6))',
-              transform: 'translateY(10px)',
+              filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.55))',
             }}
           />
         </Link>
