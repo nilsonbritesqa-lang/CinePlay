@@ -33,19 +33,17 @@ export default function LPHeader() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 54,
       }}>
         {/* Logo Premium */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-          <div style={{
-            width: 14, height: 14, 
-            background: 'linear-gradient(135deg, #E50914 0%, #9B0006 100%)',
-            clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
-            transform: 'rotate(90deg)',
-          }} />
-          <span style={{
-            fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.15rem',
-            letterSpacing: '0.04em', color: '#fff',
-          }}>
-            CINE<span style={{ color: '#E50914' }}>PLAY</span>
-          </span>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img
+            src="/logo-cineplay.png"
+            alt="CinePlay Logo"
+            style={{
+              height: 24,
+              width: 'auto',
+              display: 'block',
+              objectFit: 'contain',
+            }}
+          />
         </Link>
 
         {/* Nav desktop - Slim */}

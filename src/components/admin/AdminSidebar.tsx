@@ -51,9 +51,17 @@ export default function AdminSidebar() {
         }}>
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Image src="/logo-cineplay.jpeg" alt="CinePlay" width={32} height={32} style={{ borderRadius: 6, objectFit: 'cover' }} />
+              <img
+                src="/logo-cineplay.png"
+                alt="CinePlay"
+                style={{
+                  height: 22,
+                  width: 'auto',
+                  display: 'block',
+                  objectFit: 'contain',
+                }}
+              />
               <div>
-                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>CinePlay</div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.06em' }}>ADMIN PANEL</div>
               </div>
             </div>

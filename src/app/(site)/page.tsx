@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'CinePlay — Onde Assistir Tudo',
     description: 'Guia completo de streaming no Brasil. Futebol ao vivo, filmes, séries e canais.',
-    images: [{ url: '/logo-cineplay.jpeg', width: 1200, height: 630 }],
+    images: [{ url: '/logo-cineplay.png', width: 1200, height: 630 }],
   },
 };
 

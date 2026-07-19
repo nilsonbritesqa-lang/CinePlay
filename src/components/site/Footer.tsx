@@ -20,11 +20,17 @@ export default function Footer() {
         }}>
           {/* Marca */}
           <div>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <Image src="/logo-cineplay.jpeg" alt="CinePlay" width={36} height={36} style={{ borderRadius: 6, objectFit: 'cover' }} />
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
-                CinePlay
-              </span>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+              <img
+                src="/logo-cineplay.png"
+                alt="CinePlay Logo"
+                style={{
+                  height: 24,
+                  width: 'auto',
+                  display: 'block',
+                  objectFit: 'contain',
+                }}
+              />
             </Link>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, maxWidth: 220 }}>
               O guia definitivo de streaming no Brasil. Saiba onde assistir tudo.
