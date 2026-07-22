@@ -20,7 +20,6 @@ export default function ChatBot() {
   const [loading, setLoading] = useState(false);
   const [whatsapp, setWhatsapp] = useState<WhatsAppInfo | null>(null);
   const [config, setConfig] = useState<any>(null);
-  const [hasAutoOpened, setHasAutoOpened] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -31,19 +30,14 @@ export default function ChatBot() {
       .then(data => {
         setConfig(data);
         if (data.ativo) {
-          // Mostra bolha após 3s
+          // Popula dados do WhatsApp imediatamente
+          setWhatsapp({
+            url: `https://wa.me/${data.whatsapp_numero}?text=${encodeURIComponent(data.whatsapp_mensagem)}`,
+            cta: data.cta_texto || 'Falar no WhatsApp'
+          });
+          // Mostra a bolha de texto pequena após 3s
           const bubbleTimer = setTimeout(() => setShowBubble(true), 3000);
-          // Abre chat automaticamente após 8s (uma vez só)
-          const openTimer = setTimeout(() => {
-            if (!hasAutoOpened) {
-              setOpen(true);
-              setHasAutoOpened(true);
-              setShowBubble(false);
-              // Envia mensagem de saudação
-              setMessages([{ role: 'assistant', content: data.saudacao }]);
-            }
-          }, 8000);
-          return () => { clearTimeout(bubbleTimer); clearTimeout(openTimer); };
+          return () => clearTimeout(bubbleTimer);
         }
       })
       .catch(() => {
@@ -58,7 +52,6 @@ export default function ChatBot() {
   const handleOpen = () => {
     setOpen(true);
     setShowBubble(false);
-    setHasAutoOpened(true);
     if (messages.length === 0 && config) {
       setMessages([{ role: 'assistant', content: config.saudacao }]);
     }
@@ -82,7 +75,12 @@ export default function ChatBot() {
       });
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-      if (data.whatsapp) setWhatsapp(data.whatsapp);
+      if (data.whatsapp) {
+        setWhatsapp({
+          url: data.whatsapp.url,
+          cta: data.whatsapp.cta
+        });
+      }
     } catch {
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -97,29 +95,34 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* Bolha proativa flutuante */}
+      {/* Bolha proativa flutuante de texto pequeno e limpo (estilo balãozinho) */}
       {showBubble && !open && (
         <div
           onClick={handleOpen}
           style={{
             position: 'fixed',
-            bottom: 96,
+            bottom: 92,
             right: 24,
-            background: '#fff',
+            background: '#ffffff',
             color: '#07070D',
             padding: '10px 16px',
             borderRadius: '16px 16px 4px 16px',
             fontSize: 13,
-            fontWeight: 600,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+            fontWeight: 700,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
             zIndex: 9998,
             cursor: 'pointer',
-            maxWidth: 240,
+            maxWidth: 260,
             lineHeight: 1.4,
+            border: '1px solid rgba(0,0,0,0.06)',
             animation: 'slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
           }}
         >
-          💬 Quer saber onde assistir? Fale com a gente!
+          <span style={{ fontSize: 16 }}>💬</span>
+          <span>Quer saber como assistir? Veja aqui.</span>
         </div>
       )}
 
@@ -148,7 +151,7 @@ export default function ChatBot() {
           aria-label="Abrir Chat"
         >
           <MessageCircle size={24} color="#fff" />
-          {/* Pulsação */}
+          {/* Indicador de ativo */}
           <span style={{
             position: 'absolute',
             top: 0, right: 0,
@@ -169,7 +172,7 @@ export default function ChatBot() {
             bottom: 24,
             right: 24,
             width: 360,
-            height: 500,
+            height: 520,
             background: '#0C0C18',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 20,
@@ -215,6 +218,48 @@ export default function ChatBot() {
               <ChevronDown size={16} />
             </button>
           </div>
+
+          {/* Banner Pinned do WhatsApp (Sempre visível no topo do chat para conversão imediata) */}
+          {whatsapp && (
+            <div style={{
+              background: 'rgba(37, 211, 102, 0.08)',
+              borderBottom: '1px solid rgba(37, 211, 102, 0.15)',
+              padding: '10px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: 12,
+              color: '#25D366',
+              fontWeight: 700,
+              flexShrink: 0
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ animation: 'pulse 1s infinite', display: 'inline-block' }}>🟢</span>
+                <span>Assistir no WhatsApp</span>
+              </div>
+              <a
+                href={whatsapp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: '#25D366',
+                  color: '#fff',
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  textDecoration: 'none',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 2px 8px rgba(37, 211, 102, 0.3)',
+                  transition: 'opacity 0.2s'
+                }}
+              >
+                Veja Aqui
+              </a>
+            </div>
+          )}
 
           {/* Mensagens */}
           <div style={{
@@ -268,7 +313,7 @@ export default function ChatBot() {
               </div>
             )}
 
-            {/* CTA WhatsApp (aparece após 1ª resposta da IA) */}
+            {/* CTA WhatsApp no final da conversa */}
             {whatsapp && messages.length > 1 && (
               <a
                 href={whatsapp.url}
@@ -288,6 +333,7 @@ export default function ChatBot() {
                   textDecoration: 'none',
                   marginTop: 4,
                   transition: 'opacity 0.2s',
+                  boxShadow: '0 4px 12px rgba(37, 211, 102, 0.2)'
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -366,6 +412,10 @@ export default function ChatBot() {
         @keyframes bounce {
           0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
           30% { transform: translateY(-4px); opacity: 1; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
         }
         .chatbot-btn:hover {
           transform: scale(1.08) !important;
