@@ -159,28 +159,122 @@ export async function GET() {
       }
     });
 
-    // Fallback com marcas reais se pouca atividade em tempo real
+    // Fallback com partidas reais simuladas de alto engajamento se a API não retornar dados ativos
     if (sportsPool.length < 3) {
-      LEAGUES.forEach((league, idx) => {
-        sportsPool.push({
-          id: 9000000 + idx,
-          type: 'EXPECTATIVA',
-          title: league.name,
-          subtitle: `${league.name} - Temporada 2026`,
-          poster_url: null,
-          background_video_url: `/api/sports-video?league=${encodeURIComponent(league.name)}`,
-          overlay_badge: `${league.flag} EDICÃO 2026`,
-          live_score: null,
-          
-          poster: null,
-          backdrop: SPORT_BACKDROPS[idx % SPORT_BACKDROPS.length],
-          vote: 9.5,
-          sport: true,
-          league: league.name,
-          leagueFlag: league.flag,
-          leagueColor: league.color,
+      const MOCK_FIXTURES = [
+        {
+          id: 9900001,
+          title: "Flamengo x Palmeiras",
+          homeTeam: { name: "Flamengo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flamengo_braz_logo.svg/180px-Flamengo_braz_logo.svg.png" },
+          awayTeam: { name: "Palmeiras", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Palmeiras_logo.svg/180px-Palmeiras_logo.svg.png" },
+          league: "Brasileirão Série A",
+          leagueFlag: "🇧🇷",
+          leagueColor: "#009C3B",
+          isLive: true,
+          goalsHome: 2,
+          goalsAway: 1,
+          round: "Rodada 18",
+          dateOffsetDays: 0,
+        },
+        {
+          id: 9900002,
+          title: "Real Madrid x Barcelona",
+          homeTeam: { name: "Real Madrid", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Real_Madrid_CF.svg/160px-Real_Madrid_CF.svg.png" },
+          awayTeam: { name: "Barcelona", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/FC_Barcelona_%28crested%29.svg/160px-FC_Barcelona_%28crested%29.svg.png" },
+          league: "Champions League",
+          leagueFlag: "⭐",
+          leagueColor: "#1A3A6B",
           isLive: false,
-          label: `${league.flag} Edição 2026`,
+          goalsHome: null,
+          goalsAway: null,
+          round: "Semifinal",
+          dateOffsetDays: 0, // Hoje
+          timeStr: "21:30"
+        },
+        {
+          id: 9900003,
+          title: "Corinthians x São Paulo",
+          homeTeam: { name: "Corinthians", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Corinthians_crest.svg/180px-Corinthians_crest.svg.png" },
+          awayTeam: { name: "São Paulo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Escudo_do_S%C3%A3o_Paulo_Futebol_Clube.svg/180px-Escudo_do_S%C3%A3o_Paulo_Futebol_Clube.svg.png" },
+          league: "Copa do Brasil",
+          leagueFlag: "🇧🇷",
+          leagueColor: "#009C3B",
+          isLive: false,
+          goalsHome: null,
+          goalsAway: null,
+          round: "Quartas de Final",
+          dateOffsetDays: 1, // Amanhã
+        },
+        {
+          id: 9900004,
+          title: "Liverpool x Arsenal",
+          homeTeam: { name: "Liverpool", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/0/0c/Liverpool_FC.svg/150px-Liverpool_FC.svg.png" },
+          awayTeam: { name: "Arsenal", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/5/53/Arsenal_FC.svg/180px-Arsenal_FC.svg.png" },
+          league: "Champions League",
+          leagueFlag: "⭐",
+          leagueColor: "#1A3A6B",
+          isLive: false,
+          goalsHome: null,
+          goalsAway: null,
+          round: "Fase de Grupos",
+          dateOffsetDays: 2, // Faltam 2 dias
+        }
+      ];
+
+      MOCK_FIXTURES.forEach((mock) => {
+        const fixtureDate = new Date(today);
+        fixtureDate.setDate(fixtureDate.getDate() + mock.dateOffsetDays);
+
+        const leagueName = mock.league;
+        const subtitle = `${leagueName} - ${mock.round}`;
+
+        let type = 'EXPECTATIVA';
+        let overlayBadge = '';
+        let liveScore: string | null = null;
+        let matchTitle = mock.title;
+
+        if (mock.isLive) {
+          type = 'LIVE';
+          overlayBadge = 'AO VIVO';
+          liveScore = mock.liveScore || '0 x 0';
+          matchTitle = `${mock.homeTeam.name} ${liveScore} ${mock.awayTeam.name}`;
+        } else if (mock.dateOffsetDays === 0) {
+          type = 'URGÊNCIA';
+          overlayBadge = `HOJE às ${mock.timeStr || '20:00'}`;
+        } else if (mock.dateOffsetDays === 1) {
+          type = 'URGÊNCIA';
+          overlayBadge = 'É AMANHÃ';
+        } else if (mock.dateOffsetDays >= 2 && mock.dateOffsetDays <= 7) {
+          type = 'EXPECTATIVA';
+          overlayBadge = `FALTAM ${mock.dateOffsetDays} DIAS`;
+        }
+
+        const posterUrl = mock.homeTeam.logo;
+        const backdropUrl = SPORT_BACKDROPS[Math.floor(Math.random() * SPORT_BACKDROPS.length)];
+
+        sportsPool.push({
+          id: mock.id,
+          type,
+          title: matchTitle,
+          subtitle,
+          poster_url: posterUrl,
+          background_video_url: `/api/sports-video?id=${mock.id}&home=${encodeURIComponent(mock.homeTeam.name)}&away=${encodeURIComponent(mock.awayTeam.name)}&league=${encodeURIComponent(leagueName)}`,
+          overlay_badge: overlayBadge,
+          live_score: liveScore,
+          
+          poster: posterUrl,
+          backdrop: backdropUrl,
+          vote: mock.isLive ? 10 : 9.5,
+          sport: true,
+          league: leagueName,
+          leagueFlag: mock.leagueFlag,
+          leagueColor: mock.leagueColor,
+          isLive: mock.isLive,
+          label: overlayBadge,
+          homeTeam: mock.homeTeam,
+          awayTeam: mock.awayTeam,
+          leagueLogo: null,
+          country: "Brazil"
         });
       });
     }
@@ -193,31 +287,35 @@ export async function GET() {
 
   } catch (error: any) {
     console.error('Erro API-Football:', error.message);
-    const fallback = LEAGUES.map((league, idx) => ({
-      id: 9000000 + idx,
-      type: 'EXPECTATIVA',
-      title: league.name,
-      subtitle: `${league.name} - Temporada 2026`,
-      poster_url: null,
-      background_video_url: `/api/sports-video?league=${encodeURIComponent(league.name)}`,
-      overlay_badge: `${league.flag} EDICÃO 2026`,
-      live_score: null,
-      
-      poster: null,
-      backdrop: SPORT_BACKDROPS[idx % SPORT_BACKDROPS.length],
-      vote: 9.5,
-      sport: true,
-      league: league.name,
-      leagueFlag: league.flag,
-      leagueColor: league.color,
-      isLive: false,
-      label: `${league.flag} Edição 2026`,
-    }));
+    // Retorna a lista mockada para garantir que nunca quebre
+    const fallbackList = [
+      {
+        id: 9900001,
+        type: 'LIVE',
+        title: "Flamengo 2 x 1 Palmeiras",
+        subtitle: "Brasileirão Série A - Rodada 18",
+        poster_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flamengo_braz_logo.svg/180px-Flamengo_braz_logo.svg.png",
+        background_video_url: "/api/sports-video?id=9900001&home=Flamengo&away=Palmeiras&league=Brasileir%C3%A3o%20S%C3%A9rie%20A",
+        overlay_badge: "AO VIVO",
+        live_score: "2 x 1",
+        poster: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flamengo_braz_logo.svg/180px-Flamengo_braz_logo.svg.png",
+        backdrop: SPORT_BACKDROPS[0],
+        vote: 10,
+        sport: true,
+        league: "Brasileirão Série A",
+        leagueFlag: "🇧🇷",
+        leagueColor: "#009C3B",
+        isLive: true,
+        label: "AO VIVO",
+        homeTeam: { name: "Flamengo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Flamengo_braz_logo.svg/180px-Flamengo_braz_logo.svg.png" },
+        awayTeam: { name: "Palmeiras", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Palmeiras_logo.svg/180px-Palmeiras_logo.svg.png" }
+      }
+    ];
 
     return NextResponse.json({
       success: false,
       error: error.message,
-      pool: fallback
+      pool: fallbackList
     });
   }
 }

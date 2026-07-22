@@ -144,15 +144,23 @@ export default function HeroShowcase() {
           fetch('/api/sports-pool').then(r => r.json()),
         ]);
 
-        let items: PosterItem[] = [];
+        let movies: PosterItem[] = [];
+        let sports: PosterItem[] = [];
+
         if (tmdbRes.status === 'fulfilled' && tmdbRes.value?.pool?.length) {
-          items.push(...tmdbRes.value.pool);
+          movies = tmdbRes.value.pool;
         }
         if (sportsRes.status === 'fulfilled' && sportsRes.value?.pool?.length) {
-          const validSports = sportsRes.value.pool.filter((s: PosterItem) => 
+          sports = sportsRes.value.pool.filter((s: PosterItem) => 
             (s.poster || s.homeTeam) && !s.title.includes('Temporada')
           );
-          items.push(...validSports);
+        }
+
+        let items: PosterItem[] = [];
+        const maxLen = Math.max(movies.length, sports.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (i < sports.length) items.push(sports[i]);
+          if (i < movies.length) items.push(movies[i]);
         }
 
         let finalPool = items.filter(item => item.poster || item.homeTeam);
