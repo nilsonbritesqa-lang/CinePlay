@@ -2,12 +2,51 @@
  * Serviço de Imagens do CinePlay
  * - TMDB: posters e backdrops oficiais de filmes/séries (100% fiéis)
  * - OMDB: fallback oficial de pôsteres via IMDb
+ * - OpenAI DALL-E 3: geração de pôsteres ultra-realistas e exclusivos para partidas de futebol e eventos de TV
  * - API-Football: escudos oficiais de clubes
  * - Unsplash: imagens de fundo curadas para guias de streaming e TV
  */
 
 const TMDB_BASE = 'https://image.tmdb.org/t/p';
 const TMDB_API  = 'https://api.themoviedb.org/3';
+
+// =====================
+// OPENAI DALL-E 3 (Pôsteres de Jogos e Programas Exclusivos)
+// =====================
+export const openaiImage = {
+  async generateImage(promptTitle: string): Promise<string | null> {
+    const apiKey = process.env.OPENAI_IMAGE_API_KEY || process.env.OPENAI_API_KEY;
+    if (!apiKey) return null;
+
+    try {
+      const res = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: `Ultra-high-resolution 4k sports match poster banner or TV broadcasting cover graphic for: "${promptTitle}". Dramatic stadium or cinematic lighting, professional 3D sports graphic design, high contrast, vivid colors, landscape orientation.`,
+          n: 1,
+          size: '1024x1024',
+          quality: 'standard'
+        })
+      });
+
+      if (!res.ok) {
+        console.warn('[OpenAI DALL-E 3] Não foi possível gerar a imagem:', await res.text().catch(() => ''));
+        return null;
+      }
+
+      const data = await res.json();
+      return data.data?.[0]?.url ?? null;
+    } catch (err) {
+      console.error('[OpenAI DALL-E 3] Exceção ao gerar imagem:', err);
+      return null;
+    }
+  }
+};
 
 // =====================
 // TMDB
@@ -84,7 +123,7 @@ export const tmdb = {
         `${TMDB_API}/${type}/${movieId}/watch/providers?api_key=${process.env.TMDB_API_KEY}`,
         { next: { revalidate: 86400 } }
       );
-      if (!res.ok) return null as any;
+      if (!res.ok) return [];
       const data = await res.json();
       const br = data.results?.BR;
       if (!br) return [];
@@ -142,7 +181,7 @@ export const omdb = {
 };
 
 // =====================
-// API-FOOTBALL (escudos de times)
+// API-FOOTBALL
 // =====================
 export const footballApi = {
   teamLogoUrl(teamId: number): string {
@@ -202,7 +241,7 @@ export const unsplash = {
 };
 
 // =====================
-// PROTOCOLO DE SELEÇÃO DE IMAGEM CONTEXTUAL
+// PROTOCOLO DE SELEÇÃO DE IMAGEM CONTEXTUAL MULTICAMADAS
 // =====================
 export async function getPostImage(params: {
   categoria: string;
@@ -223,9 +262,15 @@ export async function getPostImage(params: {
     const movie = await tmdb.searchMovie(titulo);
     if (movie?.backdrop_path) return tmdb.imageUrl(movie.backdrop_path, 'original');
     if (movie?.poster_path) return tmdb.imageUrl(movie.poster_path, 'w780');
+    
     // Fallback OMDB
     const omdbMovie = await omdb.searchByTitle(titulo);
     if (omdbMovie?.Poster && omdbMovie.Poster !== 'N/A') return omdbMovie.Poster;
+    
+    // Fallback DALL-E 3 (OpenAI)
+    const generated = await openaiImage.generateImage(`Cinema movie poster for ${titulo}`);
+    if (generated) return generated;
+
     return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=85';
   }
 
@@ -234,15 +279,24 @@ export async function getPostImage(params: {
     const series = await tmdb.searchSeries(titulo);
     if (series?.backdrop_path) return tmdb.imageUrl(series.backdrop_path, 'original');
     if (series?.poster_path) return tmdb.imageUrl(series.poster_path, 'w780');
+    
     // Fallback OMDB
     const omdbSeries = await omdb.searchByTitle(titulo);
     if (omdbSeries?.Poster && omdbSeries.Poster !== 'N/A') return omdbSeries.Poster;
+    
+    // Fallback DALL-E 3 (OpenAI)
+    const generated = await openaiImage.generateImage(`TV Series poster for ${titulo}`);
+    if (generated) return generated;
+
     return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&q=85';
   }
 
-  // 4. Futebol & Esportes
+  // 4. Futebol & Esportes (Pôsteres de Jogos Exclusivos com DALL-E 3 ou Estádio HD)
   if (categoria === 'futebol') {
-    // Retorna imagens de alta qualidade de futebol em estádio
+    // Tenta gerar pôster exclusivo da partida via DALL-E 3
+    const matchPoster = await openaiImage.generateImage(`Match day poster banner for soccer game ${titulo}`);
+    if (matchPoster) return matchPoster;
+
     const stadiumImages = [
       'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85',
       'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85',
@@ -252,7 +306,10 @@ export async function getPostImage(params: {
     return stadiumImages[Math.floor(Math.random() * stadiumImages.length)];
   }
 
-  // 5. Canais / Onde Assistir / Streaming (Unsplash Direcionado)
+  // 5. Canais / Onde Assistir / Realitys / TV
+  const tvPoster = await openaiImage.generateImage(`TV show or broadcast banner for ${titulo}`);
+  if (tvPoster) return tvPoster;
+
   const unsplashKeywords: Record<string, string> = {
     canais: 'television broadcasting studio',
     'onde-assistir': 'smart tv home cinema',

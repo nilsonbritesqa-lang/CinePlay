@@ -1,56 +1,47 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, User, Clock, ArrowLeft, ArrowRight, MessageCircle } from 'lucide-react';
+import { Calendar, User, Clock, ArrowLeft, MessageCircle } from 'lucide-react';
 import type { PostCard, CTA } from '@/lib/types';
 import { CTABlock } from '@/components/site/CTABlock';
 
-// Mock dos posts detalhados
-const MOCK_POSTS_DATABASE: Record<string, PostCard & { conteudo_completo: string }> = {
-  'onde-assistir-brasileirao-2026': {
-    id: '1', slug: 'onde-assistir-brasileirao-2026', titulo: 'Onde Assistir o Brasileirão 2026: Todos os Canais e Plataformas', resumo: 'Guia completo com todos os canais que transmitem o Campeonato Brasileiro 2026, incluindo TV aberta e streaming.', imagem_capa_url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&auto=format&fit=crop&q=80', categoria: 'futebol', publicado_em: new Date().toISOString(), visualizacoes: 12430, tempo_leitura_min: 5, gerado_por_ia: true,
-    conteudo_completo: `
-      <h2>Os Direitos de Transmissão do Brasileirão 2026</h2>
-      <p>O Campeonato Brasileiro de 2026 conta com um modelo pulverizado de transmissão. Com o fim dos contratos de exclusividade centralizados de longo prazo, diversos consórcios e plataformas dividem a exibição das partidas.</p>
-      
-      <h2>Onde Assistir na TV Aberta e Fechada</h2>
-      <p>A TV Globo mantém a exibição de partidas selecionadas aos domingos e quartas-feiras na TV aberta. Já na TV fechada, os canais SporTV e Premiere continuam cobrindo a maioria dos jogos no formato pay-per-view.</p>
-
-      <h2>Onde Assistir Online via Streaming</h2>
-      <p>Para quem prefere acompanhar pelo celular ou computador, as opções oficiais incluem aplicativos digitais integrados (com sinal da TV Globo ao vivo em praças selecionadas) e o CazéTV no YouTube, que transmite jogos como mandante de equipes parceiras de forma gratuita.</p>
-    `
-  },
-  'melhores-series-streaming-julho-2026': {
-    id: '2', slug: 'melhores-series-streaming-julho-2026', titulo: 'As Melhores Séries no Streaming em Julho de 2026', resumo: 'Confira quais são as séries mais aclamadas que chegaram aos catálogos de streaming neste mês e por que você precisa assistir.', imagem_capa_url: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&auto=format&fit=crop&q=80', categoria: 'series', publicado_em: new Date().toISOString(), visualizacoes: 8720, tempo_leitura_min: 4, gerado_por_ia: true,
-    conteudo_completo: `
-      <h2>Estreias Imperdíveis de Julho de 2026</h2>
-      <p>Os serviços de streaming iniciam o segundo semestre de 2026 com lançamentos de peso. De ficção científica a dramas inspirados em fatos reais, há opções imperdíveis para todos os gostos.</p>
-      
-      <h2>Destaques da Ficção Científica</h2>
-      <p>O grande destaque do mês fica por conta da nova série cyberpunk que aborda as relações humanas e transição tecnológica em um futuro distópico. Com efeitos especiais de ponta e roteiro afiado.</p>
-
-      <h2>Como Assistir em Ultra HD 4K</h2>
-      <p>Lembre-se que para assistir a estes lançamentos com a melhor qualidade de imagem e som Dolby Atmos, é necessário possuir planos compatíveis com transmissão 4K Ultra HD e uma conexão estável à internet.</p>
-    `
-  }
-};
-
-// Mock de CTAs para a demonstração
-const MOCK_CTAS_DEMO: CTA[] = [
-  {
-    id: 'c1', patrocinador_id: '1', texto_pre: 'Quer ter acesso a todos os jogos de futebol sem travar?', texto_botao: 'Falar com Atendente no WhatsApp',
-    url_destino: 'https://wa.me/5599999999999?text=Quero+saber+mais+sobre+o+plano+de+futebol', cor_botao: '#25D366', cor_texto_botao: '#fff',
-    categorias: ['futebol', 'canais'], tipo_exibicao: 'inline',
-    data_inicio: new Date().toISOString(), data_fim: null, ativo: true, cliques_total: 342,
-    patrocinador: { id: '1', nome: 'Operadora Stream X', logo_url: '', ativo: true, prioridade: 1, plano: 'premium', criado_em: new Date().toISOString() }
-  }
-];
+interface PostDetail extends PostCard {
+  conteudo_html?: string;
+  conteudo_completo?: string;
+}
 
 export default function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
-  const post = MOCK_POSTS_DATABASE[slug];
+  const [post, setPost] = useState<PostDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPost() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/posts?slug=${encodeURIComponent(slug)}`);
+        const data = await res.json();
+        if (data.success && data.post) {
+          setPost(data.post);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar post:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPost();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div style={{ background: '#07070D', minHeight: '100vh', padding: '160px 24px', textAlign: 'center', color: '#A0A0B5' }}>
+        Carregando artigo...
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -62,8 +53,7 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
     );
   }
 
-  // Filtra CTAs da mesma categoria para exibir no post
-  const ctasFiltrados = MOCK_CTAS_DEMO.filter(cta => cta.categorias.includes(post.categoria));
+  const htmlContent = post.conteudo_html || post.conteudo_completo || post.resumo;
 
   return (
     <article style={{ background: '#07070D', minHeight: '100vh', padding: '120px 24px 80px', color: '#F0F0F5' }}>
@@ -74,7 +64,7 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'BlogPosting',
+            '@type': 'NewsArticle',
             headline: post.titulo,
             image: post.imagem_capa_url,
             datePublished: post.publicado_em || new Date().toISOString(),
@@ -94,17 +84,14 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
           display: 'inline-flex', alignItems: 'center', gap: 6,
           fontSize: 14, fontWeight: 700, color: '#A0A0B5', textDecoration: 'none',
           marginBottom: 32, transition: 'color 0.2s'
-        }}
-        onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-        onMouseLeave={e => e.currentTarget.style.color = '#A0A0B5'}
-        >
-          <ArrowLeft size={16} /> Voltar para a listagem
+        }}>
+          <ArrowLeft size={16} /> Voltar para o Blog
         </Link>
 
         {/* Categoria Badge */}
         <span style={{
           display: 'inline-block', padding: '4px 12px', borderRadius: 99,
-          fontSize: 11, fontWeight: 700, background: 'rgba(229, 9, 20, 0.1)', color: '#E50914',
+          fontSize: 11, fontWeight: 700, background: 'rgba(229, 9, 20, 0.12)', color: '#E50914',
           border: '1px solid rgba(229, 9, 20, 0.3)', textTransform: 'uppercase',
           letterSpacing: '0.04em', marginBottom: 16
         }}>
@@ -136,7 +123,7 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
             <Calendar size={14} /> {post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR') : 'Hoje'}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Clock size={14} /> {post.tempo_leitura_min} minutos de leitura
+            <Clock size={14} /> {post.tempo_leitura_min || 3} minutos de leitura
           </span>
         </div>
 
@@ -152,7 +139,7 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
         {/* Conteúdo HTML do Artigo */}
         <div
           className="post-content"
-          dangerouslySetInnerHTML={{ __html: post.conteudo_completo }}
+          dangerouslySetInnerHTML={{ __html: htmlContent }}
           style={{
             fontSize: '1.05rem',
             lineHeight: 1.8,
@@ -160,12 +147,32 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
           }}
         />
 
-        {/* CTA do Patrocinador contextualizado */}
-        {ctasFiltrados.length > 0 && (
-          <div style={{ marginTop: 48, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 40 }}>
-            <CTABlock ctas={ctasFiltrados} />
-          </div>
-        )}
+        {/* Banner CTA WhatsApp de Conversão */}
+        <div style={{
+          marginTop: 48, padding: '24px', borderRadius: 20,
+          background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(7, 7, 13, 0.9) 100%)',
+          border: '1px solid rgba(37, 211, 102, 0.3)', textAlign: 'center'
+        }}>
+          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
+            Dúvidas sobre transmissões ao vivo e canais?
+          </h3>
+          <p style={{ color: '#A0A0B5', fontSize: 14, marginBottom: 18 }}>
+            Fale com a nossa equipe de atendimento no WhatsApp para consultar grades de jogos e suporte.
+          </p>
+          <a
+            href="https://wa.me/5511999999999?text=Ol%C3%A1!+Vim+pelo+CinePlay+e+quero+saber+mais+sobre+transmiss%C3%B5es"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '12px 24px', borderRadius: 99, background: '#25D366',
+              color: '#fff', fontWeight: 800, fontSize: 14, textDecoration: 'none',
+              boxShadow: '0 4px 20px rgba(37, 211, 102, 0.4)'
+            }}
+          >
+            <MessageCircle size={18} /> Conversar no WhatsApp
+          </a>
+        </div>
 
       </div>
     </article>

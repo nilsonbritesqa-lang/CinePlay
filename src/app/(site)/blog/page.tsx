@@ -1,31 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Calendar, Clock, ArrowRight } from 'lucide-react';
+import { Search, Calendar, Clock, ArrowRight, Sparkles } from 'lucide-react';
 import type { PostCard } from '@/lib/types';
-
-// Dados simulados ricos para o blog
-const MOCK_POSTS: PostCard[] = [
-  {
-    id: '1', slug: 'onde-assistir-brasileirao-2026', titulo: 'Onde Assistir o Brasileirão 2026: Todos os Canais e Plataformas', resumo: 'Guia completo com todos os canais que transmitem o Campeonato Brasileiro 2026, incluindo TV aberta e streaming.', imagem_capa_url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80', categoria: 'futebol', publicado_em: new Date().toISOString(), visualizacoes: 12430, tempo_leitura_min: 5, gerado_por_ia: true,
-  },
-  {
-    id: '2', slug: 'melhores-series-streaming-julho-2026', titulo: 'As Melhores Séries no Streaming em Julho de 2026', resumo: 'Confira quais são as séries de suspense e drama mais aclamadas do momento e por que você precisa assistir.', imagem_capa_url: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=800&auto=format&fit=crop&q=80', categoria: 'series', publicado_em: new Date(Date.now() - 3600000).toISOString(), visualizacoes: 8720, tempo_leitura_min: 4, gerado_por_ia: true,
-  },
-  {
-    id: '3', slug: 'onde-assistir-deadpool-wolverine', titulo: 'Onde Assistir Deadpool & Wolverine Online — Já está no Streaming?', resumo: 'Descubra em qual plataforma de streaming você pode assistir ao maior sucesso de bilheteria do Marvel.', imagem_capa_url: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&auto=format&fit=crop&q=80', categoria: 'cinema', publicado_em: new Date(Date.now() - 7200000).toISOString(), visualizacoes: 21100, tempo_leitura_min: 3, gerado_por_ia: false,
-  },
-  {
-    id: '4', slug: 'canais-esporte-streaming-2026', titulo: 'Todos os Canais de Esporte Disponíveis no Streaming em 2026', resumo: 'De ESPN a SporTV: quais canais esportivos você pode assistir sem TV a cabo e onde encontrá-los.', imagem_capa_url: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=80', categoria: 'canais', publicado_em: new Date(Date.now() - 14400000).toISOString(), visualizacoes: 5340, tempo_leitura_min: 6, gerado_por_ia: true,
-  },
-  {
-    id: '5', slug: 'futebol-ao-vivo-gratis-internet', titulo: 'Como Assistir Futebol ao Vivo de Graça na Internet em 2026', resumo: 'Descubra os melhores aplicativos e sites legais para assistir futebol ao vivo sem pagar nada.', imagem_capa_url: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&auto=format&fit=crop&q=80', categoria: 'onde-assistir', publicado_em: new Date(Date.now() - 86400000).toISOString(), visualizacoes: 34200, tempo_leitura_min: 7, gerado_por_ia: true,
-  },
-  {
-    id: '6', slug: 'assinaturas-de-streaming-vale-a-pena-2026', titulo: 'Assinaturas de Streaming de Vídeo: Qual Vale Mais a Pena em 2026?', resumo: 'Comparamos os principais modelos de planos, catálogos e custo-benefício para você decidir qual serviço assinar.', imagem_capa_url: 'https://images.unsplash.com/photo-1616530940355-351fabd9524b?w=800&auto=format&fit=crop&q=80', categoria: 'onde-assistir', publicado_em: new Date(Date.now() - 172800000).toISOString(), visualizacoes: 18900, tempo_leitura_min: 8, gerado_por_ia: false,
-  },
-];
 
 const CAT_COLORS: Record<string, string> = {
   futebol: '#10B981',
@@ -36,15 +14,34 @@ const CAT_COLORS: Record<string, string> = {
 };
 
 export default function BlogPage() {
+  const [posts, setPosts] = useState<PostCard[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const filteredPosts = MOCK_POSTS.filter(post => {
-    const matchesSearch = post.titulo.toLowerCase().includes(search.toLowerCase()) ||
-      post.resumo.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = activeCategory ? post.categoria === activeCategory : true;
-    return matchesSearch && matchesCategory;
-  });
+  useEffect(() => {
+    async function loadPosts() {
+      setLoading(true);
+      try {
+        const url = activeCategory ? `/api/posts?categoria=${activeCategory}` : '/api/posts';
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.success && data.posts) {
+          setPosts(data.posts);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar posts:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPosts();
+  }, [activeCategory]);
+
+  const filteredPosts = posts.filter(post =>
+    post.titulo.toLowerCase().includes(search.toLowerCase()) ||
+    post.resumo.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div style={{ background: '#07070D', minHeight: '100vh', padding: '110px 20px 60px', color: '#F0F0F5' }} className="blog-page-container">
@@ -52,6 +49,9 @@ export default function BlogPage() {
         
         {/* Header da página */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 99, background: 'rgba(229,9,20,0.12)', color: '#E50914', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', marginBottom: 12 }}>
+            <Sparkles size={14} /> Guia Editorial & Notícias de Entretenimento
+          </div>
           <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(2rem, 5vw, 2.8rem)', fontWeight: 900, marginBottom: 10 }}>
             📰 Blog CinePlay
           </h1>
@@ -66,7 +66,6 @@ export default function BlogPage() {
           background: 'var(--bg-card)', border: '1px solid var(--border-default)',
           borderRadius: 16, padding: '20px'
         }} className="blog-filter-card">
-          {/* Busca por texto */}
           <div style={{ position: 'relative' }}>
             <Search style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#A0A0B5' }} size={18} />
             <input
@@ -82,7 +81,6 @@ export default function BlogPage() {
             />
           </div>
 
-          {/* Categorias Filtros com Scroll Touch Suave no Celular */}
           <div style={{
             display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4,
             WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none'
@@ -117,8 +115,12 @@ export default function BlogPage() {
           </div>
         </div>
 
-        {/* Listagem de Posts Responsiva */}
-        {filteredPosts.length > 0 ? (
+        {/* Listagem de Posts */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#A0A0B5', fontSize: 14 }}>
+            Carregando artigos do blog...
+          </div>
+        ) : filteredPosts.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
             {filteredPosts.map(post => (
               <article key={post.id} style={{
@@ -135,7 +137,6 @@ export default function BlogPage() {
                 e.currentTarget.style.borderColor = 'var(--border-subtle)';
               }}
               >
-                {/* Imagem Capa */}
                 <div style={{ position: 'relative', height: 180, width: '100%' }}>
                   <img
                     src={post.imagem_capa_url}
@@ -152,55 +153,42 @@ export default function BlogPage() {
                   </span>
                 </div>
 
-                {/* Conteúdo */}
-                <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#A0A0B5', marginBottom: 10 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Calendar size={12} /> {post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR') : 'Hoje'}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Clock size={12} /> {post.tempo_leitura_min} min de leitura
-                    </span>
+                <div style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 16, fontWeight: 800, marginBottom: 8, color: '#fff', lineHeight: 1.3 }}>
+                      {post.titulo}
+                    </h3>
+                    <p style={{ fontSize: 12, color: '#A0A0B5', lineHeight: 1.5, marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {post.resumo}
+                    </p>
                   </div>
 
-                  <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, color: '#fff', lineHeight: 1.35, fontFamily: 'Outfit' }}>
-                    {post.titulo}
-                  </h2>
-                  <p style={{ fontSize: 13, color: '#A0A0B5', lineHeight: 1.5, marginBottom: 18, flex: 1 }}>
-                    {post.resumo}
-                  </p>
-
-                  <Link href={`/blog/${post.slug}`} style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 13, fontWeight: 700, color: '#E50914', textDecoration: 'none',
-                    marginTop: 'auto', fontFamily: 'Outfit, sans-serif'
-                  }}>
-                    Ler Artigo Completo <ArrowRight size={14} />
-                  </Link>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 11, color: '#6B6B85' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Calendar size={12} /> {new Date(post.publicado_em || Date.now()).toLocaleDateString('pt-BR')}
+                    </span>
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        color: '#E50914', fontWeight: 800, textDecoration: 'none',
+                        fontFamily: 'Outfit'
+                      }}
+                    >
+                      Ler Artigo <ArrowRight size={12} />
+                    </Link>
+                  </div>
                 </div>
               </article>
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '50px 20px', background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border-default)' }}>
-            <span style={{ fontSize: 36 }}>🔍</span>
-            <h3 style={{ fontSize: 17, fontWeight: 700, marginTop: 10, marginBottom: 6 }}>Nenhum artigo encontrado</h3>
-            <p style={{ color: '#A0A0B5', fontSize: 13 }}>Tente pesquisar por outros termos ou mudar os filtros.</p>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#A0A0B5' }}>
+            Nenhum artigo encontrado para o filtro selecionado.
           </div>
         )}
 
       </div>
-
-      <style jsx global>{`
-        @media (max-width: 640px) {
-          .blog-page-container {
-            padding: 90px 16px 40px !important;
-          }
-          .blog-filter-card {
-            padding: 14px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
