@@ -422,13 +422,13 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* BANNER SHOWCASE CONECTADO ÁS APIS TMDB/OMDB COM SINOPSE AMPLA E PÔSTER SEM CORTE */}
+              {/* BANNER SHOWCASE COM PÔSTER GRANDE CENTRALIZADO E 0 ESPAÇO VAZIO */}
               <div
                 onMouseEnter={() => setIsBannerHovered(true)}
                 onMouseLeave={() => setIsBannerHovered(false)}
                 style={{
                   flex: 1,
-                  minHeight: 500,
+                  minHeight: 520,
                   position: 'relative',
                   borderRadius: 18,
                   overflow: 'hidden',
@@ -481,7 +481,7 @@ export default function LandingPage() {
                   zIndex: 1
                 }} />
 
-                {/* CONTEÚDO: TÍTULO GRANDE + SINOPSE LEVADA E AMPLA NO TOPO / PÔSTER SEM CORTE + CTA NO RODAPÉ */}
+                {/* CONTEÚDO PRINCIPAL: PÔSTER GRANDE + SINOPSE PREENCHENDO TODO O ESPAÇO VAZIO */}
                 {showcaseItems.map((item, idx) => {
                   const isActive = idx === currentShowcaseIdx;
                   if (!isActive) return null;
@@ -492,18 +492,17 @@ export default function LandingPage() {
                       style={{
                         position: 'relative',
                         zIndex: 2,
-                        padding: '26px 30px',
+                        padding: '28px 30px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         height: '100%',
-                        gap: 18,
+                        gap: 20,
                         animation: 'fadeIn 0.5s ease'
                       }}
                     >
-                      {/* TOPO: BADGES + BOTOES < > + TITULO + SINOPSE MAIOR */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        {/* Header Badges + Controles < > */}
+                      {/* TOPO: BADGES + NAVEGAÇÃO < > + TÍTULO PRINCIPAL */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={{
@@ -529,7 +528,7 @@ export default function LandingPage() {
                               style={{
                                 background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
                                 border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
-                                borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                               }}
                             >
                               <ChevronLeft size={16} />
@@ -540,7 +539,7 @@ export default function LandingPage() {
                               style={{
                                 background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
                                 border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
-                                borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                               }}
                             >
                               <ChevronRight size={16} />
@@ -549,40 +548,22 @@ export default function LandingPage() {
                         </div>
 
                         {/* Título Principal */}
-                        <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.7rem', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+                        <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.85rem', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
                           {item.title}
                         </h3>
-
-                        {/* BLOCO DE SINOPSE AMPLIADO (FONTE MAIOR E MAIS ESPAÇO) */}
-                        <div style={{
-                          background: 'rgba(7,7,13,0.82)',
-                          backdropFilter: 'blur(16px)',
-                          border: '1px solid rgba(255,255,255,0.12)',
-                          borderRadius: 12,
-                          padding: '16px 20px',
-                          boxShadow: '0 8px 28px rgba(0,0,0,0.5)',
-                        }}>
-                          <span style={{ fontSize: 10, fontWeight: 900, color: '#E50914', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                            <Info size={14} color="#E50914" /> Sinopse Oficial TMDB:
-                          </span>
-                          <p style={{ fontSize: '1.02rem', color: '#EAEAF5', margin: 0, lineHeight: 1.6, fontWeight: 400 }}>
-                            {item.synopsis}
-                          </p>
-                        </div>
                       </div>
 
-                      {/* RODAPÉ: PÔSTER COMPLETO SEM CORTE (ABAIXO DO TEXTO) + CTA "ONDE ASSISTIR?" */}
+                      {/* ÁREA CENTRAL PRINCIPAL: PÔSTER GRANDE + BLOCO DE SINOPSE (ELIMINA 100% DO ESPAÇO VAZIO) */}
                       <div style={{
-                        display: 'flex',
+                        display: 'grid',
+                        gridTemplateColumns: '190px 1fr',
+                        gap: 24,
                         alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 16,
-                        borderTop: '1px solid rgba(255,255,255,0.08)',
-                        paddingTop: 16,
-                        flexWrap: 'wrap'
-                      }}>
-                        {/* Pôster Oficial Inteiro (Completamente Exibido sem Cortes) */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        flex: 1,
+                        margin: '10px 0'
+                      }} className="showcase-middle-body">
+                        {/* PÔSTER OFICIAL GRANDE EM ALTA DEFINIÇÃO */}
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
                           <img
                             src={item.poster}
                             alt={item.title}
@@ -590,32 +571,68 @@ export default function LandingPage() {
                               e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80';
                             }}
                             style={{
-                              height: 120,
-                              width: 'auto',
-                              maxHeight: 125,
-                              borderRadius: 10,
-                              objectFit: 'contain',
-                              background: '#07070D',
-                              border: '1.5px solid rgba(255,255,255,0.25)',
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.9)',
-                              flexShrink: 0
+                              width: 190,
+                              height: 275,
+                              borderRadius: 14,
+                              objectFit: 'cover',
+                              border: '2px solid rgba(255,255,255,0.25)',
+                              boxShadow: '0 16px 36px rgba(0,0,0,0.9), 0 0 20px rgba(229,9,20,0.25)',
+                              transition: 'transform 0.3s ease',
+                              display: 'block'
                             }}
                           />
-                          <div>
-                            <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: '#9090A5', letterSpacing: '0.06em', display: 'block', marginBottom: 2 }}>
-                              {item.type}
-                            </span>
-                            <h4 style={{ fontSize: 13, fontWeight: 800, color: '#fff', margin: '0 0 4px 0', fontFamily: 'Outfit' }}>
-                              {item.title}
-                            </h4>
-                            <span style={{ fontSize: 11, color: '#25D366', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#25D366' }} /> Guia Disponível no WhatsApp
-                            </span>
-                          </div>
+                          <span style={{
+                            position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+                            background: '#E50914', color: '#fff', fontSize: 9, fontWeight: 900,
+                            padding: '3px 10px', borderRadius: 99, textTransform: 'uppercase',
+                            letterSpacing: '0.06em', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(229,9,20,0.5)'
+                          }}>
+                            {item.type} Destaque
+                          </span>
                         </div>
 
-                        {/* CTA "Onde Assistir?" direcionando ao WhatsApp + Indicadores Dots */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+                        {/* BLOCO DE SINOPSE AMPLIADO */}
+                        <div style={{
+                          background: 'rgba(7,7,13,0.85)',
+                          backdropFilter: 'blur(16px)',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          borderRadius: 14,
+                          padding: '20px 22px',
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.6)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          height: '100%',
+                          maxHeight: 275
+                        }}>
+                          <span style={{ fontSize: 11, fontWeight: 900, color: '#E50914', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                            <Info size={15} color="#E50914" /> Sinopse Oficial TMDB:
+                          </span>
+                          <p style={{ fontSize: '1.02rem', color: '#EAEAF5', margin: 0, lineHeight: 1.6, fontWeight: 400, overflowY: 'auto', maxHeight: 200, paddingRight: 6 }}>
+                            {item.synopsis}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* RODAPÉ DO BANNER: CTA "ONDE ASSISTIR?" GRANDE COM WHATSAPP + INDICADORES DOTS */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                        borderTop: '1px solid rgba(255,255,255,0.1)',
+                        paddingTop: 16,
+                        flexWrap: 'wrap'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#25D366', boxShadow: '0 0 10px #25D366' }} />
+                          <span style={{ fontSize: 12, color: '#25D366', fontWeight: 800 }}>
+                            Disponível no Guia de Transmissão CinePlay
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                          {/* Botão CTA Verde WhatsApp Onde Assistir */}
                           <a
                             href={getMovieWhatsappUrl(item.title)}
                             target="_blank"
@@ -623,21 +640,21 @@ export default function LandingPage() {
                             style={{
                               background: '#25D366',
                               color: '#fff',
-                              padding: '12px 24px',
-                              borderRadius: 10,
+                              padding: '12px 28px',
+                              borderRadius: 12,
                               fontWeight: 800,
-                              fontSize: 13,
+                              fontSize: 14,
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: 8,
+                              gap: 10,
                               textDecoration: 'none',
-                              boxShadow: '0 4px 18px rgba(37, 211, 102, 0.4)',
+                              boxShadow: '0 4px 20px rgba(37, 211, 102, 0.45)',
                               fontFamily: 'Outfit, sans-serif',
                               transition: 'transform 0.2s ease, background 0.2s ease'
                             }}
                             className="onde-assistir-btn"
                           >
-                            <MessageCircle size={16} />
+                            <MessageCircle size={18} />
                             Onde Assistir?
                           </a>
 
@@ -648,8 +665,8 @@ export default function LandingPage() {
                                 key={i}
                                 onClick={() => setCurrentShowcaseIdx(i)}
                                 style={{
-                                  width: i === currentShowcaseIdx ? 22 : 6,
-                                  height: 6,
+                                  width: i === currentShowcaseIdx ? 24 : 7,
+                                  height: 7,
                                   borderRadius: 99,
                                   background: i === currentShowcaseIdx ? '#E50914' : 'rgba(255,255,255,0.25)',
                                   cursor: 'pointer',
@@ -659,7 +676,6 @@ export default function LandingPage() {
                             ))}
                           </div>
                         </div>
-
                       </div>
 
                     </div>
@@ -1189,6 +1205,10 @@ export default function LandingPage() {
           }
           .full-movie-showcase-banner {
             min-height: 400px !important;
+          }
+          .showcase-middle-body {
+            grid-template-columns: 1fr !important;
+            justify-items: center;
           }
         }
         .category-card {
