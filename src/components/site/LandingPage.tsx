@@ -19,7 +19,7 @@ export default function LandingPage() {
   const [sportsMatches, setSportsMatches] = useState<any[]>([]);
   const [whatsappConfig, setWhatsappConfig] = useState<any>(null);
 
-  // Controle de sanfona (accordion) dos campeonatos estilo FlashScore
+  // Controle de sanfona (accordion) dos campeonatos
   const [expandedLeagues, setExpandedLeagues] = useState<Record<string, boolean>>({});
 
   const toggleLeague = (leagueName: string) => {
@@ -45,7 +45,7 @@ export default function LandingPage() {
         if (sportsRes?.success && sportsRes.pool?.length) {
           setSportsMatches(sportsRes.pool);
           
-          // Abre por padrão o primeiro campeonato
+          // Expande os 2 primeiros campeonatos por padrão
           const initialExpanded: Record<string, boolean> = {};
           sportsRes.pool.forEach((match: any, index: number) => {
             const league = match.league || 'Futebol';
@@ -112,7 +112,7 @@ export default function LandingPage() {
     return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
   };
 
-  // Agrupa os jogos por Campeonato (estilo FlashScore)
+  // Agrupa os jogos por Campeonato
   const groupedMatches = sportsMatches.reduce((acc: Record<string, any[]>, match) => {
     const league = match.league || 'Outros Campeonatos';
     if (!acc[league]) acc[league] = [];
@@ -136,7 +136,6 @@ export default function LandingPage() {
         padding: '110px 24px 32px',
         background: 'radial-gradient(circle at 10% 20%, rgba(229, 9, 20, 0.06) 0%, transparent 60%)',
       }}>
-        {/* Glows de fundo */}
         <div style={{
           position: 'absolute', top: '10%', right: '10%', width: '400px', height: '400px',
           background: 'radial-gradient(circle, rgba(229,9,20,0.04) 0%, transparent 70%)',
@@ -241,253 +240,263 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          2. AGENDA FLASHSCORE SLIM — CAMPEONATOS & ONDE ASSISTIR (COMPACTO)
+          2. SEÇÃO DUPLA: CATEGORIAS (ESQUERDA) + COLUNA SLIM CALENDÁRIO (DIREITA)
       ═══════════════════════════════ */}
-      {sportsMatches.length > 0 && (
-        <section id="calendario-jogos" style={{
-          padding: '40px 24px',
-          background: 'linear-gradient(to bottom, rgba(10,10,20,0.8) 0%, rgba(7,7,13,0.98) 100%)',
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-        }}>
-          <div style={{ maxWidth: 860, margin: '0 auto' }}>
-            {/* Header da Agenda Estilo FlashScore */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-              <div>
+      <section id="categorias-e-jogos" style={{
+        padding: '56px 24px',
+        borderTop: '1px solid rgba(255,255,255,0.04)',
+        background: 'linear-gradient(to bottom, rgba(12,12,24,0.6) 0%, rgba(7,7,13,0.95) 100%)',
+      }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: sportsMatches.length > 0 ? '1.25fr 0.85fr' : '1fr',
+            gap: 32,
+            alignItems: 'start'
+          }} className="main-content-grid">
+
+            {/* COLUNA ESQUERDA: CATEGORIAS DE CONTEÚDO */}
+            <div>
+              <div style={{ marginBottom: 20 }}>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(37, 211, 102, 0.1)', color: '#25D366',
+                  background: 'rgba(229,9,20,0.08)', color: '#E50914',
                   padding: '3px 9px', borderRadius: 99, fontSize: 9, fontWeight: 800,
-                  border: '1px solid rgba(37, 211, 102, 0.2)', marginBottom: 6,
+                  border: '1px solid rgba(229,9,20,0.18)', marginBottom: 6,
                   textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'Outfit'
                 }}>
-                  <Zap size={11} /> FlashScore - Horários Brasília (BR - SP)
+                  Explore por Categoria
                 </span>
-                <h2 style={{ fontFamily: 'Outfit', fontSize: '1.4rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>
-                  Agenda de Jogos & <span style={{ color: '#25D366' }}>Onde Assistir</span>
+                <h2 style={{ fontFamily: 'Outfit', fontSize: '1.6rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>
+                  O que cobrimos <span style={{ color: '#E50914' }}>para você</span>
                 </h2>
               </div>
-              <div style={{ fontSize: 11, color: '#9090A5', background: 'rgba(255,255,255,0.04)', padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                Clique no campeonato para ver ou fechar os jogos
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
+                {CATEGORIAS.map(cat => (
+                  <Link
+                    key={cat.id}
+                    href={`/blog?categoria=${cat.id}`}
+                    style={{
+                      background: '#0a0a12 url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.008\'/%3E%3C/svg%3E")',
+                      border: cat.badge ? '1.5px solid rgba(229,9,20,0.3)' : '1px solid rgba(255,255,255,0.04)',
+                      borderRadius: 12, padding: '18px 16px',
+                      position: 'relative', textDecoration: 'none', display: 'block',
+                      transition: 'all 0.28s ease'
+                    }}
+                    className="category-card"
+                  >
+                    <div style={{ fontSize: 24, marginBottom: 8 }}>{cat.icon}</div>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{cat.title}</h3>
+                    <p style={{ fontSize: 11, color: '#9090A5', lineHeight: 1.4 }}>{cat.desc}</p>
+                    {cat.badge && (
+                      <span style={{
+                        position: 'absolute', top: 10, right: 10,
+                        fontSize: 8, fontWeight: 800, color: '#E50914',
+                        background: 'rgba(229,9,20,0.08)', padding: '2px 6px',
+                        borderRadius: 99, border: '1px solid rgba(229,9,20,0.2)'
+                      }}>{cat.badge}</span>
+                    )}
+                  </Link>
+                ))}
               </div>
             </div>
 
-            {/* Container Sanfona (Accordion) Slim Estilo FlashScore */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {Object.entries(groupedMatches).map(([leagueName, matches]) => {
-                const isExpanded = expandedLeagues[leagueName] ?? false;
-                const sampleMatch = matches[0];
-                const flag = sampleMatch?.leagueFlag || '⚽';
-                const leagueColor = sampleMatch?.leagueColor || '#009C3B';
-
-                return (
-                  <div
-                    key={leagueName}
-                    style={{
-                      background: '#0B0B16',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: 12,
-                      overflow: 'hidden',
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-                    }}
-                  >
-                    {/* Barra do Campeonato (Header Sanfona) */}
-                    <button
-                      onClick={() => toggleLeague(leagueName)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        color: '#fff',
-                        outline: 'none',
-                        transition: 'background 0.2s ease',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 16 }}>{flag}</span>
-                        <span style={{ fontSize: 13, fontWeight: 800, fontFamily: 'Outfit', color: '#fff', letterSpacing: '0.02em' }}>
-                          {leagueName}
-                        </span>
-                        <span style={{
-                          fontSize: 9, fontWeight: 800, color: leagueColor,
-                          background: `${leagueColor}18`, padding: '2px 8px', borderRadius: 99,
-                          border: `1px solid ${leagueColor}30`
-                        }}>
-                          {matches.length} {matches.length === 1 ? 'jogo' : 'jogos'}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#A0A0B5' }}>
-                        <span style={{ fontSize: 11, fontWeight: 600 }}>{isExpanded ? 'Ocultar' : 'Ver Jogos'}</span>
-                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </div>
-                    </button>
-
-                    {/* Lista Slim de Jogos (Exibida ao expandir) */}
-                    {isExpanded && (
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        {matches.map((match) => (
-                          <div
-                            key={match.id}
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '95px 1fr 125px',
-                              alignItems: 'center',
-                              padding: '10px 16px',
-                              borderTop: '1px solid rgba(255,255,255,0.04)',
-                              background: match.isLive ? 'rgba(229,9,20,0.04)' : 'transparent',
-                              gap: 12,
-                            }}
-                            className="flashscore-row"
-                          >
-                            {/* Coluna 1: Horário / Status */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                              <span style={{
-                                fontSize: 10, fontWeight: 800,
-                                color: match.isLive ? '#E50914' : '#25D366',
-                                display: 'inline-flex', alignItems: 'center', gap: 4
-                              }}>
-                                {match.isLive && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#E50914', animation: 'spin 1s ease infinite' }} />}
-                                {match.overlay_badge || match.label || 'AGENDADO'}
-                              </span>
-                              <span style={{ fontSize: 9, color: '#65657B' }}>
-                                {match.subtitle?.split(' - ')[1] || 'Futebol'}
-                              </span>
-                            </div>
-
-                            {/* Coluna 2: Times e Escudos (Garantia de 100% de Carregamento) */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
-                              {/* Mandante */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', width: '42%' }}>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                  {match.homeTeam?.name}
-                                </span>
-                                <img
-                                  src={match.homeTeam?.logo || ''}
-                                  alt=""
-                                  onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }}
-                                  style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
-                                />
-                              </div>
-
-                              {/* Placar ou VS */}
-                              <div style={{
-                                background: 'rgba(255,255,255,0.06)',
-                                padding: '2px 8px', borderRadius: 6,
-                                fontSize: 11, fontWeight: 900, color: match.isLive ? '#E50914' : '#9090A5',
-                                flexShrink: 0
-                              }}>
-                                {match.live_score || 'VS'}
-                              </div>
-
-                              {/* Visitante */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start', width: '42%' }}>
-                                <img
-                                  src={match.awayTeam?.logo || ''}
-                                  alt=""
-                                  onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }}
-                                  style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
-                                />
-                                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                  {match.awayTeam?.name}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Coluna 3: Botão Como Assistir? */}
-                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                              <a
-                                href={getMatchWhatsappUrl(match.title)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  background: '#25D366',
-                                  color: '#fff',
-                                  padding: '6px 10px',
-                                  borderRadius: 8,
-                                  fontWeight: 800,
-                                  fontSize: 10,
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 4,
-                                  textDecoration: 'none',
-                                  boxShadow: '0 2px 8px rgba(37, 211, 102, 0.25)',
-                                  whiteSpace: 'nowrap',
-                                  transition: 'transform 0.2s ease, background 0.2s ease'
-                                }}
-                                className="como-assistir-btn-slim"
-                              >
-                                <MessageCircle size={12} />
-                                Como assistir?
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+            {/* COLUNA DIREITA: COLUNA SLIM DA AGENDA ESPORTIVA */}
+            {sportsMatches.length > 0 && (
+              <div style={{
+                background: '#090914',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 16,
+                padding: '20px',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14
+              }} className="slim-sports-column">
+                
+                {/* Header da Coluna */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 12 }}>
+                  <div>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      color: '#25D366', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em'
+                    }}>
+                      <Zap size={10} /> Agenda Esportiva (BR - SP)
+                    </span>
+                    <h3 style={{ fontFamily: 'Outfit', fontSize: '1.15rem', fontWeight: 900, color: '#fff', margin: 0 }}>
+                      Próximos Jogos
+                    </h3>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
+                  <span style={{ fontSize: 10, color: '#65657B', background: 'rgba(255,255,255,0.04)', padding: '4px 8px', borderRadius: 6 }}>
+                    Ao Vivo & Hoje
+                  </span>
+                </div>
 
-      {/* ═══════════════════════════════
-          3. CATEGORIAS
-      ═══════════════════════════════ */}
-      <section id="categorias" style={{ padding: '64px 24px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                {/* Lista de Campeonatos (Sanfona Slim Retrátil) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {Object.entries(groupedMatches).map(([leagueName, matches]) => {
+                    const isExpanded = expandedLeagues[leagueName] ?? false;
+                    const sampleMatch = matches[0];
+                    const flag = sampleMatch?.leagueFlag || '⚽';
+                    const leagueColor = sampleMatch?.leagueColor || '#009C3B';
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
-            <h2 style={{ fontFamily: 'Outfit', fontSize: '1.65rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
-              O que cobrimos <span style={{ color: '#E50914' }}>para você</span>
-            </h2>
-            <Link href="/blog" style={{ fontSize: 12, fontWeight: 600, color: '#9090A5', display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}>
-              Ver todos os artigos <ArrowRight size={12} />
-            </Link>
-          </div>
+                    return (
+                      <div
+                        key={leagueName}
+                        style={{
+                          background: '#0B0B18',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          borderRadius: 10,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {/* Header do Campeonato */}
+                        <button
+                          onClick={() => toggleLeague(leagueName)}
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            background: 'rgba(255,255,255,0.02)',
+                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            cursor: 'pointer',
+                            color: '#fff',
+                            outline: 'none',
+                            transition: 'background 0.2s ease',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 13 }}>{flag}</span>
+                            <span style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Outfit', color: '#fff' }}>
+                              {leagueName}
+                            </span>
+                            <span style={{
+                              fontSize: 8, fontWeight: 800, color: leagueColor,
+                              background: `${leagueColor}18`, padding: '1px 6px', borderRadius: 99
+                            }}>
+                              {matches.length}
+                            </span>
+                          </div>
+                          <div style={{ color: '#65657B', display: 'flex', alignItems: 'center' }}>
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </div>
+                        </button>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(172px, 1fr))', gap: 14 }}>
-            {CATEGORIAS.map(cat => (
-              <Link
-                key={cat.id}
-                href={`/blog?categoria=${cat.id}`}
-                style={{
-                  background: '#0a0a12 url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.008\'/%3E%3C/svg%3E")',
-                  border: cat.badge ? '1.5px solid rgba(229,9,20,0.3)' : '1px solid rgba(255,255,255,0.04)',
-                  borderRadius: 12, padding: '20px 18px',
-                  position: 'relative', textDecoration: 'none', display: 'block',
-                  transition: 'all 0.28s ease'
-                }}
-                className="category-card"
-              >
-                <div style={{ fontSize: 26, marginBottom: 10 }}>{cat.icon}</div>
-                <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{cat.title}</h3>
-                <p style={{ fontSize: 11, color: '#9090A5', lineHeight: 1.45 }}>{cat.desc}</p>
-                {cat.badge && (
-                  <span style={{
-                    position: 'absolute', top: 12, right: 12,
-                    fontSize: 8, fontWeight: 800, color: '#E50914',
-                    background: 'rgba(229,9,20,0.08)', padding: '2px 6px',
-                    borderRadius: 99, border: '1px solid rgba(229,9,20,0.2)'
-                  }}>{cat.badge}</span>
-                )}
-              </Link>
-            ))}
+                        {/* Jogos Retráteis Slim */}
+                        {isExpanded && (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {matches.map((match) => (
+                              <div
+                                key={match.id}
+                                style={{
+                                  padding: '8px 12px',
+                                  borderTop: '1px solid rgba(255,255,255,0.04)',
+                                  background: match.isLive ? 'rgba(229,9,20,0.05)' : 'transparent',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: 6
+                                }}
+                              >
+                                {/* Status e Horário */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                  <span style={{
+                                    fontSize: 9, fontWeight: 800,
+                                    color: match.isLive ? '#E50914' : '#25D366',
+                                    display: 'inline-flex', alignItems: 'center', gap: 4
+                                  }}>
+                                    {match.isLive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#E50914', animation: 'spin 1s ease infinite' }} />}
+                                    {match.overlay_badge || match.label || 'AGENDADO'}
+                                  </span>
+                                  <span style={{ fontSize: 8, color: '#65657B' }}>
+                                    {match.subtitle?.split(' - ')[1] || 'Rodada'}
+                                  </span>
+                                </div>
+
+                                {/* Confronto com Escudos Garantidos */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
+                                  {/* Mandante */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '42%' }}>
+                                    <img
+                                      src={match.homeTeam?.logo || ''}
+                                      alt=""
+                                      onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }}
+                                      style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }}
+                                    />
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      {match.homeTeam?.name}
+                                    </span>
+                                  </div>
+
+                                  {/* Placar ou VS */}
+                                  <span style={{ fontSize: 10, fontWeight: 900, color: match.isLive ? '#E50914' : '#65657B', padding: '0 4px' }}>
+                                    {match.live_score || 'VS'}
+                                  </span>
+
+                                  {/* Visitante */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', width: '42%' }}>
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      {match.awayTeam?.name}
+                                    </span>
+                                    <img
+                                      src={match.awayTeam?.logo || ''}
+                                      alt=""
+                                      onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }}
+                                      style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Botão "Saiba como Assistir" */}
+                                <a
+                                  href={getMatchWhatsappUrl(match.title)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    background: '#25D366',
+                                    color: '#fff',
+                                    padding: '5px 8px',
+                                    borderRadius: 6,
+                                    fontWeight: 800,
+                                    fontSize: 9,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 4,
+                                    textDecoration: 'none',
+                                    boxShadow: '0 2px 6px rgba(37, 211, 102, 0.2)',
+                                    marginTop: 2,
+                                    transition: 'transform 0.15s ease, background 0.15s ease'
+                                  }}
+                                  className="saiba-como-assistir-btn"
+                                >
+                                  <MessageCircle size={10} />
+                                  Saiba como Assistir
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+              </div>
+            )}
+
           </div>
 
         </div>
       </section>
 
       {/* ═══════════════════════════════
-          4. TICKER VISUAL — PÔSTERES EM MOVIMENTO
+          3. TICKER VISUAL — PÔSTERES EM MOVIMENTO
       ═══════════════════════════════ */}
       <section style={{ 
         padding: '24px 0', 
@@ -761,7 +770,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          5. CTA CENTRAL — TESTE GRÁTIS
+          4. CTA CENTRAL — TESTE GRÁTIS
       ═══════════════════════════════ */}
       <section id="teste-gratis" style={{
         padding: '64px 24px',
@@ -848,10 +857,9 @@ export default function LandingPage() {
             flex-direction: column;
             align-items: center;
           }
-          .flashscore-row {
+          .main-content-grid {
             grid-template-columns: 1fr !important;
-            text-align: center;
-            gap: 8px !important;
+            gap: 24px !important;
           }
         }
         .category-card {
@@ -861,8 +869,8 @@ export default function LandingPage() {
           transform: translateY(-4px) scale(1.01);
           border-color: rgba(229,9,20,0.5) !important;
         }
-        .como-assistir-btn-slim:hover {
-          transform: scale(1.04);
+        .saiba-como-assistir-btn:hover {
+          transform: scale(1.03);
           background: #20ba59 !important;
         }
         

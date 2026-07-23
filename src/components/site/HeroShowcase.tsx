@@ -24,9 +24,6 @@ const FALLBACK: PosterItem[] = [
   { id: 9013, title: 'Stranger Things', poster: 'https://image.tmdb.org/t/p/w500/49WJ2N36DkQclh2C35QJ6J71Vll.jpg', backdrop: 'https://image.tmdb.org/t/p/w1280/56v2Kj2qgo37g341wLTw8DM6oQ4.jpg', vote: 8.6, type: 'Série' }
 ];
 
-/*
-  Posições horizontais fixas e planas.
-*/
 const SLOTS = [
   { left: -10, rotateY: 25,  scale: 0.50, zDepth: -150, opacity: 0,    zIndex: 1, w: 120, h: 170, blur: 5 },
   { left: 12,  rotateY: 20,  scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 },
@@ -56,7 +53,8 @@ export default function HeroShowcase() {
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const lastFetchedIdRef = useRef<number | null>(null);
   
-  // Inicia SEMPRE com som habilitado para priorizar áudio direto
+  // Guard da preferência de áudio definida explicitamente pelo usuário
+  const userManuallyMutedRef = useRef(false);
   const [isMuted, setIsMuted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -74,13 +72,16 @@ export default function HeroShowcase() {
   const toggleMute = () => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
+    userManuallyMutedRef.current = nextMuted; // Registra a escolha manual do usuário
     sendIframeCommand(nextMuted ? 'mute' : 'unMute');
     if (!nextMuted) sendIframeCommand('setVolume', 100);
   };
 
-  // Garante liberação do som e play contínuo no iPhone / Safari no primeiro gesto do usuário
+  // Garante liberação do som no primeiro gesto do usuário APENAS se ele não tiver mutado manualmente
   useEffect(() => {
     const handleUnlockAudio = () => {
+      if (userManuallyMutedRef.current) return; // Respeita a escolha manual do usuário!
+
       setIsMuted(false);
       sendIframeCommand('unMute');
       sendIframeCommand('setVolume', 100);
@@ -174,6 +175,16 @@ export default function HeroShowcase() {
         const data = await res.json();
         if (data.success && data.videoKey) {
           setActiveTrailerKey(data.videoKey);
+          
+          // Aplica o estado de áudio mantendo a preferência do usuário
+          setTimeout(() => {
+            if (userManuallyMutedRef.current) {
+              sendIframeCommand('mute');
+            } else {
+              sendIframeCommand('unMute');
+              sendIframeCommand('setVolume', 100);
+            }
+          }, 500);
         } else {
           setActiveTrailerKey(null);
         }
@@ -257,7 +268,7 @@ export default function HeroShowcase() {
               transform: 'scale(1.42)',
               filter: 'saturate(1.2)',
             }}
-            src={`https://www.youtube.com/embed/${activeTrailerKey}?autoplay=1&mute=0&controls=1&loop=1&playlist=${activeTrailerKey}&playsinline=1&enablejsapi=1`}
+            src={`https://www.youtube.com/embed/${activeTrailerKey}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=1&loop=1&playlist=${activeTrailerKey}&playsinline=1&enablejsapi=1`}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             frameBorder="0"
           />
