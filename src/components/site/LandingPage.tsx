@@ -23,7 +23,7 @@ const MOVIE_SHOWCASE_ITEMS = [
     rating: 8.8,
     synopsis: 'Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Diante de uma escolha entre o amor de sua vida e o destino do universo, ele luta para evitar um futuro terrível que só ele pode prever.',
     image: 'https://image.tmdb.org/t/p/w780/8Z8dHFw7JVhXPSmx0yg2mtGEyeb.jpg',
-    poster: 'https://image.tmdb.org/t/p/w342/c7D6n1clBL6Vo44x2Uo599026T.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/c7D6n1clBL6Vo44x2Uo599026T.jpg',
   },
   {
     id: 2,
@@ -33,7 +33,7 @@ const MOVIE_SHOWCASE_ITEMS = [
     rating: 9.1,
     synopsis: 'A história da Casa Targaryen 200 anos antes dos eventos de Game of Thrones. A Dança dos Dragões começa quando os Verdes e os Pretos travam uma sangrenta guerra civil pelo Trono de Ferro de Westeros.',
     image: 'https://image.tmdb.org/t/p/w780/5PN1vU2hDYO9MNJK8g5n24J6LVw.jpg',
-    poster: 'https://image.tmdb.org/t/p/w342/t9X7imfv64es3496nQ3KyIFnN5Y.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/t9X7imfv64es3496nQ3KyIFnN5Y.jpg',
   },
   {
     id: 3,
@@ -43,7 +43,7 @@ const MOVIE_SHOWCASE_ITEMS = [
     rating: 9.2,
     synopsis: 'Cinco anos após os eventos traumáticos da primeira temporada, Joel e Ellie tentam reconstruir suas vidas em Jackson. No entanto, o passado retorna implacável, desencadeando uma jornada de vingança e sobrevivência.',
     image: 'https://image.tmdb.org/t/p/w780/2rezQWg73XFWuKE5eZIBwJ7CBca.jpg',
-    poster: 'https://image.tmdb.org/t/p/w342/u3bZ62I4rj75XyH2h45a60xa4iO.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/u3bZ62I4rj75XyH2h45a60xa4iO.jpg',
   },
   {
     id: 4,
@@ -53,7 +53,7 @@ const MOVIE_SHOWCASE_ITEMS = [
     rating: 8.9,
     synopsis: 'A história do físico americano J. Robert Oppenheimer, seu papel no Projeto Manhattan durante a Segunda Guerra Mundial e o desenvolvimento da bomba atômica que mudou o curso da humanidade para sempre.',
     image: 'https://image.tmdb.org/t/p/w780/nb3xI8XI3w4pMVZ38VijbsyBqP4.jpg',
-    poster: 'https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
   }
 ];
 
@@ -359,7 +359,7 @@ export default function LandingPage() {
             alignItems: 'stretch'
           }} className="main-content-grid">
 
-            {/* COLUNA ESQUERDA: CATEGORIAS + SUPER BANNER SHOWCASE DE FILMES E SÉRIES COM SINOPSE E CTA "ONDE ASSISTIR?" */}
+            {/* COLUNA ESQUERDA: CATEGORIAS + SHOWCASE COM SINOPSE GRANDE NO TOPO E PÔSTER INTEIRO NO RODAPÉ */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, height: '100%' }}>
               <div>
                 <div style={{ marginBottom: 14 }}>
@@ -407,13 +407,13 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* SUPER BANNER SHOWCASE EXPANDIDO DE FILMES E SÉRIES COM CARREGAMENTO INSTANTÂNEO DE IMAGENS E PAUSA NO HOVER */}
+              {/* SHOWCASE EXPANDIDO DE FILMES E SÉRIES COM LAYOUT VERTICAL OTIMIZADO */}
               <div
                 onMouseEnter={() => setIsBannerHovered(true)}
                 onMouseLeave={() => setIsBannerHovered(false)}
                 style={{
                   flex: 1,
-                  minHeight: 460,
+                  minHeight: 480,
                   position: 'relative',
                   borderRadius: 18,
                   overflow: 'hidden',
@@ -422,11 +422,11 @@ export default function LandingPage() {
                   boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'flex-end',
+                  justifyContent: 'space-between',
                 }}
                 className="full-movie-showcase-banner"
               >
-                {/* CAMADAS DE IMAGENS EMPILHADAS COM TRANSIÇÃO SUAVE DE OPACIDADE (CARREGAMENTO INSTANTÂNEO SEM FLICKER SECO) */}
+                {/* BACKDROP EM CAMADAS COM TRANSIÇÃO SUAVE */}
                 {MOVIE_SHOWCASE_ITEMS.map((item, idx) => {
                   const isActive = idx === currentShowcaseIdx;
                   return (
@@ -452,7 +452,7 @@ export default function LandingPage() {
                           height: '100%',
                           objectFit: 'cover',
                           objectPosition: 'center 20%',
-                          filter: 'brightness(0.55) saturate(1.25)',
+                          filter: 'brightness(0.4) saturate(1.2)',
                         }}
                       />
                     </div>
@@ -462,11 +462,11 @@ export default function LandingPage() {
                 {/* Overlays Gradientes Cinematográficos */}
                 <div style={{
                   position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, #07070D 0%, rgba(7,7,13,0.88) 55%, rgba(7,7,13,0.4) 85%, transparent 100%), linear-gradient(to right, rgba(7,7,13,0.9) 0%, transparent 60%)',
+                  background: 'linear-gradient(to bottom, rgba(7,7,13,0.85) 0%, rgba(7,7,13,0.65) 50%, rgba(7,7,13,0.95) 100%)',
                   zIndex: 1
                 }} />
 
-                {/* Conteúdo com Pôster, Sinopse Completa e CTA "Onde Assistir?" */}
+                {/* CONTEÚDO: TÍTULO + SINOPSE AMPLA NO TOPO / PÔSTER SEM CORTE + CTA "ONDE ASSISTIR?" NO RODAPÉ */}
                 {MOVIE_SHOWCASE_ITEMS.map((item, idx) => {
                   const isActive = idx === currentShowcaseIdx;
                   if (!isActive) return null;
@@ -480,136 +480,171 @@ export default function LandingPage() {
                         padding: '24px 28px',
                         display: 'flex',
                         flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        height: '100%',
                         gap: 16,
                         animation: 'fadeIn 0.5s ease'
                       }}
                     >
-                      {/* Topo do Banner: Badge da Categoria + Controles de Slide */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{
-                            fontSize: 9, fontWeight: 900, textTransform: 'uppercase',
-                            color: '#E50914', background: 'rgba(229,9,20,0.18)', padding: '4px 10px', borderRadius: 99,
-                            border: '1px solid rgba(229,9,20,0.35)', fontFamily: 'Outfit, sans-serif', letterSpacing: '0.06em'
-                          }}>
-                            {item.category}
-                          </span>
-                          <span style={{
-                            fontSize: 9, fontWeight: 800, color: '#F59E0B', background: 'rgba(245,158,11,0.15)',
-                            padding: '4px 8px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 4
-                          }}>
-                            <Star size={10} fill="#F59E0B" color="#F59E0B" /> {item.rating}
-                          </span>
+                      {/* PARTE SUPERIOR: BADGES + NAVEGAÇÃO + TÍTULO GRANDE + SINOPSE MAIOR */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {/* Header Badges + Controles < > */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{
+                              fontSize: 10, fontWeight: 900, textTransform: 'uppercase',
+                              color: '#E50914', background: 'rgba(229,9,20,0.18)', padding: '5px 12px', borderRadius: 99,
+                              border: '1px solid rgba(229,9,20,0.35)', fontFamily: 'Outfit, sans-serif', letterSpacing: '0.06em'
+                            }}>
+                              {item.category}
+                            </span>
+                            <span style={{
+                              fontSize: 10, fontWeight: 800, color: '#F59E0B', background: 'rgba(245,158,11,0.15)',
+                              padding: '5px 10px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 4
+                            }}>
+                              <Star size={12} fill="#F59E0B" color="#F59E0B" /> {item.rating} / 10
+                            </span>
+                          </div>
+
+                          {/* Botões de Navegação < > */}
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              onClick={() => setCurrentShowcaseIdx(prev => (prev - 1 + MOVIE_SHOWCASE_ITEMS.length) % MOVIE_SHOWCASE_ITEMS.length)}
+                              aria-label="Anterior"
+                              style={{
+                                background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
+                                borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                              }}
+                            >
+                              <ChevronLeft size={16} />
+                            </button>
+                            <button
+                              onClick={() => setCurrentShowcaseIdx(prev => (prev + 1) % MOVIE_SHOWCASE_ITEMS.length)}
+                              aria-label="Próximo"
+                              style={{
+                                background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
+                                borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                              }}
+                            >
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
                         </div>
 
-                        {/* Botões de Navegação < > */}
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button
-                            onClick={() => setCurrentShowcaseIdx(prev => (prev - 1 + MOVIE_SHOWCASE_ITEMS.length) % MOVIE_SHOWCASE_ITEMS.length)}
-                            aria-label="Anterior"
-                            style={{
-                              background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
-                              borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                            }}
-                          >
-                            <ChevronLeft size={14} />
-                          </button>
-                          <button
-                            onClick={() => setCurrentShowcaseIdx(prev => (prev + 1) % MOVIE_SHOWCASE_ITEMS.length)}
-                            aria-label="Próximo"
-                            style={{
-                              background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
-                              border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
-                              borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                            }}
-                          >
-                            <ChevronRight size={14} />
-                          </button>
+                        {/* Título Principal */}
+                        <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.65rem', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+                          {item.title}
+                        </h3>
+
+                        {/* BLOCO DE SINOPSE EXPANDIDO OCUPANDO ÁREA MAIOR */}
+                        <div style={{
+                          background: 'rgba(7,7,13,0.75)',
+                          backdropFilter: 'blur(16px)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: 12,
+                          padding: '14px 18px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+                        }}>
+                          <span style={{ fontSize: 10, fontWeight: 900, color: '#E50914', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                            <Info size={13} color="#E50914" /> Sinopse Oficial do Conteúdo:
+                          </span>
+                          <p style={{ fontSize: '0.94rem', color: '#E0E0F5', margin: 0, lineHeight: 1.55, fontWeight: 400 }}>
+                            {item.synopsis}
+                          </p>
                         </div>
                       </div>
 
-                      {/* Corpo do Banner: Pôster + Título + SINOPSE COMPLETA */}
-                      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                        <img
-                          src={item.poster}
-                          alt={item.title}
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=342&q=80';
-                          }}
-                          style={{
-                            width: 115,
-                            height: 165,
-                            borderRadius: 12,
-                            objectFit: 'cover',
-                            border: '2px solid rgba(255,255,255,0.2)',
-                            boxShadow: '0 12px 28px rgba(0,0,0,0.8)',
-                            flexShrink: 0
-                          }}
-                        />
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 240 }}>
-                          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.45rem', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-                            {item.title}
-                          </h3>
-
-                          {/* Bloco de SINOPSE DO FILME/SÉRIE */}
-                          <div style={{ background: 'rgba(7,7,13,0.65)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '12px 14px' }}>
-                            <span style={{ fontSize: 9, fontWeight: 900, color: '#9090A5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                              <Info size={11} color="#E50914" /> Sinopse do Conteúdo:
+                      {/* PARTE INFERIOR: PÔSTER INTEIRO SEM CORTES (ABAIXO DO TEXTO) + CTA "ONDE ASSISTIR?" */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                        borderTop: '1px solid rgba(255,255,255,0.08)',
+                        paddingTop: 16,
+                        flexWrap: 'wrap'
+                      }}>
+                        {/* Pôster Oficial Inteiro (Completamente Exibido sem Cortes) */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                          <img
+                            src={item.poster}
+                            alt={item.title}
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80';
+                            }}
+                            style={{
+                              height: 125,
+                              width: 'auto',
+                              maxHeight: 130,
+                              borderRadius: 10,
+                              objectFit: 'contain',
+                              background: '#07070D',
+                              border: '1.5px solid rgba(255,255,255,0.2)',
+                              boxShadow: '0 8px 22px rgba(0,0,0,0.85)',
+                              flexShrink: 0
+                            }}
+                          />
+                          <div>
+                            <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: '#9090A5', letterSpacing: '0.06em', display: 'block', marginBottom: 2 }}>
+                              {item.type}
                             </span>
-                            <p style={{ fontSize: '0.86rem', color: '#D0D0E5', margin: 0, lineHeight: 1.45 }}>
-                              {item.synopsis}
-                            </p>
+                            <h4 style={{ fontSize: 13, fontWeight: 800, color: '#fff', margin: '0 0 4px 0', fontFamily: 'Outfit' }}>
+                              {item.title}
+                            </h4>
+                            <span style={{ fontSize: 11, color: '#25D366', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#25D366' }} /> Guia Disponível no WhatsApp
+                            </span>
                           </div>
-
-                          {/* AÇÃO E CTA: "ONDE ASSISTIR?" REDIRECIONANDO PARA O WHATSAPP */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
-                            <a
-                              href={getMovieWhatsappUrl(item.title)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                background: '#25D366',
-                                color: '#fff',
-                                padding: '10px 22px',
-                                borderRadius: 10,
-                                fontWeight: 800,
-                                fontSize: 13,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                textDecoration: 'none',
-                                boxShadow: '0 4px 18px rgba(37, 211, 102, 0.35)',
-                                fontFamily: 'Outfit, sans-serif',
-                                transition: 'transform 0.2s ease, background 0.2s ease'
-                              }}
-                              className="onde-assistir-btn"
-                            >
-                              <MessageCircle size={16} />
-                              Onde Assistir?
-                            </a>
-
-                            {/* Indicadores de Slide Dots com barra de progresso visual */}
-                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                              {MOVIE_SHOWCASE_ITEMS.map((_, i) => (
-                                <span
-                                  key={i}
-                                  onClick={() => setCurrentShowcaseIdx(i)}
-                                  style={{
-                                    width: i === currentShowcaseIdx ? 20 : 6,
-                                    height: 6,
-                                    borderRadius: 99,
-                                    background: i === currentShowcaseIdx ? '#E50914' : 'rgba(255,255,255,0.25)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          </div>
-
                         </div>
+
+                        {/* CTA "Onde Assistir?" direcionando ao WhatsApp + Indicadores Dots */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+                          <a
+                            href={getMovieWhatsappUrl(item.title)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              background: '#25D366',
+                              color: '#fff',
+                              padding: '12px 24px',
+                              borderRadius: 10,
+                              fontWeight: 800,
+                              fontSize: 13,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              textDecoration: 'none',
+                              boxShadow: '0 4px 18px rgba(37, 211, 102, 0.4)',
+                              fontFamily: 'Outfit, sans-serif',
+                              transition: 'transform 0.2s ease, background 0.2s ease'
+                            }}
+                            className="onde-assistir-btn"
+                          >
+                            <MessageCircle size={16} />
+                            Onde Assistir?
+                          </a>
+
+                          {/* Dots */}
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            {MOVIE_SHOWCASE_ITEMS.map((_, i) => (
+                              <span
+                                key={i}
+                                onClick={() => setCurrentShowcaseIdx(i)}
+                                style={{
+                                  width: i === currentShowcaseIdx ? 22 : 6,
+                                  height: 6,
+                                  borderRadius: 99,
+                                  background: i === currentShowcaseIdx ? '#E50914' : 'rgba(255,255,255,0.25)',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.3s ease'
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
                       </div>
 
                     </div>
