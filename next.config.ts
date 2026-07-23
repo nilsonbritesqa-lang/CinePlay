@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
     ],
   },
+  async redirects() {
+    return [
+      { source: '/futebol', destination: '/blog?categoria=futebol', permanent: false },
+      { source: '/filmes', destination: '/blog?categoria=cinema', permanent: false },
+      { source: '/series', destination: '/blog?categoria=series', permanent: false },
+      { source: '/canais', destination: '/blog?categoria=canais', permanent: false },
+      { source: '/onde-assistir', destination: '/blog?categoria=onde-assistir', permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

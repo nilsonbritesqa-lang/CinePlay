@@ -1250,9 +1250,19 @@ export default function LandingPage() {
 
       {/* CSS RESPONSIVO COMPLETO DE ALTA QUALIDADE */}
       <style jsx global>{`
+        *, *::before, *::after {
+          max-width: 100%;
+        }
+        body, html {
+          overflow-x: hidden !important;
+          width: 100% !important;
+        }
         .hero-visuals-container {
           margin-left: -110px !important;
           width: calc(100% + 110px) !important;
+        }
+        .card-media-synopsis {
+          min-width: 0 !important;
         }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(6px); }
@@ -1286,40 +1296,48 @@ export default function LandingPage() {
 
         @media (max-width: 640px) {
           .hero-section {
-            padding: 90px 16px 24px !important;
+            padding: 85px 12px 20px !important;
           }
           .main-section {
-            padding: 36px 14px !important;
+            padding: 28px 10px !important;
           }
           .cta-section-container {
-            padding: 40px 16px !important;
+            padding: 32px 12px !important;
           }
           .mobile-full-btn {
             width: 100% !important;
             justify-content: center !important;
           }
           .card-content-inner {
-            padding: 16px 16px !important;
+            padding: 14px 12px !important;
           }
           .card-media-synopsis {
-            grid-template-columns: 90px 1fr !important;
-            gap: 12px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+            width: 100% !important;
+            min-width: 0 !important;
           }
           .poster-img-responsive {
-            width: 90px !important;
-            height: 135px !important;
+            width: 75px !important;
+            height: 110px !important;
+            align-self: flex-start !important;
           }
           .categories-grid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 8px !important;
+            gap: 6px !important;
           }
           .card-footer-cta {
             flex-direction: column !important;
             align-items: stretch !important;
-            gap: 10px !important;
+            gap: 8px !important;
           }
           .onde-assistir-btn {
             justify-content: center !important;
+          }
+          .showcase-card-container {
+            min-height: auto !important;
           }
         }
 
