@@ -42,68 +42,24 @@ export default function HeroShowcase() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [pool, setPool] = useState<PosterItem[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Progress representa o índice visual atual
   const [progress, setProgress] = useState(0.0);
+  const targetProgressRef = useRef(0);
 
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [targetMouse, setTargetMouse] = useState({ x: 0, y: 0 });
 
   const isDraggingRef = useRef(false);
+  const isHoveredRef = useRef(false);
   const dragStartRef = useRef<{ clientX: number; progress: number } | null>(null);
 
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const lastFetchedIdRef = useRef<number | null>(null);
   
-  // Guard da preferência de áudio definida explicitamente pelo usuário
-  const userManuallyMutedRef = useRef(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
-  const sendIframeCommand = (func: string, args: any = '') => {
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      try {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func, args }),
-          '*'
-        );
-      } catch {}
-    }
-  };
-
-  const toggleMute = () => {
-    const nextMuted = !isMuted;
-    setIsMuted(nextMuted);
-    userManuallyMutedRef.current = nextMuted; // Registra a escolha manual do usuário
-    sendIframeCommand(nextMuted ? 'mute' : 'unMute');
-    if (!nextMuted) sendIframeCommand('setVolume', 100);
-  };
-
-  // Garante liberação do som no primeiro gesto do usuário APENAS se ele não tiver mutado manualmente
-  useEffect(() => {
-    const handleUnlockAudio = () => {
-      if (userManuallyMutedRef.current) return; // Respeita a escolha manual do usuário!
-
-      setIsMuted(false);
-      sendIframeCommand('unMute');
-      sendIframeCommand('setVolume', 100);
-      sendIframeCommand('playVideo');
-
-      document.removeEventListener('click', handleUnlockAudio);
-      document.removeEventListener('touchstart', handleUnlockAudio);
-      document.removeEventListener('pointerdown', handleUnlockAudio);
-    };
-
-    document.addEventListener('click', handleUnlockAudio);
-    document.addEventListener('touchstart', handleUnlockAudio);
-    document.addEventListener('pointerdown', handleUnlockAudio);
-
-    return () => {
-      document.removeEventListener('click', handleUnlockAudio);
-      document.removeEventListener('touchstart', handleUnlockAudio);
-      document.removeEventListener('pointerdown', handleUnlockAudio);
-    };
-  }, []);
-
-  // Carregar estritamente Filmes e Séries (TMDB)
+  // Carrega lista TMDB
   useEffect(() => {
     async function loadData() {
       try {
@@ -123,21 +79,41 @@ export default function HeroShowcase() {
     loadData();
   }, []);
 
-  // Rotação automática suave
+  // Rotação controlada a cada 8 segundos (permite assistir ao trailer tranquilamente)
+  useEffect(() => {
+    if (pool.length === 0) return;
+
+    const interval = setInterval(() => {
+      if (!isDraggingRef.current && !isHoveredRef.current) {
+        targetProgressRef.current = (targetProgressRef.current + 1) % pool.length;
+      }
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [pool]);
+
+  // Animação suave para mover o progress até o targetProgress (suavidade de transição)
   useEffect(() => {
     let animId: number;
-    const tick = () => {
-      if (!isDraggingRef.current && pool.length > 0) {
-        setProgress(p => {
-          const next = p - 0.003;
-          return next < 0 ? next + pool.length : next;
+    const animate = () => {
+      if (!isDraggingRef.current) {
+        setProgress(prev => {
+          const target = targetProgressRef.current;
+          let diff = target - prev;
+          if (Math.abs(diff) > pool.length / 2) {
+            if (diff > 0) diff -= pool.length;
+            else diff += pool.length;
+          }
+          if (Math.abs(diff) < 0.001) return target;
+          const next = prev + diff * 0.08;
+          return (next + pool.length) % pool.length;
         });
       }
-      animId = requestAnimationFrame(tick);
+      animId = requestAnimationFrame(animate);
     };
-    animId = requestAnimationFrame(tick);
+    animId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animId);
-  }, [pool]);
+  }, [pool.length]);
 
   // Efeito Parallax Mouse
   useEffect(() => {
@@ -153,7 +129,7 @@ export default function HeroShowcase() {
     return () => cancelAnimationFrame(animId);
   }, [targetMouse]);
 
-  // Buscar Trailer Silencioso do Filme/Série em destaque
+  // Busca trailer do filme em destaque
   const currentIntIndex = pool.length > 0 
     ? ((Math.round(progress) % pool.length) + pool.length) % pool.length 
     : 0;
@@ -175,16 +151,6 @@ export default function HeroShowcase() {
         const data = await res.json();
         if (data.success && data.videoKey) {
           setActiveTrailerKey(data.videoKey);
-          
-          // Aplica o estado de áudio mantendo a preferência do usuário
-          setTimeout(() => {
-            if (userManuallyMutedRef.current) {
-              sendIframeCommand('mute');
-            } else {
-              sendIframeCommand('unMute');
-              sendIframeCommand('setVolume', 100);
-            }
-          }, 500);
         } else {
           setActiveTrailerKey(null);
         }
@@ -194,6 +160,10 @@ export default function HeroShowcase() {
     }
     fetchTrailer();
   }, [protagonist]);
+
+  const toggleMute = () => {
+    setIsMuted(prev => !prev);
+  };
 
   const onDragStart = (clientX: number) => {
     isDraggingRef.current = true;
@@ -208,7 +178,9 @@ export default function HeroShowcase() {
     if (newProgress < 0) {
       newProgress += pool.length;
     }
-    setProgress(newProgress % pool.length);
+    const val = newProgress % pool.length;
+    setProgress(val);
+    targetProgressRef.current = Math.round(val);
   };
 
   const onDragEnd = () => {
@@ -231,10 +203,11 @@ export default function HeroShowcase() {
       ref={containerRef}
       className="hero-showcase-container"
       onMouseMove={onMouseMove}
+      onMouseEnter={() => { isHoveredRef.current = true; }}
+      onMouseLeave={() => { isHoveredRef.current = false; onDragEnd(); setTargetMouse({ x: 0, y: 0 }); }}
       onMouseDown={(e) => { e.preventDefault(); onDragStart(e.clientX); }}
       onMouseMoveCapture={(e) => { if (isDraggingRef.current) { e.preventDefault(); onDragMove(e.clientX); } }}
       onMouseUp={onDragEnd}
-      onMouseLeave={() => { onDragEnd(); setTargetMouse({ x: 0, y: 0 }); }}
       onTouchStart={(e) => onDragStart(e.touches[0].clientX)}
       onTouchMove={(e) => onDragMove(e.touches[0].clientX)}
       onTouchEnd={onDragEnd}
@@ -250,7 +223,7 @@ export default function HeroShowcase() {
         WebkitUserSelect: 'none',
       }}
     >
-      {/* TRAILER EM SEGUNDO PLANO COM ÁUDIO ATIVO E COMPATÍVEL COM IPHONE / SAFARI */}
+      {/* TRAILER EM SEGUNDO PLANO SEM ERROS DE IFRAME */}
       {activeTrailerKey ? (
         <div className="hero-video-bg">
           <div style={{
@@ -260,7 +233,7 @@ export default function HeroShowcase() {
             zIndex: 1,
           }} />
           <iframe
-            ref={iframeRef}
+            key={`trailer-${activeTrailerKey}-${isMuted ? 'muted' : 'unmuted'}`}
             style={{
               width: '100%',
               height: '100%',
@@ -268,8 +241,8 @@ export default function HeroShowcase() {
               transform: 'scale(1.42)',
               filter: 'saturate(1.2)',
             }}
-            src={`https://www.youtube.com/embed/${activeTrailerKey}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=1&loop=1&playlist=${activeTrailerKey}&playsinline=1&enablejsapi=1`}
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            src={`https://www.youtube-nocookie.com/embed/${activeTrailerKey}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${activeTrailerKey}&playsinline=1`}
+            allow="autoplay; encrypted-media; picture-in-picture"
             frameBorder="0"
           />
         </div>
@@ -350,7 +323,7 @@ export default function HeroShowcase() {
               key={`inter-card-${item.id}-${idx}`}
               onClick={() => {
                 if (!isDraggingRef.current && Math.abs(diff) > 0.4) {
-                  setProgress(idx);
+                  targetProgressRef.current = idx;
                 }
               }}
               style={{
@@ -428,7 +401,7 @@ export default function HeroShowcase() {
         })}
       </div>
 
-      {/* Botão Premium de Controle de Som */}
+      {/* Control de Som */}
       {activeTrailerKey && (
         <button
           onClick={toggleMute}

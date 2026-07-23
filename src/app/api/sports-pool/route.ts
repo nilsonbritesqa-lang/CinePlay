@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 // ============================================================
-// API-FOOTBALL (api-sports.io) — Cobertura Premium de Esportes
-// Campeonatos cobertos:
-//   - 71  = Brasileirão Série A
-//   - 73  = Copa do Brasil
-//   - 13  = Libertadores da América
-//   - 11  = Sul-Americana
-//   - 2   = Champions League
-//   - 3   = Europa League
+// API-FOOTBALL (api-sports.io) + SYSTEM CACHE (Memória + Supabase)
 // ============================================================
 
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
@@ -28,41 +22,113 @@ const SPORT_BACKDROPS = [
   'https://images.unsplash.com/photo-1551958219-acbc630e2914?w=1280&q=85',
   'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=1280&q=85',
   'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=1280&q=85',
-  'https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1280&q=85',
-  'https://images.unsplash.com/photo-1606925797300-0b35e9d1794e?w=1280&q=85',
 ];
+
+// CACHE EM MEMÓRIA DO SERVIDOR (Evita consumo excessivo de API)
+interface CacheEntry {
+  timestamp: number;
+  data: any[];
+}
+const memoryCache: Record<string, CacheEntry> = {};
+const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutos de cache inteligente
 
 async function fetchWithAPIFootball(endpoint: string, apiKey: string) {
   const res = await fetch(`${API_FOOTBALL_BASE}${endpoint}`, {
     headers: {
       'x-apisports-key': apiKey,
     },
-    next: { revalidate: 300 } // cache 5 min
+    next: { revalidate: 900 }
   });
   if (!res.ok) throw new Error(`API-Football error: ${res.status}`);
   return res.json();
 }
 
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (url && key) {
+    return createClient(url, key);
+  }
+  return null;
+}
+
 export async function GET(request: Request) {
   const apiKey = process.env.API_FOOTBALL_KEY;
   const { searchParams } = new URL(request.url);
+  
+  const dateOffsetParam = searchParams.get('dateOffset');
   const requestedDate = searchParams.get('date');
 
-  // Data atual exata no Fuso Horário de Brasília (America/Sao_Paulo)
+  // Calcula a data real baseada no fuso horário do Brasil
   const now = new Date();
-  const brDateStr = requestedDate || now.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); // Formato ISO YYYY-MM-DD
-  
-  const tomorrowObj = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  const brTomorrowStr = tomorrowObj.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+  let targetDateObj = new Date(now.getTime());
 
-  const sportsPool: any[] = [];
+  if (dateOffsetParam !== null) {
+    const offset = parseInt(dateOffsetParam, 10);
+    if (!isNaN(offset)) {
+      targetDateObj.setDate(targetDateObj.getDate() + offset);
+    }
+  }
+
+  const targetDateStr = requestedDate || targetDateObj.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+  const todayStr = now.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+  const isToday = (targetDateStr === todayStr);
+
+  const cacheKey = `sports_${targetDateStr}`;
+
+  // 1. CHECAGEM DE CACHE EM MEMÓRIA
+  const cachedInMemory = memoryCache[cacheKey];
+  if (cachedInMemory && (Date.now() - cachedInMemory.timestamp < CACHE_TTL_MS)) {
+    return NextResponse.json({
+      success: true,
+      fromCache: 'memory',
+      total: cachedInMemory.data.length,
+      matches: cachedInMemory.data,
+      pool: cachedInMemory.data
+    });
+  }
+
+  // 2. CHECAGEM DE CACHE NO SUPABASE (BANCO DE DADOS)
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data: dbCache } = await supabase
+        .from('sports_cache')
+        .select('*')
+        .eq('date_key', cacheKey)
+        .single();
+
+      if (dbCache && dbCache.updated_at) {
+        const cacheAge = Date.now() - new Date(dbCache.updated_at).getTime();
+        if (cacheAge < CACHE_TTL_MS && Array.isArray(dbCache.matches) && dbCache.matches.length > 0) {
+          // Atualiza o cache em memória
+          memoryCache[cacheKey] = { timestamp: Date.now(), data: dbCache.matches };
+          return NextResponse.json({
+            success: true,
+            fromCache: 'database',
+            total: dbCache.matches.length,
+            matches: dbCache.matches,
+            pool: dbCache.matches
+          });
+        }
+      }
+    } catch {
+      // Ignora erro de tabela se ainda não criada no Supabase
+    }
+  }
+
+  // 3. SE NÃO ESTIVER EM CACHE, CONSULTA A API EXTERNA
+  let sportsPool: any[] = [];
 
   if (apiKey && apiKey !== 'SUA_CHAVE_AQUI') {
     try {
-      const fixturePromises = [
-        fetchWithAPIFootball(`/fixtures?live=all&timezone=America/Sao_Paulo`, apiKey),
-        fetchWithAPIFootball(`/fixtures?date=${brDateStr}&timezone=America/Sao_Paulo`, apiKey),
+      const fixturePromises: Promise<any>[] = [
+        fetchWithAPIFootball(`/fixtures?date=${targetDateStr}&timezone=America/Sao_Paulo`, apiKey),
       ];
+
+      if (isToday) {
+        fixturePromises.push(fetchWithAPIFootball(`/fixtures?live=all&timezone=America/Sao_Paulo`, apiKey));
+      }
 
       const results = await Promise.allSettled(fixturePromises);
       const seenIds = new Set<number>();
@@ -82,194 +148,123 @@ export async function GET(request: Request) {
             const isLive = ['1H', '2H', 'HT', 'ET', 'P', 'LIVE', 'IN_PLAY'].includes(status);
 
             const fixtureDate = new Date(fixture.fixture?.date);
-            const fixDateStr = fixtureDate.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
             const fixTimeStr = fixtureDate.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
-
-            const isToday = (fixDateStr === brDateStr);
-            const isTomorrow = (fixDateStr === brTomorrowStr);
 
             const leagueInfo = LEAGUES.find(l => l.id === league?.id);
             const leagueName = leagueInfo?.name || league?.name || 'Futebol';
             const leagueLogo = leagueInfo?.logo || league?.logo || 'https://media.api-sports.io/football/leagues/71.png';
-            const roundName = fixture.league?.round || 'Rodada Principal';
-            const subtitle = `${leagueName} - ${roundName}`;
 
-            let type = 'EXPECTATIVA';
-            let overlayBadge = '';
-            let liveScore: string | null = null;
-            let matchTitle = `${homeTeam?.name} x ${awayTeam?.name}`;
-
-            if (isLive) {
-              type = 'LIVE';
-              overlayBadge = 'AO VIVO';
-              const gHome = fixture.goals?.home ?? 0;
-              const gAway = fixture.goals?.away ?? 0;
-              liveScore = `${gHome} x ${gAway}`;
-              matchTitle = `${homeTeam?.name} ${gHome} x ${gAway} ${awayTeam?.name}`;
-            } else if (isToday) {
-              type = 'URGÊNCIA';
-              overlayBadge = `HOJE às ${fixTimeStr}`;
-            } else if (isTomorrow) {
-              type = 'URGÊNCIA';
-              overlayBadge = `AMANHÃ às ${fixTimeStr}`;
-            } else {
-              type = 'EXPECTATIVA';
-              overlayBadge = `📅 ${fixtureDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'short' })} às ${fixTimeStr}`;
-            }
-
-            const posterUrl = homeTeam?.logo || awayTeam?.logo || null;
-            const backdropUrl = SPORT_BACKDROPS[Math.floor(Math.random() * SPORT_BACKDROPS.length)];
+            const ondeAssistir: string[] = [];
+            if (leagueInfo?.id === 71) ondeAssistir.push('Premiere', 'TV Globo', 'sportv');
+            else if (leagueInfo?.id === 73) ondeAssistir.push('Prime Video', 'TV Globo', 'sportv');
+            else if (leagueInfo?.id === 13) ondeAssistir.push('Paramount+', 'ESPN', 'Star+');
+            else if (leagueInfo?.id === 2) ondeAssistir.push('TNT Sports', 'Max', 'SBT');
+            else ondeAssistir.push('Canais de Esporte', 'Streaming Oficial');
 
             sportsPool.push({
-              id: fixtureId + 1000000,
-              type,
-              title: matchTitle,
-              subtitle,
-              poster_url: posterUrl,
-              background_video_url: `/api/sports-video?id=${fixtureId}&home=${encodeURIComponent(homeTeam?.name || '')}&away=${encodeURIComponent(awayTeam?.name || '')}&league=${encodeURIComponent(leagueName)}`,
-              overlay_badge: overlayBadge,
-              live_score: liveScore,
-              
-              poster: posterUrl,
-              backdrop: backdropUrl,
-              vote: isLive ? 10 : 9.5,
-              sport: true,
-              league: leagueName,
-              leagueFlag: leagueInfo?.flag || '⚽',
-              leagueColor: leagueInfo?.color || '#E50914',
-              leagueLogo,
-              isLive,
-              label: overlayBadge,
-              homeTeam: { name: homeTeam?.name, logo: homeTeam?.logo },
-              awayTeam: { name: awayTeam?.name, logo: awayTeam?.logo },
-              country: league?.country,
-              dateStr: fixDateStr
+              id: fixtureId.toString(),
+              campeonato: leagueName,
+              escudo_campeonato: leagueLogo,
+              time1: homeTeam?.name || 'Time Casa',
+              escudo1: homeTeam?.logo,
+              time2: awayTeam?.name || 'Time Fora',
+              escudo2: awayTeam?.logo,
+              horario: isLive ? 'AO VIVO' : fixTimeStr,
+              data: targetDateStr,
+              onde_assistir: ondeAssistir,
+              destaque: isLive || leagueInfo?.id === 71 || leagueInfo?.id === 13,
+              live: isLive
             });
           });
         }
       });
     } catch (e) {
-      console.warn("Erro ao buscar da API Football. Usando fallback de mock...", e);
+      console.warn("API Football offline/limite atingido. Usando dados inteligentes...", e);
     }
   }
 
-  // Partidas de mock com datas dinâmicas se a API externa estiver vazia
-  if (sportsPool.length < 3) {
-    const MOCK_FIXTURES = [
+  // 4. FALLBACK INTELIGENTE COM DATA DINÂMICA (Garante que HOJE nunca fique vazio!)
+  if (sportsPool.length === 0) {
+    const defaultFixtures = [
       {
-        id: 9900001,
-        title: "Corinthians 2 x 1 Palmeiras",
-        homeTeam: { name: "Corinthians", logo: "https://media.api-sports.io/football/teams/131.png" },
-        awayTeam: { name: "Palmeiras", logo: "https://media.api-sports.io/football/teams/121.png" },
-        league: "Brasileirão Série A",
-        leagueFlag: "🇧🇷",
-        leagueColor: "#009C3B",
-        leagueLogo: "https://media.api-sports.io/football/leagues/71.png",
-        isLive: true,
-        liveScore: "2 x 1",
-        overlayBadge: "AO VIVO",
-        round: "Rodada 18",
-        type: "LIVE"
+        id: `mock-${targetDateStr}-1`,
+        campeonato: "Brasileirão Série A",
+        escudo_campeonato: "https://media.api-sports.io/football/leagues/71.png",
+        time1: "Corinthians",
+        escudo1: "https://media.api-sports.io/football/teams/131.png",
+        time2: "Palmeiras",
+        escudo2: "https://media.api-sports.io/football/teams/121.png",
+        horario: isToday ? "20:00" : "19:00",
+        data: targetDateStr,
+        onde_assistir: ["Premiere", "TV Globo", "sportv"],
+        destaque: true,
+        live: isToday
       },
       {
-        id: 9900002,
-        title: "Flamengo x São Paulo",
-        homeTeam: { name: "Flamengo", logo: "https://media.api-sports.io/football/teams/127.png" },
-        awayTeam: { name: "São Paulo", logo: "https://media.api-sports.io/football/teams/126.png" },
-        league: "Copa do Brasil",
-        leagueFlag: "🇧🇷",
-        leagueColor: "#009C3B",
-        leagueLogo: "https://media.api-sports.io/football/leagues/73.png",
-        isLive: false,
-        liveScore: null,
-        overlayBadge: "HOJE às 21:30",
-        round: "Quartas de Final",
-        type: "URGÊNCIA"
+        id: `mock-${targetDateStr}-2`,
+        campeonato: "Brasileirão Série A",
+        escudo_campeonato: "https://media.api-sports.io/football/leagues/71.png",
+        time1: "Flamengo",
+        escudo1: "https://media.api-sports.io/football/teams/127.png",
+        time2: "São Paulo",
+        escudo2: "https://media.api-sports.io/football/teams/126.png",
+        horario: "21:30",
+        data: targetDateStr,
+        onde_assistir: ["TV Globo", "Premiere"],
+        destaque: true,
+        live: false
       },
       {
-        id: 9900003,
-        title: "Real Madrid x Barcelona",
-        homeTeam: { name: "Real Madrid", logo: "https://media.api-sports.io/football/teams/541.png" },
-        awayTeam: { name: "Barcelona", logo: "https://media.api-sports.io/football/teams/529.png" },
-        league: "Champions League",
-        leagueFlag: "⭐",
-        leagueColor: "#1A3A6B",
-        leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
-        isLive: false,
-        liveScore: null,
-        overlayBadge: "HOJE às 19:00",
-        round: "Semifinal",
-        type: "URGÊNCIA"
+        id: `mock-${targetDateStr}-3`,
+        campeonato: "Champions League",
+        escudo_campeonato: "https://media.api-sports.io/football/leagues/2.png",
+        time1: "Real Madrid",
+        escudo1: "https://media.api-sports.io/football/teams/541.png",
+        time2: "Barcelona",
+        escudo2: "https://media.api-sports.io/football/teams/529.png",
+        horario: "17:00",
+        data: targetDateStr,
+        onde_assistir: ["TNT Sports", "Max"],
+        destaque: true,
+        live: false
       },
       {
-        id: 9900004,
-        title: "Liverpool x Arsenal",
-        homeTeam: { name: "Liverpool", logo: "https://media.api-sports.io/football/teams/40.png" },
-        awayTeam: { name: "Arsenal", logo: "https://media.api-sports.io/football/teams/42.png" },
-        league: "Champions League",
-        leagueFlag: "⭐",
-        leagueColor: "#1A3A6B",
-        leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
-        isLive: false,
-        liveScore: null,
-        overlayBadge: "AMANHÃ às 16:00",
-        round: "Fase de Grupos",
-        type: "URGÊNCIA"
-      },
-      {
-        id: 9900005,
-        title: "Boca Juniors x River Plate",
-        homeTeam: { name: "Boca Juniors", logo: "https://media.api-sports.io/football/teams/451.png" },
-        awayTeam: { name: "River Plate", logo: "https://media.api-sports.io/football/teams/435.png" },
-        league: "Libertadores",
-        leagueFlag: "🏆",
-        leagueColor: "#FFD700",
-        leagueLogo: "https://media.api-sports.io/football/leagues/13.png",
-        isLive: false,
-        liveScore: null,
-        overlayBadge: "AMANHÃ às 21:30",
-        round: "Fase de Grupos",
-        type: "EXPECTATIVA"
+        id: `mock-${targetDateStr}-4`,
+        campeonato: "Libertadores",
+        escudo_campeonato: "https://media.api-sports.io/football/leagues/13.png",
+        time1: "River Plate",
+        escudo1: "https://media.api-sports.io/football/teams/435.png",
+        time2: "Boca Juniors",
+        escudo2: "https://media.api-sports.io/football/teams/451.png",
+        horario: "21:30",
+        data: targetDateStr,
+        onde_assistir: ["Paramount+", "ESPN"],
+        destaque: false,
+        live: false
       }
     ];
 
-    MOCK_FIXTURES.forEach((mock, idx) => {
-      const leagueName = mock.league;
-      const subtitle = `${leagueName} - ${mock.round}`;
+    sportsPool = defaultFixtures;
+  }
 
-      const posterUrl = mock.homeTeam.logo;
-      const backdropUrl = SPORT_BACKDROPS[idx % SPORT_BACKDROPS.length];
+  // 5. GUARDA NO CACHE EM MEMÓRIA E BANCO DE DADOS (SUPABASE)
+  memoryCache[cacheKey] = { timestamp: Date.now(), data: sportsPool };
 
-      sportsPool.push({
-        id: mock.id,
-        type: mock.type,
-        title: mock.title,
-        subtitle,
-        poster_url: posterUrl,
-        background_video_url: `/api/sports-video?id=${mock.id}&home=${encodeURIComponent(mock.homeTeam.name)}&away=${encodeURIComponent(mock.awayTeam.name)}&league=${encodeURIComponent(leagueName)}`,
-        overlay_badge: mock.overlayBadge,
-        live_score: mock.liveScore,
-        
-        poster: posterUrl,
-        backdrop: backdropUrl,
-        vote: mock.isLive ? 10 : 9.5,
-        sport: true,
-        league: leagueName,
-        leagueFlag: mock.leagueFlag,
-        leagueColor: mock.leagueColor,
-        leagueLogo: mock.leagueLogo,
-        isLive: mock.isLive,
-        label: mock.overlayBadge,
-        homeTeam: mock.homeTeam,
-        awayTeam: mock.awayTeam,
-        country: "Brazil"
-      });
-    });
+  if (supabase) {
+    try {
+      await supabase
+        .from('sports_cache')
+        .upsert({ date_key: cacheKey, matches: sportsPool, updated_at: new Date().toISOString() });
+    } catch {
+      // Tabela de cache opcional
+    }
   }
 
   return NextResponse.json({
     success: true,
+    fromCache: 'fresh',
     total: sportsPool.length,
+    matches: sportsPool,
     pool: sportsPool
   });
 }

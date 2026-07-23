@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 const TMDB_API = 'https://api.themoviedb.org/3';
 const TMDB_IMG = 'https://image.tmdb.org/t/p';
 
+let tmdbCache: { timestamp: number; pool: any[] } | null = null;
+const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 Hora de Cache para o catálogo de filmes/séries
+
 function poster(path: string | null) {
   return path ? `${TMDB_IMG}/w500${path}` : null;
 }
@@ -11,6 +14,16 @@ function backdrop(path: string | null) {
 }
 
 export async function GET() {
+  // Retorna do Cache em Memória se ainda for válido
+  if (tmdbCache && (Date.now() - tmdbCache.timestamp < CACHE_DURATION_MS)) {
+    return NextResponse.json({
+      success: true,
+      fromCache: true,
+      total: tmdbCache.pool.length,
+      pool: tmdbCache.pool
+    });
+  }
+
   const apiKey = process.env.TMDB_API_KEY;
 
   if (!apiKey) {
@@ -18,23 +31,15 @@ export async function GET() {
   }
 
   try {
-    // Buscamos em amplas categorias para preencher ~120 itens
     const urls = [
-      // Filmes
       `${TMDB_API}/trending/movie/day?api_key=${apiKey}&language=pt-BR`,
       `${TMDB_API}/movie/popular?api_key=${apiKey}&language=pt-BR&page=1`,
       `${TMDB_API}/movie/popular?api_key=${apiKey}&language=pt-BR&page=2`,
-      `${TMDB_API}/movie/upcoming?api_key=${apiKey}&language=pt-BR&region=BR`,
       `${TMDB_API}/movie/now_playing?api_key=${apiKey}&language=pt-BR&region=BR`,
       `${TMDB_API}/movie/top_rated?api_key=${apiKey}&language=pt-BR&page=1`,
-      // Séries
       `${TMDB_API}/trending/tv/day?api_key=${apiKey}&language=pt-BR`,
       `${TMDB_API}/tv/popular?api_key=${apiKey}&language=pt-BR&page=1`,
       `${TMDB_API}/tv/popular?api_key=${apiKey}&language=pt-BR&page=2`,
-      `${TMDB_API}/tv/airing_today?api_key=${apiKey}&language=pt-BR`,
-      `${TMDB_API}/tv/top_rated?api_key=${apiKey}&language=pt-BR`,
-      // Trending Geral
-      `${TMDB_API}/trending/all/week?api_key=${apiKey}&language=pt-BR`,
     ];
 
     const responses = await Promise.allSettled(
@@ -66,12 +71,16 @@ export async function GET() {
       }
     });
 
-    const pool = Array.from(poolMap.values());
+    const pool = Array.from(poolMap.values()).slice(0, 150);
+
+    // Guarda em Cache
+    tmdbCache = { timestamp: Date.now(), pool };
 
     return NextResponse.json({
       success: true,
+      fromCache: false,
       total: pool.length,
-      pool: pool.slice(0, 150) // Até 150 títulos
+      pool
     });
 
   } catch (error: any) {
