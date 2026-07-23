@@ -10,14 +10,6 @@ interface PosterItem {
   backdrop: string | null;
   vote: number;
   type: string;
-  sport?: boolean;
-  isLive?: boolean;
-  label?: string;
-  league?: string;
-  leagueFlag?: string;
-  leagueColor?: string;
-  homeTeam?: { name: string; logo: string };
-  awayTeam?: { name: string; logo: string };
 }
 
 const FALLBACK: PosterItem[] = [
@@ -32,29 +24,19 @@ const FALLBACK: PosterItem[] = [
   { id: 9013, title: 'Stranger Things', poster: 'https://image.tmdb.org/t/p/w500/49WJ2N36DkQclh2C35QJ6J71Vll.jpg', backdrop: 'https://image.tmdb.org/t/p/w1280/56v2Kj2qgo37g341wLTw8DM6oQ4.jpg', vote: 8.6, type: 'Série' }
 ];
 
-const SPORT_STADIUMS = [
-  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&q=80',
-  'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&q=80',
-  'https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=600&q=80',
-  'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=600&q=80'
-];
-
 /*
   Posições horizontais fixas e planas.
-  Adicionamos slots fantasmas nas extremidades (-1 e 5) para que os cards que entram e saem do carrossel 
-  façam uma transição suave a partir de fora da tela de forma invisível.
 */
 const SLOTS = [
-  { left: -10, rotateY: 25,  scale: 0.50, zDepth: -150, opacity: 0,    zIndex: 1, w: 120, h: 170, blur: 5 }, // Fora à esquerda
-  { left: 12,  rotateY: 20,  scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 }, // Ponta esquerda
-  { left: 30,  rotateY: 10,  scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 }, // Esquerda
-  { left: 50,  rotateY: 0,   scale: 1.05, zDepth: 40,   opacity: 1.00, zIndex: 10, w: 220, h: 320, blur: 0 },// PROTAGONISTA CENTRO
-  { left: 70,  rotateY: -10, scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 }, // Direita
-  { left: 88,  rotateY: -20, scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 }, // Ponta direita
-  { left: 110, rotateY: -25, scale: 0.50, zDepth: -150, opacity: 0,    zIndex: 1, w: 120, h: 170, blur: 5 }, // Fora à direita
+  { left: -10, rotateY: 25,  scale: 0.50, zDepth: -150, opacity: 0,    zIndex: 1, w: 120, h: 170, blur: 5 },
+  { left: 12,  rotateY: 20,  scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 },
+  { left: 30,  rotateY: 10,  scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 },
+  { left: 50,  rotateY: 0,   scale: 1.05, zDepth: 40,   opacity: 1.00, zIndex: 10, w: 220, h: 320, blur: 0 },
+  { left: 70,  rotateY: -10, scale: 0.82, zDepth: -40,  opacity: 0.70, zIndex: 5, w: 170, h: 245, blur: 1 },
+  { left: 88,  rotateY: -20, scale: 0.65, zDepth: -100, opacity: 0.35, zIndex: 3, w: 140, h: 200, blur: 3 },
+  { left: 110, rotateY: -25, scale: 0.50, zDepth: -150, opacity: 0,    zIndex: 1, w: 120, h: 170, blur: 5 },
 ];
 
-// Helper para interpolar linearmente valores numéricos
 function lerp(start: number, end: number, amt: number) {
   return (1 - amt) * start + amt * end;
 }
@@ -63,79 +45,64 @@ export default function HeroShowcase() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [pool, setPool] = useState<PosterItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Progresso decimal do carrossel (ex: 2.45 representa que estamos entre o card 2 e 3)
   const [progress, setProgress] = useState(0.0);
 
-  // Parallax estilo Vision Pro
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [targetMouse, setTargetMouse] = useState({ x: 0, y: 0 });
 
-  // Controle de arraste (drag)
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ clientX: number; progress: number } | null>(null);
 
-  // Controle de Trailer Silencioso no Fundo
   const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const lastFetchedIdRef = useRef<number | null>(null);
   
-  // Estado e Referência para Controle de Áudio (inicia mutado para garantir o autoplay imediato sem controles gigantes na tela)
-  const [isMuted, setIsMuted] = useState(true);
+  // Inicia SEMPRE com som habilitado para priorizar áudio direto
+  const [isMuted, setIsMuted] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const sendIframeCommand = (func: string, args: any = '') => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      try {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func, args }),
+          '*'
+        );
+      } catch {}
+    }
+  };
 
   const toggleMute = () => {
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
-    
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      if (nextMuted) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: 'mute', args: '' }),
-          '*'
-        );
-      } else {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: 'unMute', args: '' }),
-          '*'
-        );
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: 'setVolume', args: [40] }),
-          '*'
-        );
-      }
-    }
+    sendIframeCommand(nextMuted ? 'mute' : 'unMute');
+    if (!nextMuted) sendIframeCommand('setVolume', 100);
   };
 
-  // Habilita som na primeira interação do usuário na página, respeitando a política de autoplay
+  // Garante liberação do som e play contínuo no iPhone / Safari no primeiro gesto do usuário
   useEffect(() => {
-    const handleFirstInteraction = () => {
+    const handleUnlockAudio = () => {
       setIsMuted(false);
-      
-      if (iframeRef.current && iframeRef.current.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: 'unMute', args: '' }),
-          '*'
-        );
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: 'command', func: 'setVolume', args: [40] }),
-          '*'
-        );
-      }
-      
-      document.removeEventListener('click', handleFirstInteraction);
-      document.removeEventListener('touchstart', handleFirstInteraction);
+      sendIframeCommand('unMute');
+      sendIframeCommand('setVolume', 100);
+      sendIframeCommand('playVideo');
+
+      document.removeEventListener('click', handleUnlockAudio);
+      document.removeEventListener('touchstart', handleUnlockAudio);
+      document.removeEventListener('pointerdown', handleUnlockAudio);
     };
 
-    document.addEventListener('click', handleFirstInteraction);
-    document.addEventListener('touchstart', handleFirstInteraction);
+    document.addEventListener('click', handleUnlockAudio);
+    document.addEventListener('touchstart', handleUnlockAudio);
+    document.addEventListener('pointerdown', handleUnlockAudio);
 
     return () => {
-      document.removeEventListener('click', handleFirstInteraction);
-      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('click', handleUnlockAudio);
+      document.removeEventListener('touchstart', handleUnlockAudio);
+      document.removeEventListener('pointerdown', handleUnlockAudio);
     };
   }, []);
 
-  // Carregar dados iniciais
+  // Carregar estritamente Filmes e Séries (TMDB)
   useEffect(() => {
     async function loadData() {
       try {
@@ -155,26 +122,23 @@ export default function HeroShowcase() {
     loadData();
   }, []);
 
-  // Rotação automática suave à esquerda (0.003 de progresso a cada frame)
+  // Rotação automática suave
   useEffect(() => {
-    if (pool.length === 0) return;
     let animId: number;
-
     const tick = () => {
-      if (!isDraggingRef.current) {
-        setProgress(prev => {
-          const next = prev + 0.0013; // Roda sozinho suavemente (velocidade reduzida para maior tempo de tela)
-          return next >= pool.length ? next - pool.length : next;
+      if (!isDraggingRef.current && pool.length > 0) {
+        setProgress(p => {
+          const next = p - 0.003;
+          return next < 0 ? next + pool.length : next;
         });
       }
       animId = requestAnimationFrame(tick);
     };
-
     animId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animId);
   }, [pool]);
 
-  // Efeito Lerp do Parallax do Mouse
+  // Efeito Parallax Mouse
   useEffect(() => {
     let animId: number;
     const update = () => {
@@ -188,7 +152,7 @@ export default function HeroShowcase() {
     return () => cancelAnimationFrame(animId);
   }, [targetMouse]);
 
-  // Buscar Trailer Silencioso do Protagonista no Youtube (garantindo índice circular positivo)
+  // Buscar Trailer Silencioso do Filme/Série em destaque
   const currentIntIndex = pool.length > 0 
     ? ((Math.round(progress) % pool.length) + pool.length) % pool.length 
     : 0;
@@ -205,10 +169,7 @@ export default function HeroShowcase() {
 
     async function fetchTrailer() {
       try {
-        const endpoint = protagonist.sport 
-          ? `/api/sports-video?id=${protagonist.id}&home=${encodeURIComponent(protagonist.homeTeam?.name || '')}&away=${encodeURIComponent(protagonist.awayTeam?.name || '')}&league=${encodeURIComponent(protagonist.league || '')}`
-          : `/api/tmdb-video?id=${protagonist.id}&type=${protagonist.type}`;
-
+        const endpoint = `/api/tmdb-video?id=${protagonist.id}&type=${protagonist.type}`;
         const res = await fetch(endpoint);
         const data = await res.json();
         if (data.success && data.videoKey) {
@@ -223,7 +184,6 @@ export default function HeroShowcase() {
     fetchTrailer();
   }, [protagonist]);
 
-  // Tratadores de Drag do Mouse / Touch
   const onDragStart = (clientX: number) => {
     isDraggingRef.current = true;
     dragStartRef.current = { clientX, progress };
@@ -232,16 +192,12 @@ export default function HeroShowcase() {
   const onDragMove = (clientX: number) => {
     if (!isDraggingRef.current || dragStartRef.current === null || pool.length === 0) return;
     const deltaX = clientX - dragStartRef.current.clientX;
-    // O sinal negativo faz com que arrastar para a esquerda mova a esteira para a esquerda (próximos cards)
     let newProgress = dragStartRef.current.progress - (deltaX / 320);
 
-    // Módulos circulares
     if (newProgress < 0) {
       newProgress += pool.length;
     }
-    newProgress = newProgress % pool.length;
-
-    setProgress(newProgress);
+    setProgress(newProgress % pool.length);
   };
 
   const onDragEnd = () => {
@@ -249,131 +205,15 @@ export default function HeroShowcase() {
     dragStartRef.current = null;
   };
 
-  // Parallax do mouse
-  const onMouseMove = (e: React.MouseEvent) => {
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
-    const r = containerRef.current.getBoundingClientRect();
-    setTargetMouse({
-      x: ((e.clientX - r.left) / r.width) * 2 - 1,
-      y: ((e.clientY - r.top) / r.height) * 2 - 1,
-    });
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+    const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+    setTargetMouse({ x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) });
   };
 
-  // Renderização do Card de Futebol Personalizado
-  const renderSportCard = (item: PosterItem, isMain: boolean) => {
-    const backdropImg = item.backdrop || SPORT_STADIUMS[item.id % SPORT_STADIUMS.length];
-    
-    return (
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        background: '#07070D',
-        display: 'flex',
-        flexDirection: 'column',
-        userSelect: 'none',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `url(${backdropImg})`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          opacity: 0.35, filter: 'blur(1px)'
-        }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(circle at center, transparent 30%, rgba(7,7,13,0.92) 90%)',
-        }} />
-
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          zIndex: 3, padding: '15px 10px 0', gap: 14
-        }}>
-          <span style={{
-            fontSize: isMain ? 9 : 7, fontWeight: 900, textTransform: 'uppercase',
-            color: item.leagueColor || '#009C3B', letterSpacing: '0.08em',
-            background: 'rgba(7,7,13,0.85)', padding: '3px 8px', borderRadius: 4,
-            border: `1px solid ${item.leagueColor || '#009C3B'}40`,
-          }}>
-            {item.league || 'Futebol'}
-          </span>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMain ? 15 : 8, width: '100%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40%', gap: 6 }}>
-              <div style={{
-                width: isMain ? 56 : 38, height: isMain ? 56 : 38,
-                borderRadius: '50%', background: 'rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6,
-                border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 16px rgba(0,0,0,0.6)'
-              }}>
-                {item.homeTeam?.logo ? (
-                  <img src={item.homeTeam.logo} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                ) : <span style={{ fontSize: 16 }}>⚽</span>}
-              </div>
-              <span style={{
-                fontSize: isMain ? 9 : 7, fontWeight: 700, color: '#E1E1E6', textAlign: 'center',
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%'
-              }}>
-                {item.homeTeam?.name}
-              </span>
-            </div>
-
-            <span style={{
-              fontSize: isMain ? 14 : 10, fontWeight: 900,
-              color: item.isLive ? '#E50914' : '#65657B',
-              textShadow: item.isLive ? '0 0 10px rgba(229,9,20,0.5)' : 'none',
-            }}>
-              VS
-            </span>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40%', gap: 6 }}>
-              <div style={{
-                width: isMain ? 56 : 38, height: isMain ? 56 : 38,
-                borderRadius: '50%', background: 'rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6,
-                border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 16px rgba(0,0,0,0.6)'
-              }}>
-                {item.awayTeam?.logo ? (
-                  <img src={item.awayTeam.logo} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                ) : <span style={{ fontSize: 16 }}>⚽</span>}
-              </div>
-              <span style={{
-                fontSize: isMain ? 9 : 7, fontWeight: 700, color: '#E1E1E6', textAlign: 'center',
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%'
-              }}>
-                {item.awayTeam?.name}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div style={{
-          background: 'linear-gradient(to top, rgba(7,7,13,0.98) 0%, rgba(7,7,13,0.7) 100%)',
-          padding: isMain ? '12px 14px 10px' : '6px 8px', zIndex: 3, fontFamily: 'Outfit, sans-serif'
-        }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 3,
-            background: item.isLive ? 'rgba(229,9,20,0.15)' : 'rgba(255,255,255,0.05)',
-            color: item.isLive ? '#E50914' : '#A0A0B5',
-            padding: '2px 6px', borderRadius: 99,
-            fontSize: isMain ? 8 : 6, fontWeight: 900, textTransform: 'uppercase',
-            border: `1px solid ${item.isLive ? '#E50914' : 'rgba(255,255,255,0.1)'}30`,
-            marginBottom: isMain ? 4 : 2,
-          }}>
-            {item.isLive && <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#E50914', display: 'inline-block', animation: 'livePulse 1.5s ease-in-out infinite' }} />}
-            {item.isLive ? 'Ao Vivo' : item.label || 'Futebol'}
-          </span>
-          <h4 style={{
-            fontSize: isMain ? 13 : 9, fontWeight: 800, color: '#fff', margin: 0,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-          }}>
-            {item.title}
-          </h4>
-        </div>
-      </div>
-    );
-  };
-
-  const accentColor = protagonist?.sport ? (protagonist.leagueColor || '#009C3B') : protagonist?.type === 'Série' ? '#6366F1' : '#E50914';
+  const accentColor = '#E50914';
 
   return (
     <div
@@ -399,12 +239,9 @@ export default function HeroShowcase() {
         WebkitUserSelect: 'none',
       }}
     >
-      {/* ═══════════════════════════════
-          TRAILER SILENCIOSO DE FUNDO (YOUTUBE EMBED)
-      ═══════════════════════════════ */}
+      {/* TRAILER EM SEGUNDO PLANO COM ÁUDIO ATIVO E COMPATÍVEL COM IPHONE / SAFARI */}
       {activeTrailerKey ? (
         <div className="hero-video-bg">
-          {/* Máscara de fusão com o fundo para contraste do texto */}
           <div style={{
             position: 'absolute',
             inset: 0,
@@ -420,15 +257,13 @@ export default function HeroShowcase() {
               transform: 'scale(1.42)',
               filter: 'saturate(1.2)',
             }}
-            src={`https://www.youtube.com/embed/${activeTrailerKey}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${activeTrailerKey}&playsinline=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&enablejsapi=1`}
-            allow="autoplay; encrypted-media"
+            src={`https://www.youtube.com/embed/${activeTrailerKey}?autoplay=1&mute=0&controls=1&loop=1&playlist=${activeTrailerKey}&playsinline=1&enablejsapi=1`}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             frameBorder="0"
-            loading="lazy"
           />
         </div>
       ) : protagonist?.backdrop ? (
         <div className="hero-video-bg" style={{ filter: 'blur(12px) saturate(1.25)', opacity: 0.38 }}>
-          {/* Máscara de fusão */}
           <div style={{
             position: 'absolute',
             inset: 0,
@@ -458,7 +293,7 @@ export default function HeroShowcase() {
       {loading && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#A0A0B5', fontSize: 12 }}>
           <span style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(229,9,20,0.2)', borderTopColor: '#E50914', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
-          Carregando showcase...
+          Carregando filmes e séries...
         </div>
       )}
 
@@ -469,32 +304,22 @@ export default function HeroShowcase() {
         height: '100%',
         zIndex: 2,
         transformStyle: 'preserve-3d',
-        transform: `rotateX(${mouse.y * -2}deg) rotateY(${mouse.x * 2.5}deg)`,
-        transition: isDraggingRef.current ? 'none' : 'transform 0.4s cubic-bezier(0.16,1,0.3,1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        userSelect: 'none',
+        transform: `rotateY(${mouse.x * 3.5}deg) rotateX(${-mouse.y * 2.5}deg)`,
+        transition: 'transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1)',
       }}>
         {pool.map((item, idx) => {
-          // Calcula a distância angular do item em relação ao progresso atual
           let diff = idx - progress;
-          // Ajusta a distância para o caminho circular mais curto
           const half = pool.length / 2;
           if (diff > half) diff -= pool.length;
           if (diff < -half) diff += pool.length;
 
-          // Se estiver muito longe do centro (fora dos 5 slots visíveis), não renderiza
           if (diff < -3.2 || diff > 3.2) return null;
 
-          // Mapeia a posição do item baseando-se em sua distância d.
-          // O centro d = 0 corresponde ao slot 3 (PROTAGONISTA CENTRO)
           const virtualSlotIdx = diff + 3; 
           const lowerIdx = Math.floor(virtualSlotIdx);
           const upperIdx = Math.ceil(virtualSlotIdx);
           const fraction = virtualSlotIdx - lowerIdx;
 
-          // Interpola as propriedades visuais entre os slots adjacentes
           const slotA = SLOTS[Math.max(0, Math.min(SLOTS.length - 1, lowerIdx))];
           const slotB = SLOTS[Math.max(0, Math.min(SLOTS.length - 1, upperIdx))];
 
@@ -514,7 +339,6 @@ export default function HeroShowcase() {
               key={`inter-card-${item.id}-${idx}`}
               onClick={() => {
                 if (!isDraggingRef.current && Math.abs(diff) > 0.4) {
-                  // Centraliza o card clicado
                   setProgress(idx);
                 }
               }}
@@ -544,99 +368,82 @@ export default function HeroShowcase() {
                 WebkitUserSelect: 'none',
               }}
             >
-              {item.sport ? (
-                renderSportCard(item, isMain)
-              ) : (
-                <div style={{ position: 'relative', width: '100%', height: '100%', userSelect: 'none' }}>
-                  <img
-                    src={item.poster || ''}
-                    alt={item.title}
-                    draggable={false}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', userSelect: 'none' }}
-                  />
-                  
-                  {/* Overlay Inferior */}
-                  <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0,
-                    background: 'linear-gradient(to top, rgba(7,7,13,0.98) 0%, rgba(7,7,13,0.5) 60%, transparent 100%)',
-                    padding: isMain ? '12px 14px 10px' : '6px 8px',
-                    fontFamily: 'Outfit, sans-serif',
-                    userSelect: 'none',
+              <div style={{ position: 'relative', width: '100%', height: '100%', userSelect: 'none' }}>
+                <img
+                  src={item.poster || ''}
+                  alt={item.title}
+                  draggable={false}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', userSelect: 'none' }}
+                />
+                
+                {/* Overlay Inferior */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  background: 'linear-gradient(to top, rgba(7,7,13,0.98) 0%, rgba(7,7,13,0.5) 60%, transparent 100%)',
+                  padding: isMain ? '12px 14px 10px' : '6px 8px',
+                  fontFamily: 'Outfit, sans-serif',
+                  userSelect: 'none',
+                }}>
+                  <span style={{
+                    display: 'inline-flex',
+                    background: item.type === 'Série' ? 'rgba(99,102,241,0.15)' : 'rgba(229,9,20,0.12)',
+                    color: item.type === 'Série' ? '#818CF8' : '#E50914',
+                    padding: '2px 6px', borderRadius: 99,
+                    fontSize: isMain ? 8 : 6, fontWeight: 900, textTransform: 'uppercase',
+                    border: `1px solid ${item.type === 'Série' ? '#6366F1' : '#E50914'}30`,
+                    marginBottom: isMain ? 4 : 2,
                   }}>
-                    <span style={{
-                      display: 'inline-flex',
-                      background: item.type === 'Série' ? 'rgba(99,102,241,0.15)' : 'rgba(229,9,20,0.12)',
-                      color: item.type === 'Série' ? '#818CF8' : '#E50914',
-                      padding: '2px 6px', borderRadius: 99,
-                      fontSize: isMain ? 8 : 6, fontWeight: 900, textTransform: 'uppercase',
-                      border: `1px solid ${item.type === 'Série' ? '#6366F1' : '#E50914'}30`,
-                      marginBottom: isMain ? 4 : 2,
-                    }}>
-                      {item.type}
-                    </span>
-                    <h4 style={{
-                      fontSize: isMain ? 13 : 9, fontWeight: 800, color: '#fff', margin: 0,
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                    }}>
-                      {item.title}
-                    </h4>
-                    {isMain && (
-                      <p style={{ fontSize: 9, color: '#A0A0B5', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>{item.type}</span>
-                        <span style={{ width: 2, height: 2, borderRadius: '50%', background: '#555' }} />
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#F59E0B' }}>
-                          <Star size={8} fill="#F59E0B" color="#F59E0B" /> {item.vote?.toFixed(1) || '8.0'}
-                        </span>
-                      </p>
-                    )}
-                  </div>
+                    {item.type}
+                  </span>
+                  <h4 style={{
+                    fontSize: isMain ? 13 : 9, fontWeight: 800, color: '#fff', margin: 0,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                  }}>
+                    {item.title}
+                  </h4>
+                  {isMain && (
+                    <p style={{ fontSize: 9, color: '#A0A0B5', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>{item.type}</span>
+                      <span style={{ width: 2, height: 2, borderRadius: '50%', background: '#555' }} />
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: '#F59E0B' }}>
+                        <Star size={8} fill="#F59E0B" color="#F59E0B" /> {item.vote?.toFixed(1) || '8.0'}
+                      </span>
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Botão de Som Premium (Mute/Unmute) */}
+      {/* Botão Premium de Controle de Som */}
       {activeTrailerKey && (
         <button
           onClick={toggleMute}
-          aria-label={isMuted ? 'Ativar som' : 'Desativar som'}
+          aria-label={isMuted ? 'Ativar Áudio' : 'Mudar para Mudo'}
           style={{
             position: 'absolute',
-            bottom: 20,
-            right: 20,
+            bottom: 20, right: 20,
             zIndex: 120,
-            background: isMuted ? 'rgba(15, 15, 28, 0.72)' : 'rgba(229, 9, 20, 0.95)',
+            background: isMuted ? 'rgba(15, 15, 28, 0.85)' : 'rgba(229, 9, 20, 0.95)',
             backdropFilter: 'blur(16px)',
-            border: isMuted ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(229, 9, 20, 0.35)',
+            border: isMuted ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid rgba(229, 9, 20, 0.4)',
             borderRadius: 24,
             padding: '8px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
+            display: 'flex', alignItems: 'center', gap: 6,
             color: '#fff',
             cursor: 'pointer',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
-            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-            outline: 'none',
-            fontSize: 10,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+            fontSize: 11,
             fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
             fontFamily: 'Outfit, sans-serif',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.transform = 'scale(1.04)';
-            if (isMuted) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.background = isMuted ? 'rgba(15, 15, 28, 0.72)' : 'rgba(229, 9, 20, 0.95)';
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
           }}
         >
-          {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-          <span>{isMuted ? 'Mudo' : 'Com Som'}</span>
+          {isMuted ? <VolumeX size={14} color="#A0A0B5" /> : <Volume2 size={14} color="#fff" />}
+          <span>{isMuted ? 'Áudio Desativado' : 'Com Áudio'}</span>
         </button>
       )}
 
@@ -667,10 +474,6 @@ export default function HeroShowcase() {
           }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes livePulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.3); }
-        }
       `}</style>
     </div>
   );
