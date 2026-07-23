@@ -33,7 +33,7 @@ export default function ChatBot() {
           // Popula dados do WhatsApp imediatamente
           setWhatsapp({
             url: `https://wa.me/${data.whatsapp_numero}?text=${encodeURIComponent(data.whatsapp_mensagem)}`,
-            cta: data.cta_texto || 'Falar no WhatsApp'
+            cta: data.cta_texto || 'Saiba como Assistir'
           });
           // Mostra a bolha de texto pequena após 3s
           const bubbleTimer = setTimeout(() => setShowBubble(true), 3000);
@@ -235,7 +235,7 @@ export default function ChatBot() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ animation: 'pulse 1s infinite', display: 'inline-block' }}>🟢</span>
-                <span>Assistir no WhatsApp</span>
+                <span>Saiba como Assistir</span>
               </div>
               <a
                 href={whatsapp.url}

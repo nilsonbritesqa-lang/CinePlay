@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Star, Play, MessageCircle, Calendar, ChevronDown, ChevronUp, Zap } from 'lucide-react';
+import { ArrowRight, Star, Play, MessageCircle, Calendar, ChevronDown, ChevronUp, Zap, ChevronLeft, ChevronRight, Newspaper } from 'lucide-react';
 import HeroShowcase from './HeroShowcase';
 
 const CATEGORIAS = [
@@ -14,13 +14,59 @@ const CATEGORIAS = [
   { id: 'onde-assistir', title: 'Onde Assistir', desc: 'Guias práticos de streaming e canais por conteúdo.', icon: '🔍', badge: 'Novo' },
 ];
 
+const MOVIE_NEWS_HIGHLIGHTS = [
+  {
+    id: 1,
+    title: 'Duna 2: Entenda o Fenômeno e Onde Assistir Online',
+    category: '🎬 Destaque do Cinema',
+    summary: 'A continuação épica dirigida por Denis Villeneuve que bateu recordes globais de bilheteria e crítica.',
+    image: 'https://image.tmdb.org/t/p/w1280/8Z8dHFw7JVhXPSmx0yg2mtGEyeb.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/c7D6n1clBL6Vo44x2Uo599026T.jpg',
+    slug: 'duna-2-onde-assistir'
+  },
+  {
+    id: 2,
+    title: 'House of the Dragon: A Batalha dos Verdes vs Pretos',
+    category: '📺 Novidade nas Séries',
+    summary: 'Tudo sobre os novos episódios da 2ª temporada e o destino dos dragões em Westeros.',
+    image: 'https://image.tmdb.org/t/p/w1280/5PN1vU2hDYO9MNJK8g5n24J6LVw.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/t9X7imfv64es3496nQ3KyIFnN5Y.jpg',
+    slug: 'house-of-the-dragon-guia'
+  },
+  {
+    id: 3,
+    title: 'The Last of Us Temporada 2: Elenco e Data de Estreia',
+    category: '🔥 Em Alta no Streaming',
+    summary: 'Joel e Ellie retornam para os momentos mais intensos da aclamada franquia de videogame.',
+    image: 'https://image.tmdb.org/t/p/w1280/2rezQWg73XFWuKE5eZIBwJ7CBca.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/u3bZ62I4rj75XyH2h45a60xa4iO.jpg',
+    slug: 'the-last-of-us-temporada-2'
+  },
+  {
+    id: 4,
+    title: 'Oppenheimer: O Vencedor do Oscar de Melhor Filme',
+    category: '🏆 Sucesso de Crítica',
+    summary: 'Confira em quais plataformas de streaming o épico histórico de Christopher Nolan está disponível.',
+    image: 'https://image.tmdb.org/t/p/w1280/nb3xI8XI3w4pMVZ38VijbsyBqP4.jpg',
+    poster: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+    slug: 'oppenheimer-onde-assistir'
+  }
+];
+
 export default function LandingPage() {
   const [tickerItems, setTickerItems] = useState<any[]>([]);
   const [sportsMatches, setSportsMatches] = useState<any[]>([]);
   const [whatsappConfig, setWhatsappConfig] = useState<any>(null);
 
+  // Navegação de Datas no Calendário Esportivo
+  const [selectedDateOffset, setSelectedDateOffset] = useState(0); // 0 = Hoje, 1 = Amanhã, -1 = Ontem...
+  const [loadingMatches, setLoadingMatches] = useState(false);
+
   // Controle de sanfona (accordion) dos campeonatos
   const [expandedLeagues, setExpandedLeagues] = useState<Record<string, boolean>>({});
+
+  // Notícias de Filmes/Séries passando sozinho
+  const [currentNewsIdx, setCurrentNewsIdx] = useState(0);
 
   const toggleLeague = (leagueName: string) => {
     setExpandedLeagues(prev => ({
@@ -29,12 +75,72 @@ export default function LandingPage() {
     }));
   };
 
+  // Rotação automática de notícias a cada 4.5 segundos
+  useEffect(() => {
+    const newsInterval = setInterval(() => {
+      setCurrentNewsIdx(prev => (prev + 1) % MOVIE_NEWS_HIGHLIGHTS.length);
+    }, 4500);
+    return () => clearInterval(newsInterval);
+  }, []);
+
+  // Calcula lista de dias para navegação
+  const getDateOptions = () => {
+    const options = [];
+    const now = new Date();
+    for (let offset = -1; offset <= 4; offset++) {
+      const d = new Date(now.getTime() + offset * 24 * 60 * 60 * 1000);
+      const isoDate = d.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+      
+      let label = d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit' });
+      let dayName = d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short' }).replace('.', '');
+      
+      if (offset === 0) { dayName = 'Hoje'; }
+      else if (offset === 1) { dayName = 'Amanhã'; }
+      else if (offset === -1) { dayName = 'Ontem'; }
+
+      options.push({ offset, isoDate, label, dayName });
+    }
+    return options;
+  };
+
+  const dateOptions = getDateOptions();
+  const selectedDateObj = dateOptions.find(o => o.offset === selectedDateOffset) || dateOptions[1];
+
+  // Carrega dados dinâmicos da API
+  useEffect(() => {
+    async function loadSportsData() {
+      setLoadingMatches(true);
+      try {
+        const url = `/api/sports-pool?date=${selectedDateObj.isoDate}`;
+        const sportsRes = await fetch(url).then(r => r.json()).catch(() => null);
+
+        if (sportsRes?.success && sportsRes.pool?.length) {
+          setSportsMatches(sportsRes.pool);
+          
+          // Expande os 3 primeiros campeonatos por padrão
+          const initialExpanded: Record<string, boolean> = {};
+          sportsRes.pool.forEach((match: any, index: number) => {
+            const league = match.league || 'Futebol';
+            if (index < 3) initialExpanded[league] = true;
+          });
+          setExpandedLeagues(initialExpanded);
+        } else {
+          setSportsMatches([]);
+        }
+      } catch (e) {
+        console.error("Erro ao buscar esportes por data:", e);
+      } finally {
+        setLoadingMatches(false);
+      }
+    }
+    loadSportsData();
+  }, [selectedDateOffset]);
+
   useEffect(() => {
     async function loadData() {
       try {
-        const [tmdbRes, sportsRes, configRes] = await Promise.all([
+        const [tmdbRes, configRes] = await Promise.all([
           fetch('/api/tmdb-pool').then(r => r.json()).catch(() => null),
-          fetch('/api/sports-pool').then(r => r.json()).catch(() => null),
           fetch('/api/chatbot-config').then(r => r.json()).catch(() => null)
         ]);
 
@@ -42,42 +148,7 @@ export default function LandingPage() {
           setWhatsappConfig(configRes);
         }
 
-        if (sportsRes?.success && sportsRes.pool?.length) {
-          setSportsMatches(sportsRes.pool);
-          
-          // Expande os 2 primeiros campeonatos por padrão
-          const initialExpanded: Record<string, boolean> = {};
-          sportsRes.pool.forEach((match: any, index: number) => {
-            const league = match.league || 'Futebol';
-            if (index < 2) initialExpanded[league] = true;
-          });
-          setExpandedLeagues(initialExpanded);
-        }
-
         const list: any[] = [];
-
-        if (sportsRes?.success && sportsRes.pool?.length) {
-          sportsRes.pool.forEach((item: any) => {
-            if (item.homeTeam && item.awayTeam) {
-              list.push({
-                id: `sport-${item.id}`,
-                title: item.title,
-                poster: item.poster || null,
-                backdrop: item.backdrop || null,
-                badge: item.isLive ? '🔴 Ao Vivo' : item.league || 'Futebol',
-                badgeColor: item.isLive ? '#E50914' : item.leagueColor || '#009C3B',
-                type: 'sport',
-                vote: item.vote,
-                homeTeam: item.homeTeam,
-                awayTeam: item.awayTeam,
-                league: item.league,
-                leagueColor: item.leagueColor,
-                isLive: item.isLive,
-                label: item.label
-              });
-            }
-          });
-        }
 
         if (tmdbRes?.success && tmdbRes.pool?.length) {
           tmdbRes.pool.forEach((item: any) => {
@@ -119,6 +190,8 @@ export default function LandingPage() {
     acc[league].push(match);
     return acc;
   }, {});
+
+  const currentNews = MOVIE_NEWS_HIGHLIGHTS[currentNewsIdx];
 
   return (
     <div style={{ 
@@ -240,7 +313,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          2. SEÇÃO DUPLA: CATEGORIAS (ESQUERDA) + COLUNA SLIM CALENDÁRIO (DIREITA)
+          2. SEÇÃO DUPLA: CATEGORIAS E NOTÍCIAS (ESQUERDA) + COLUNA SLIM CALENDÁRIO COM DATAS (DIREITA)
       ═══════════════════════════════ */}
       <section id="categorias-e-jogos" style={{
         padding: '56px 24px',
@@ -251,96 +324,261 @@ export default function LandingPage() {
           
           <div style={{
             display: 'grid',
-            gridTemplateColumns: sportsMatches.length > 0 ? '1.25fr 0.85fr' : '1fr',
+            gridTemplateColumns: '1.2fr 0.9fr',
             gap: 32,
             alignItems: 'start'
           }} className="main-content-grid">
 
-            {/* COLUNA ESQUERDA: CATEGORIAS DE CONTEÚDO */}
-            <div>
-              <div style={{ marginBottom: 20 }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(229,9,20,0.08)', color: '#E50914',
-                  padding: '3px 9px', borderRadius: 99, fontSize: 9, fontWeight: 800,
-                  border: '1px solid rgba(229,9,20,0.18)', marginBottom: 6,
-                  textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'Outfit'
-                }}>
-                  Explore por Categoria
-                </span>
-                <h2 style={{ fontFamily: 'Outfit', fontSize: '1.6rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>
-                  O que cobrimos <span style={{ color: '#E50914' }}>para você</span>
-                </h2>
+            {/* COLUNA ESQUERDA: CATEGORIAS + CARROSSEL DE NOTÍCIAS AUTOMÁTICO (PREENCHE O VAZIO) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: 'rgba(229,9,20,0.08)', color: '#E50914',
+                    padding: '3px 9px', borderRadius: 99, fontSize: 9, fontWeight: 800,
+                    border: '1px solid rgba(229,9,20,0.18)', marginBottom: 6,
+                    textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'Outfit'
+                  }}>
+                    Explore por Categoria
+                  </span>
+                  <h2 style={{ fontFamily: 'Outfit', fontSize: '1.6rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>
+                    O que cobrimos <span style={{ color: '#E50914' }}>para você</span>
+                  </h2>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                  {CATEGORIAS.map(cat => (
+                    <Link
+                      key={cat.id}
+                      href={`/blog?categoria=${cat.id}`}
+                      style={{
+                        background: '#0a0a12 url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.008\'/%3E%3C/svg%3E")',
+                        border: cat.badge ? '1.5px solid rgba(229,9,20,0.3)' : '1px solid rgba(255,255,255,0.04)',
+                        borderRadius: 12, padding: '16px 14px',
+                        position: 'relative', textDecoration: 'none', display: 'block',
+                        transition: 'all 0.28s ease'
+                      }}
+                      className="category-card"
+                    >
+                      <div style={{ fontSize: 22, marginBottom: 6 }}>{cat.icon}</div>
+                      <h3 style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{cat.title}</h3>
+                      <p style={{ fontSize: 10, color: '#9090A5', lineHeight: 1.35, margin: 0 }}>{cat.desc}</p>
+                      {cat.badge && (
+                        <span style={{
+                          position: 'absolute', top: 8, right: 8,
+                          fontSize: 7, fontWeight: 800, color: '#E50914',
+                          background: 'rgba(229,9,20,0.08)', padding: '2px 5px',
+                          borderRadius: 99, border: '1px solid rgba(229,9,20,0.2)'
+                        }}>{cat.badge}</span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
-                {CATEGORIAS.map(cat => (
-                  <Link
-                    key={cat.id}
-                    href={`/blog?categoria=${cat.id}`}
-                    style={{
-                      background: '#0a0a12 url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.008\'/%3E%3C/svg%3E")',
-                      border: cat.badge ? '1.5px solid rgba(229,9,20,0.3)' : '1px solid rgba(255,255,255,0.04)',
-                      borderRadius: 12, padding: '18px 16px',
-                      position: 'relative', textDecoration: 'none', display: 'block',
-                      transition: 'all 0.28s ease'
-                    }}
-                    className="category-card"
-                  >
-                    <div style={{ fontSize: 24, marginBottom: 8 }}>{cat.icon}</div>
-                    <h3 style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{cat.title}</h3>
-                    <p style={{ fontSize: 11, color: '#9090A5', lineHeight: 1.4 }}>{cat.desc}</p>
-                    {cat.badge && (
-                      <span style={{
-                        position: 'absolute', top: 10, right: 10,
-                        fontSize: 8, fontWeight: 800, color: '#E50914',
-                        background: 'rgba(229,9,20,0.08)', padding: '2px 6px',
-                        borderRadius: 99, border: '1px solid rgba(229,9,20,0.2)'
-                      }}>{cat.badge}</span>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* COLUNA DIREITA: COLUNA SLIM DA AGENDA ESPORTIVA */}
-            {sportsMatches.length > 0 && (
+              {/* CARD DINÂMICO DE DESTAQUES & NOTÍCIAS PASSANDO SOZINHO COM PÔSTER (PREENCHE O VAZIO) */}
               <div style={{
-                background: '#090914',
-                border: '1px solid rgba(255,255,255,0.08)',
+                position: 'relative',
                 borderRadius: 16,
-                padding: '20px',
-                boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+                overflow: 'hidden',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: '#0D0D1A',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
+                minHeight: 280,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 14
-              }} className="slim-sports-column">
-                
-                {/* Header da Coluna */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 12 }}>
+                justifyContent: 'flex-end',
+              }} className="news-carousel-card">
+                {/* Imagem de Fundo em Movimento Suave */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${currentNews.image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  filter: 'brightness(0.45) saturate(1.2)',
+                  transition: 'background-image 0.8s ease',
+                  zIndex: 0
+                }} />
+
+                {/* Overlays Gradientes */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(to top, #090914 0%, rgba(9,9,20,0.7) 50%, transparent 100%)',
+                  zIndex: 1
+                }} />
+
+                {/* Conteúdo da Notícia com Pôster */}
+                <div style={{ position: 'relative', zIndex: 2, padding: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
+                  <img
+                    src={currentNews.poster}
+                    alt={currentNews.title}
+                    style={{
+                      width: 90,
+                      height: 130,
+                      borderRadius: 10,
+                      objectFit: 'cover',
+                      border: '1.5px solid rgba(255,255,255,0.15)',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.7)',
+                      flexShrink: 0
+                    }}
+                  />
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{
+                        fontSize: 9, fontWeight: 900, textTransform: 'uppercase',
+                        color: '#E50914', background: 'rgba(229,9,20,0.15)', padding: '3px 8px', borderRadius: 99,
+                        border: '1px solid rgba(229,9,20,0.3)', fontFamily: 'Outfit'
+                      }}>
+                        {currentNews.category}
+                      </span>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button
+                          onClick={() => setCurrentNewsIdx(prev => (prev - 1 + MOVIE_NEWS_HIGHLIGHTS.length) % MOVIE_NEWS_HIGHLIGHTS.length)}
+                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: 4, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        >
+                          <ChevronLeft size={12} />
+                        </button>
+                        <button
+                          onClick={() => setCurrentNewsIdx(prev => (prev + 1) % MOVIE_NEWS_HIGHLIGHTS.length)}
+                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: 4, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        >
+                          <ChevronRight size={12} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <h3 style={{ fontFamily: 'Outfit', fontSize: '1.15rem', fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.25 }}>
+                      {currentNews.title}
+                    </h3>
+                    
+                    <p style={{ fontSize: '0.82rem', color: '#A0A0B5', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {currentNews.summary}
+                    </p>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                      <Link
+                        href={`/blog?search=${encodeURIComponent(currentNews.title.split(':')[0])}`}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          background: '#E50914', color: '#fff', padding: '6px 12px',
+                          borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: 'none',
+                          boxShadow: '0 4px 12px rgba(229,9,20,0.3)', fontFamily: 'Outfit'
+                        }}
+                      >
+                        <Newspaper size={12} /> Ler Notícia Completa
+                      </Link>
+                      
+                      {/* Indicadores de slide */}
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {MOVIE_NEWS_HIGHLIGHTS.map((_, i) => (
+                          <span
+                            key={i}
+                            onClick={() => setCurrentNewsIdx(i)}
+                            style={{
+                              width: i === currentNewsIdx ? 16 : 5,
+                              height: 5,
+                              borderRadius: 99,
+                              background: i === currentNewsIdx ? '#E50914' : 'rgba(255,255,255,0.2)',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* COLUNA DIREITA: COLUNA SLIM DA AGENDA ESPORTIVA COM NAVEGAÇÃO DE DATAS */}
+            <div style={{
+              background: '#090914',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 16,
+              padding: '20px',
+              boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14
+            }} className="slim-sports-column">
+              
+              {/* Header da Agenda com Navegador de Datas */}
+              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div>
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
                       color: '#25D366', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em'
                     }}>
-                      <Zap size={10} /> Agenda Esportiva (BR - SP)
+                      <Zap size={10} /> Agenda de Transmissões (BR - SP)
                     </span>
                     <h3 style={{ fontFamily: 'Outfit', fontSize: '1.15rem', fontWeight: 900, color: '#fff', margin: 0 }}>
-                      Próximos Jogos
+                      Calendário de Jogos
                     </h3>
                   </div>
-                  <span style={{ fontSize: 10, color: '#65657B', background: 'rgba(255,255,255,0.04)', padding: '4px 8px', borderRadius: 6 }}>
-                    Ao Vivo & Hoje
+                  <span style={{ fontSize: 10, color: '#25D366', background: 'rgba(37,211,102,0.1)', padding: '4px 8px', borderRadius: 6, fontWeight: 800 }}>
+                    {selectedDateObj.dayName} ({selectedDateObj.label})
                   </span>
                 </div>
 
-                {/* Lista de Campeonatos (Sanfona Slim Retrátil) */}
+                {/* BARRA DE NAVEGAÇÃO ENTRE DATAS (Ontem / Hoje / Amanhã / Próximos) */}
+                <div style={{
+                  display: 'flex',
+                  gap: 6,
+                  overflowX: 'auto',
+                  paddingBottom: 4,
+                  scrollbarWidth: 'none',
+                }}>
+                  {dateOptions.map((opt) => {
+                    const isSelected = opt.offset === selectedDateOffset;
+                    return (
+                      <button
+                        key={opt.isoDate}
+                        onClick={() => setSelectedDateOffset(opt.offset)}
+                        style={{
+                          background: isSelected ? '#25D366' : 'rgba(255,255,255,0.05)',
+                          color: isSelected ? '#000' : '#A0A0B5',
+                          border: isSelected ? '1px solid #25D366' : '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: 8,
+                          padding: '5px 10px',
+                          fontSize: 10,
+                          fontWeight: isSelected ? 900 : 700,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          transition: 'all 0.2s ease',
+                          fontFamily: 'Outfit, sans-serif'
+                        }}
+                      >
+                        {opt.dayName} <span style={{ opacity: 0.8, fontSize: 9 }}>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {loadingMatches ? (
+                <div style={{ padding: '30px 0', textAlign: 'center', color: '#9090A5', fontSize: 12 }}>
+                  <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(37,211,102,0.2)', borderTopColor: '#25D366', display: 'inline-block', animation: 'spin 0.8s linear infinite', marginRight: 8 }} />
+                  Buscando transmissões para {selectedDateObj.dayName}...
+                </div>
+              ) : sportsMatches.length === 0 ? (
+                <div style={{ padding: '30px 16px', textAlign: 'center', color: '#9090A5', fontSize: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 10 }}>
+                  Sem partidas confirmadas para esta data. <br /> Use a barra acima para ver outros dias!
+                </div>
+              ) : (
+                /* Lista de Campeonatos com Escudos Oficiais de Cada Liga */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {Object.entries(groupedMatches).map(([leagueName, matches]) => {
                     const isExpanded = expandedLeagues[leagueName] ?? false;
                     const sampleMatch = matches[0];
                     const flag = sampleMatch?.leagueFlag || '⚽';
                     const leagueColor = sampleMatch?.leagueColor || '#009C3B';
+                    const leagueLogo = sampleMatch?.leagueLogo || 'https://media.api-sports.io/football/leagues/71.png';
 
                     return (
                       <div
@@ -352,7 +590,7 @@ export default function LandingPage() {
                           overflow: 'hidden',
                         }}
                       >
-                        {/* Header do Campeonato */}
+                        {/* Header do Campeonato COM ESCUDO OFICIAL DO CAMPEONATO */}
                         <button
                           onClick={() => toggleLeague(leagueName)}
                           style={{
@@ -372,7 +610,13 @@ export default function LandingPage() {
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 13 }}>{flag}</span>
+                            {/* ESCUDO / LOGO OFICIAL DO CAMPEONATO */}
+                            <img
+                              src={leagueLogo}
+                              alt=""
+                              onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }}
+                              style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }}
+                            />
                             <span style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Outfit', color: '#fff' }}>
                               {leagueName}
                             </span>
@@ -418,7 +662,7 @@ export default function LandingPage() {
                                   </span>
                                 </div>
 
-                                {/* Confronto com Escudos Garantidos */}
+                                {/* Confronto com Escudos dos Times Garantidos */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
                                   {/* Mandante */}
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '42%' }}>
@@ -452,7 +696,7 @@ export default function LandingPage() {
                                   </div>
                                 </div>
 
-                                {/* Botão "Saiba como Assistir" */}
+                                {/* Botão "Saiba como Assistir" -> Redireciona ao WhatsApp */}
                                 <a
                                   href={getMatchWhatsappUrl(match.title)}
                                   target="_blank"
@@ -460,10 +704,10 @@ export default function LandingPage() {
                                   style={{
                                     background: '#25D366',
                                     color: '#fff',
-                                    padding: '5px 8px',
+                                    padding: '6px 8px',
                                     borderRadius: 6,
                                     fontWeight: 800,
-                                    fontSize: 9,
+                                    fontSize: 10,
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -475,7 +719,7 @@ export default function LandingPage() {
                                   }}
                                   className="saiba-como-assistir-btn"
                                 >
-                                  <MessageCircle size={10} />
+                                  <MessageCircle size={11} />
                                   Saiba como Assistir
                                 </a>
                               </div>
@@ -486,9 +730,9 @@ export default function LandingPage() {
                     );
                   })}
                 </div>
+              )}
 
-              </div>
-            )}
+            </div>
 
           </div>
 
@@ -516,9 +760,6 @@ export default function LandingPage() {
                 {/* Rodada 1 */}
                 <div style={{ display: 'flex', gap: 12, paddingRight: 12 }}>
                   {tickerItems.slice(0, Math.floor(tickerItems.length / 2)).map((item, idx) => {
-                    const isSport = item.type === 'sport';
-                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
-
                     return (
                       <div
                         key={`t1-a-${item.id}-${idx}`}
@@ -535,28 +776,7 @@ export default function LandingPage() {
                           background: '#07070D',
                         }}
                       >
-                        {isSport ? (
-                          <>
-                            <div style={{
-                              position: 'absolute', inset: 0,
-                              backgroundImage: `url(${backdropImg})`,
-                              backgroundSize: 'cover', backgroundPosition: 'center',
-                              opacity: 0.35, filter: 'blur(0.5px)'
-                            }} />
-                            <div style={{
-                              position: 'absolute', top: '22%', left: 0, right: 0,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                              zIndex: 2, padding: '0 4px'
-                            }}>
-                              <img src={item.homeTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
-                              <img src={item.awayTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                            </div>
-                          </>
-                        ) : (
-                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        )}
-
+                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         <div style={{
                           position: 'absolute', bottom: 0, left: 0, right: 0,
                           background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
@@ -577,9 +797,6 @@ export default function LandingPage() {
                 {/* Rodada 2 */}
                 <div style={{ display: 'flex', gap: 12 }}>
                   {tickerItems.slice(0, Math.floor(tickerItems.length / 2)).map((item, idx) => {
-                    const isSport = item.type === 'sport';
-                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
-
                     return (
                       <div
                         key={`t1-b-${item.id}-${idx}`}
@@ -596,28 +813,7 @@ export default function LandingPage() {
                           background: '#07070D',
                         }}
                       >
-                        {isSport ? (
-                          <>
-                            <div style={{
-                              position: 'absolute', inset: 0,
-                              backgroundImage: `url(${backdropImg})`,
-                              backgroundSize: 'cover', backgroundPosition: 'center',
-                              opacity: 0.35, filter: 'blur(0.5px)'
-                            }} />
-                            <div style={{
-                              position: 'absolute', top: '22%', left: 0, right: 0,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                              zIndex: 2, padding: '0 4px'
-                            }}>
-                              <img src={item.homeTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
-                              <img src={item.awayTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                            </div>
-                          </>
-                        ) : (
-                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        )}
-
+                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         <div style={{
                           position: 'absolute', bottom: 0, left: 0, right: 0,
                           background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
@@ -644,9 +840,6 @@ export default function LandingPage() {
                 {/* Rodada 1 */}
                 <div style={{ display: 'flex', gap: 12, paddingRight: 12 }}>
                   {tickerItems.slice(Math.floor(tickerItems.length / 2)).map((item, idx) => {
-                    const isSport = item.type === 'sport';
-                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
-
                     return (
                       <div
                         key={`t2-a-${item.id}-${idx}`}
@@ -663,28 +856,7 @@ export default function LandingPage() {
                           background: '#07070D',
                         }}
                       >
-                        {isSport ? (
-                          <>
-                            <div style={{
-                              position: 'absolute', inset: 0,
-                              backgroundImage: `url(${backdropImg})`,
-                              backgroundSize: 'cover', backgroundPosition: 'center',
-                              opacity: 0.35, filter: 'blur(0.5px)'
-                            }} />
-                            <div style={{
-                              position: 'absolute', top: '22%', left: 0, right: 0,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                              zIndex: 2, padding: '0 4px'
-                            }}>
-                              <img src={item.homeTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
-                              <img src={item.awayTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                            </div>
-                          </>
-                        ) : (
-                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        )}
-
+                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         <div style={{
                           position: 'absolute', bottom: 0, left: 0, right: 0,
                           background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',
@@ -705,9 +877,6 @@ export default function LandingPage() {
                 {/* Rodada 2 */}
                 <div style={{ display: 'flex', gap: 12 }}>
                   {tickerItems.slice(Math.floor(tickerItems.length / 2)).map((item, idx) => {
-                    const isSport = item.type === 'sport';
-                    const backdropImg = item.backdrop || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=200&q=80';
-
                     return (
                       <div
                         key={`t2-b-${item.id}-${idx}`}
@@ -724,28 +893,7 @@ export default function LandingPage() {
                           background: '#07070D',
                         }}
                       >
-                        {isSport ? (
-                          <>
-                            <div style={{
-                              position: 'absolute', inset: 0,
-                              backgroundImage: `url(${backdropImg})`,
-                              backgroundSize: 'cover', backgroundPosition: 'center',
-                              opacity: 0.35, filter: 'blur(0.5px)'
-                            }} />
-                            <div style={{
-                              position: 'absolute', top: '22%', left: 0, right: 0,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                              zIndex: 2, padding: '0 4px'
-                            }}>
-                              <img src={item.homeTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                              <span style={{ fontSize: 7, fontWeight: 900, color: item.isLive ? '#E50914' : '#65657B' }}>VS</span>
-                              <img src={item.awayTeam?.logo} alt="" onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }} style={{ width: 24, height: 24, objectFit: 'contain', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.6))' }} />
-                            </div>
-                          </>
-                        ) : (
-                          <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        )}
-
+                        <img src={item.poster} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         <div style={{
                           position: 'absolute', bottom: 0, left: 0, right: 0,
                           background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 65%, transparent 100%)',

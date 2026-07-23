@@ -14,12 +14,12 @@ import { NextResponse } from 'next/server';
 const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
 
 const LEAGUES = [
-  { id: 71,  name: 'Brasileirão Série A', flag: '🇧🇷', color: '#009C3B' },
-  { id: 73,  name: 'Copa do Brasil',      flag: '🇧🇷', color: '#009C3B' },
-  { id: 13,  name: 'Libertadores',        flag: '🏆', color: '#FFD700' },
-  { id: 11,  name: 'Sul-Americana',       flag: '🌎', color: '#E67E22' },
-  { id: 2,   name: 'Champions League',    flag: '⭐', color: '#1A3A6B' },
-  { id: 3,   name: 'Europa League',       flag: '🏅', color: '#F39C12' },
+  { id: 71,  name: 'Brasileirão Série A', flag: '🇧🇷', color: '#009C3B', logo: 'https://media.api-sports.io/football/leagues/71.png' },
+  { id: 73,  name: 'Copa do Brasil',      flag: '🇧🇷', color: '#009C3B', logo: 'https://media.api-sports.io/football/leagues/73.png' },
+  { id: 13,  name: 'Libertadores',        flag: '🏆', color: '#FFD700', logo: 'https://media.api-sports.io/football/leagues/13.png' },
+  { id: 11,  name: 'Sul-Americana',       flag: '🌎', color: '#E67E22', logo: 'https://media.api-sports.io/football/leagues/11.png' },
+  { id: 2,   name: 'Champions League',    flag: '⭐', color: '#1A3A6B', logo: 'https://media.api-sports.io/football/leagues/2.png' },
+  { id: 3,   name: 'Europa League',       flag: '🏅', color: '#F39C12', logo: 'https://media.api-sports.io/football/leagues/3.png' },
 ];
 
 const SPORT_BACKDROPS = [
@@ -43,29 +43,25 @@ async function fetchWithAPIFootball(endpoint: string, apiKey: string) {
   return res.json();
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const apiKey = process.env.API_FOOTBALL_KEY;
+  const { searchParams } = new URL(request.url);
+  const requestedDate = searchParams.get('date');
 
   // Data atual exata no Fuso Horário de Brasília (America/Sao_Paulo)
   const now = new Date();
-  const brDateStr = now.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); // Formato ISO YYYY-MM-DD
+  const brDateStr = requestedDate || now.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); // Formato ISO YYYY-MM-DD
   
   const tomorrowObj = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const brTomorrowStr = tomorrowObj.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
-
-  const nextWeekObj = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const brNextWeekStr = nextWeekObj.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
 
   const sportsPool: any[] = [];
 
   if (apiKey && apiKey !== 'SUA_CHAVE_AQUI') {
     try {
-      const currentYear = new Date().getFullYear();
       const fixturePromises = [
         fetchWithAPIFootball(`/fixtures?live=all&timezone=America/Sao_Paulo`, apiKey),
         fetchWithAPIFootball(`/fixtures?date=${brDateStr}&timezone=America/Sao_Paulo`, apiKey),
-        fetchWithAPIFootball(`/fixtures?from=${brDateStr}&to=${brNextWeekStr}&league=71&season=${currentYear}&timezone=America/Sao_Paulo`, apiKey),
-        fetchWithAPIFootball(`/fixtures?from=${brDateStr}&to=${brNextWeekStr}&league=13&season=${currentYear}&timezone=America/Sao_Paulo`, apiKey),
       ];
 
       const results = await Promise.allSettled(fixturePromises);
@@ -94,6 +90,7 @@ export async function GET() {
 
             const leagueInfo = LEAGUES.find(l => l.id === league?.id);
             const leagueName = leagueInfo?.name || league?.name || 'Futebol';
+            const leagueLogo = leagueInfo?.logo || league?.logo || 'https://media.api-sports.io/football/leagues/71.png';
             const roundName = fixture.league?.round || 'Rodada Principal';
             const subtitle = `${leagueName} - ${roundName}`;
 
@@ -114,10 +111,10 @@ export async function GET() {
               overlayBadge = `HOJE às ${fixTimeStr}`;
             } else if (isTomorrow) {
               type = 'URGÊNCIA';
-              overlayBadge = 'É AMANHÃ';
+              overlayBadge = `AMANHÃ às ${fixTimeStr}`;
             } else {
               type = 'EXPECTATIVA';
-              overlayBadge = `📅 ${fixtureDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'short' })}`;
+              overlayBadge = `📅 ${fixtureDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'short' })} às ${fixTimeStr}`;
             }
 
             const posterUrl = homeTeam?.logo || awayTeam?.logo || null;
@@ -140,12 +137,13 @@ export async function GET() {
               league: leagueName,
               leagueFlag: leagueInfo?.flag || '⚽',
               leagueColor: leagueInfo?.color || '#E50914',
+              leagueLogo,
               isLive,
               label: overlayBadge,
               homeTeam: { name: homeTeam?.name, logo: homeTeam?.logo },
               awayTeam: { name: awayTeam?.name, logo: awayTeam?.logo },
-              leagueLogo: league?.logo,
               country: league?.country,
+              dateStr: fixDateStr
             });
           });
         }
@@ -155,7 +153,7 @@ export async function GET() {
     }
   }
 
-  // Partidas em destaque para HOJE e AO VIVO quando a API não estiver ativa/disponível
+  // Partidas de mock com datas dinâmicas se a API externa estiver vazia
   if (sportsPool.length < 3) {
     const MOCK_FIXTURES = [
       {
@@ -166,6 +164,7 @@ export async function GET() {
         league: "Brasileirão Série A",
         leagueFlag: "🇧🇷",
         leagueColor: "#009C3B",
+        leagueLogo: "https://media.api-sports.io/football/leagues/71.png",
         isLive: true,
         liveScore: "2 x 1",
         overlayBadge: "AO VIVO",
@@ -180,6 +179,7 @@ export async function GET() {
         league: "Copa do Brasil",
         leagueFlag: "🇧🇷",
         leagueColor: "#009C3B",
+        leagueLogo: "https://media.api-sports.io/football/leagues/73.png",
         isLive: false,
         liveScore: null,
         overlayBadge: "HOJE às 21:30",
@@ -194,6 +194,7 @@ export async function GET() {
         league: "Champions League",
         leagueFlag: "⭐",
         leagueColor: "#1A3A6B",
+        leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
         isLive: false,
         liveScore: null,
         overlayBadge: "HOJE às 19:00",
@@ -208,11 +209,27 @@ export async function GET() {
         league: "Champions League",
         leagueFlag: "⭐",
         leagueColor: "#1A3A6B",
+        leagueLogo: "https://media.api-sports.io/football/leagues/2.png",
         isLive: false,
         liveScore: null,
-        overlayBadge: "É AMANHÃ",
+        overlayBadge: "AMANHÃ às 16:00",
         round: "Fase de Grupos",
         type: "URGÊNCIA"
+      },
+      {
+        id: 9900005,
+        title: "Boca Juniors x River Plate",
+        homeTeam: { name: "Boca Juniors", logo: "https://media.api-sports.io/football/teams/451.png" },
+        awayTeam: { name: "River Plate", logo: "https://media.api-sports.io/football/teams/435.png" },
+        league: "Libertadores",
+        leagueFlag: "🏆",
+        leagueColor: "#FFD700",
+        leagueLogo: "https://media.api-sports.io/football/leagues/13.png",
+        isLive: false,
+        liveScore: null,
+        overlayBadge: "AMANHÃ às 21:30",
+        round: "Fase de Grupos",
+        type: "EXPECTATIVA"
       }
     ];
 
@@ -240,11 +257,11 @@ export async function GET() {
         league: leagueName,
         leagueFlag: mock.leagueFlag,
         leagueColor: mock.leagueColor,
+        leagueLogo: mock.leagueLogo,
         isLive: mock.isLive,
         label: mock.overlayBadge,
         homeTeam: mock.homeTeam,
         awayTeam: mock.awayTeam,
-        leagueLogo: null,
         country: "Brazil"
       });
     });
