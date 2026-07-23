@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Star, Play, MessageCircle, Calendar, ChevronDown, ChevronUp, Zap, ChevronLeft, ChevronRight, Newspaper } from 'lucide-react';
+import { ArrowRight, Star, Play, MessageCircle, Calendar, ChevronDown, ChevronUp, Zap, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import HeroShowcase from './HeroShowcase';
 
 const CATEGORIAS = [
@@ -14,42 +14,46 @@ const CATEGORIAS = [
   { id: 'onde-assistir', title: 'Onde Assistir', desc: 'Guias práticos de streaming e canais por conteúdo.', icon: '🔍', badge: 'Novo' },
 ];
 
-const MOVIE_NEWS_HIGHLIGHTS = [
+const MOVIE_SHOWCASE_ITEMS = [
   {
     id: 1,
-    title: 'Duna 2: Entenda o Fenômeno e Onde Assistir Online',
+    title: 'Duna: Parte 2',
     category: '🎬 Destaque do Cinema',
-    summary: 'A continuação épica dirigida por Denis Villeneuve que bateu recordes globais de bilheteria e crítica.',
+    type: 'Filme',
+    rating: 8.8,
+    synopsis: 'Paul Atreides se une a Chani e aos Fremen enquanto busca vingança contra os conspiradores que destruíram sua família. Diante de uma escolha entre o amor de sua vida e o destino do universo, ele luta para evitar um futuro terrível que só ele pode prever.',
     image: 'https://image.tmdb.org/t/p/w1280/8Z8dHFw7JVhXPSmx0yg2mtGEyeb.jpg',
     poster: 'https://image.tmdb.org/t/p/w500/c7D6n1clBL6Vo44x2Uo599026T.jpg',
-    slug: 'duna-2-onde-assistir'
   },
   {
     id: 2,
-    title: 'House of the Dragon: A Batalha dos Verdes vs Pretos',
+    title: 'House of the Dragon (A Casa do Dragão)',
     category: '📺 Novidade nas Séries',
-    summary: 'Tudo sobre os novos episódios da 2ª temporada e o destino dos dragões em Westeros.',
+    type: 'Série',
+    rating: 9.1,
+    synopsis: 'A história da Casa Targaryen 200 anos antes dos eventos de Game of Thrones. A Dança dos Dragões começa quando os Verdes e os Pretos travam uma sangrenta guerra civil pelo Trono de Ferro de Westeros.',
     image: 'https://image.tmdb.org/t/p/w1280/5PN1vU2hDYO9MNJK8g5n24J6LVw.jpg',
     poster: 'https://image.tmdb.org/t/p/w500/t9X7imfv64es3496nQ3KyIFnN5Y.jpg',
-    slug: 'house-of-the-dragon-guia'
   },
   {
     id: 3,
-    title: 'The Last of Us Temporada 2: Elenco e Data de Estreia',
+    title: 'The Last of Us: 2ª Temporada',
     category: '🔥 Em Alta no Streaming',
-    summary: 'Joel e Ellie retornam para os momentos mais intensos da aclamada franquia de videogame.',
+    type: 'Série',
+    rating: 9.2,
+    synopsis: 'Cinco anos após os eventos traumáticos da primeira temporada, Joel e Ellie tentam reconstruir suas vidas em Jackson. No entanto, o passado retorna implacável, desencadeando uma jornada de vingança e sobrevivência.',
     image: 'https://image.tmdb.org/t/p/w1280/2rezQWg73XFWuKE5eZIBwJ7CBca.jpg',
     poster: 'https://image.tmdb.org/t/p/w500/u3bZ62I4rj75XyH2h45a60xa4iO.jpg',
-    slug: 'the-last-of-us-temporada-2'
   },
   {
     id: 4,
-    title: 'Oppenheimer: O Vencedor do Oscar de Melhor Filme',
-    category: '🏆 Sucesso de Crítica',
-    summary: 'Confira em quais plataformas de streaming o épico histórico de Christopher Nolan está disponível.',
+    title: 'Oppenheimer',
+    category: '🏆 Vencedor do Oscar',
+    type: 'Filme',
+    rating: 8.9,
+    synopsis: 'A história do físico americano J. Robert Oppenheimer, seu papel no Projeto Manhattan durante a Segunda Guerra Mundial e o desenvolvimento da bomba atômica que mudou o curso da humanidade para sempre.',
     image: 'https://image.tmdb.org/t/p/w1280/nb3xI8XI3w4pMVZ38VijbsyBqP4.jpg',
     poster: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
-    slug: 'oppenheimer-onde-assistir'
   }
 ];
 
@@ -65,8 +69,8 @@ export default function LandingPage() {
   // Controle de sanfona (accordion) dos campeonatos
   const [expandedLeagues, setExpandedLeagues] = useState<Record<string, boolean>>({});
 
-  // Notícias de Filmes/Séries passando sozinho
-  const [currentNewsIdx, setCurrentNewsIdx] = useState(0);
+  // Notícias/Posteres de Filmes e Séries passando sozinho
+  const [currentShowcaseIdx, setCurrentShowcaseIdx] = useState(0);
 
   const toggleLeague = (leagueName: string) => {
     setExpandedLeagues(prev => ({
@@ -75,12 +79,12 @@ export default function LandingPage() {
     }));
   };
 
-  // Rotação automática de notícias a cada 4.5 segundos
+  // Rotação automática de filmes/séries a cada 5 segundos
   useEffect(() => {
-    const newsInterval = setInterval(() => {
-      setCurrentNewsIdx(prev => (prev + 1) % MOVIE_NEWS_HIGHLIGHTS.length);
-    }, 4500);
-    return () => clearInterval(newsInterval);
+    const showcaseInterval = setInterval(() => {
+      setCurrentShowcaseIdx(prev => (prev + 1) % MOVIE_SHOWCASE_ITEMS.length);
+    }, 5000);
+    return () => clearInterval(showcaseInterval);
   }, []);
 
   // Calcula lista de dias para navegação
@@ -183,6 +187,12 @@ export default function LandingPage() {
     return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
   };
 
+  const getMovieWhatsappUrl = (title: string) => {
+    const num = whatsappConfig?.whatsapp_numero || '5511999999999';
+    const text = `Olá! Quero saber onde assistir o título: ${title}`;
+    return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+  };
+
   // Agrupa os jogos por Campeonato
   const groupedMatches = sportsMatches.reduce((acc: Record<string, any[]>, match) => {
     const league = match.league || 'Outros Campeonatos';
@@ -191,7 +201,7 @@ export default function LandingPage() {
     return acc;
   }, {});
 
-  const currentNews = MOVIE_NEWS_HIGHLIGHTS[currentNewsIdx];
+  const currentShowcase = MOVIE_SHOWCASE_ITEMS[currentShowcaseIdx];
 
   return (
     <div style={{ 
@@ -313,7 +323,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          2. SEÇÃO DUPLA: CATEGORIAS E NOTÍCIAS (ESQUERDA) + COLUNA SLIM CALENDÁRIO COM DATAS (DIREITA)
+          2. SEÇÃO DUPLA: CATEGORIAS + SHOWCASE DE FILMES COMPLETO (ESQUERDA) + AGENDA ESPORTIVA (DIREITA)
       ═══════════════════════════════ */}
       <section id="categorias-e-jogos" style={{
         padding: '56px 24px',
@@ -326,13 +336,13 @@ export default function LandingPage() {
             display: 'grid',
             gridTemplateColumns: '1.2fr 0.9fr',
             gap: 32,
-            alignItems: 'start'
+            alignItems: 'stretch'
           }} className="main-content-grid">
 
-            {/* COLUNA ESQUERDA: CATEGORIAS + CARROSSEL DE NOTÍCIAS AUTOMÁTICO (PREENCHE O VAZIO) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+            {/* COLUNA ESQUERDA: CATEGORIAS + SUPER BANNER SHOWCASE DE FILMES E SÉRIES COM SINOPSE E CTA "ONDE ASSISTIR?" */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, height: '100%' }}>
               <div>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 14 }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
                     background: 'rgba(229,9,20,0.08)', color: '#E50914',
@@ -347,7 +357,7 @@ export default function LandingPage() {
                   </h2>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
                   {CATEGORIAS.map(cat => (
                     <Link
                       key={cat.id}
@@ -355,20 +365,20 @@ export default function LandingPage() {
                       style={{
                         background: '#0a0a12 url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.008\'/%3E%3C/svg%3E")',
                         border: cat.badge ? '1.5px solid rgba(229,9,20,0.3)' : '1px solid rgba(255,255,255,0.04)',
-                        borderRadius: 12, padding: '16px 14px',
+                        borderRadius: 12, padding: '14px 12px',
                         position: 'relative', textDecoration: 'none', display: 'block',
                         transition: 'all 0.28s ease'
                       }}
                       className="category-card"
                     >
-                      <div style={{ fontSize: 22, marginBottom: 6 }}>{cat.icon}</div>
-                      <h3 style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{cat.title}</h3>
-                      <p style={{ fontSize: 10, color: '#9090A5', lineHeight: 1.35, margin: 0 }}>{cat.desc}</p>
+                      <div style={{ fontSize: 20, marginBottom: 4 }}>{cat.icon}</div>
+                      <h3 style={{ fontSize: 11, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{cat.title}</h3>
+                      <p style={{ fontSize: 9.5, color: '#9090A5', lineHeight: 1.3, margin: 0 }}>{cat.desc}</p>
                       {cat.badge && (
                         <span style={{
-                          position: 'absolute', top: 8, right: 8,
+                          position: 'absolute', top: 6, right: 6,
                           fontSize: 7, fontWeight: 800, color: '#E50914',
-                          background: 'rgba(229,9,20,0.08)', padding: '2px 5px',
+                          background: 'rgba(229,9,20,0.08)', padding: '1px 5px',
                           borderRadius: 99, border: '1px solid rgba(229,9,20,0.2)'
                         }}>{cat.badge}</span>
                       )}
@@ -377,118 +387,166 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* CARD DINÂMICO DE DESTAQUES & NOTÍCIAS PASSANDO SOZINHO COM PÔSTER (PREENCHE O VAZIO) */}
+              {/* SUPER BANNER SHOWCASE EXPANDIDO DE FILMES E SÉRIES COM SINOPSE E CTA "ONDE ASSISTIR?" (PREENCHE TODO O ESPAÇO) */}
               <div style={{
+                flex: 1,
+                minHeight: 460,
                 position: 'relative',
-                borderRadius: 16,
+                borderRadius: 18,
                 overflow: 'hidden',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                background: '#0D0D1A',
-                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
-                minHeight: 280,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: '#090914',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
-              }} className="news-carousel-card">
-                {/* Imagem de Fundo em Movimento Suave */}
+              }} className="full-movie-showcase-banner">
+                {/* Imagem de Fundo de Alta Resolução em Transição Suave */}
                 <div style={{
                   position: 'absolute', inset: 0,
-                  backgroundImage: `url(${currentNews.image})`,
+                  backgroundImage: `url(${currentShowcase.image})`,
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  filter: 'brightness(0.45) saturate(1.2)',
-                  transition: 'background-image 0.8s ease',
+                  backgroundPosition: 'center 20%',
+                  filter: 'brightness(0.55) saturate(1.25)',
+                  transition: 'background-image 0.9s ease',
                   zIndex: 0
                 }} />
 
-                {/* Overlays Gradientes */}
+                {/* Overlays Gradientes Cinematográficos */}
                 <div style={{
                   position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, #090914 0%, rgba(9,9,20,0.7) 50%, transparent 100%)',
+                  background: 'linear-gradient(to top, #07070D 0%, rgba(7,7,13,0.85) 55%, rgba(7,7,13,0.4) 85%, transparent 100%), linear-gradient(to right, rgba(7,7,13,0.9) 0%, transparent 60%)',
                   zIndex: 1
                 }} />
 
-                {/* Conteúdo da Notícia com Pôster */}
-                <div style={{ position: 'relative', zIndex: 2, padding: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <img
-                    src={currentNews.poster}
-                    alt={currentNews.title}
-                    style={{
-                      width: 90,
-                      height: 130,
-                      borderRadius: 10,
-                      objectFit: 'cover',
-                      border: '1.5px solid rgba(255,255,255,0.15)',
-                      boxShadow: '0 8px 20px rgba(0,0,0,0.7)',
-                      flexShrink: 0
-                    }}
-                  />
+                {/* Conteúdo com Pôster, Sinopse Completa e CTA "Onde Assistir?" */}
+                <div style={{ position: 'relative', zIndex: 2, padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {/* Topo do Banner: Badge da Categoria + Controles de Slide */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{
                         fontSize: 9, fontWeight: 900, textTransform: 'uppercase',
-                        color: '#E50914', background: 'rgba(229,9,20,0.15)', padding: '3px 8px', borderRadius: 99,
-                        border: '1px solid rgba(229,9,20,0.3)', fontFamily: 'Outfit'
+                        color: '#E50914', background: 'rgba(229,9,20,0.18)', padding: '4px 10px', borderRadius: 99,
+                        border: '1px solid rgba(229,9,20,0.35)', fontFamily: 'Outfit, sans-serif', letterSpacing: '0.06em'
                       }}>
-                        {currentNews.category}
+                        {currentShowcase.category}
                       </span>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button
-                          onClick={() => setCurrentNewsIdx(prev => (prev - 1 + MOVIE_NEWS_HIGHLIGHTS.length) % MOVIE_NEWS_HIGHLIGHTS.length)}
-                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: 4, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                        >
-                          <ChevronLeft size={12} />
-                        </button>
-                        <button
-                          onClick={() => setCurrentNewsIdx(prev => (prev + 1) % MOVIE_NEWS_HIGHLIGHTS.length)}
-                          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: 4, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                        >
-                          <ChevronRight size={12} />
-                        </button>
-                      </div>
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, color: '#F59E0B', background: 'rgba(245,158,11,0.15)',
+                        padding: '4px 8px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 4
+                      }}>
+                        <Star size={10} fill="#F59E0B" color="#F59E0B" /> {currentShowcase.rating}
+                      </span>
                     </div>
 
-                    <h3 style={{ fontFamily: 'Outfit', fontSize: '1.15rem', fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.25 }}>
-                      {currentNews.title}
-                    </h3>
-                    
-                    <p style={{ fontSize: '0.82rem', color: '#A0A0B5', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {currentNews.summary}
-                    </p>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
-                      <Link
-                        href={`/blog?search=${encodeURIComponent(currentNews.title.split(':')[0])}`}
+                    {/* Botões de Navegação < > */}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={() => setCurrentShowcaseIdx(prev => (prev - 1 + MOVIE_SHOWCASE_ITEMS.length) % MOVIE_SHOWCASE_ITEMS.length)}
+                        aria-label="Anterior"
                         style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 6,
-                          background: '#E50914', color: '#fff', padding: '6px 12px',
-                          borderRadius: 8, fontSize: 11, fontWeight: 700, textDecoration: 'none',
-                          boxShadow: '0 4px 12px rgba(229,9,20,0.3)', fontFamily: 'Outfit'
+                          background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
+                          borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                         }}
                       >
-                        <Newspaper size={12} /> Ler Notícia Completa
-                      </Link>
-                      
-                      {/* Indicadores de slide */}
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {MOVIE_NEWS_HIGHLIGHTS.map((_, i) => (
-                          <span
-                            key={i}
-                            onClick={() => setCurrentNewsIdx(i)}
-                            style={{
-                              width: i === currentNewsIdx ? 16 : 5,
-                              height: 5,
-                              borderRadius: 99,
-                              background: i === currentNewsIdx ? '#E50914' : 'rgba(255,255,255,0.2)',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s ease'
-                            }}
-                          />
-                        ))}
-                      </div>
+                        <ChevronLeft size={14} />
+                      </button>
+                      <button
+                        onClick={() => setCurrentShowcaseIdx(prev => (prev + 1) % MOVIE_SHOWCASE_ITEMS.length)}
+                        aria-label="Próximo"
+                        style={{
+                          background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255,255,255,0.15)', color: '#fff',
+                          borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                        }}
+                      >
+                        <ChevronRight size={14} />
+                      </button>
                     </div>
                   </div>
+
+                  {/* Corpo do Banner: Pôster + Título + SINOPSE COMPLETA */}
+                  <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <img
+                      src={currentShowcase.poster}
+                      alt={currentShowcase.title}
+                      style={{
+                        width: 115,
+                        height: 165,
+                        borderRadius: 12,
+                        objectFit: 'cover',
+                        border: '2px solid rgba(255,255,255,0.2)',
+                        boxShadow: '0 12px 28px rgba(0,0,0,0.8)',
+                        flexShrink: 0
+                      }}
+                    />
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 240 }}>
+                      <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.45rem', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+                        {currentShowcase.title}
+                      </h3>
+
+                      {/* Bloco de SINOPSE DO FILME/SÉRIE */}
+                      <div style={{ background: 'rgba(7,7,13,0.65)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '12px 14px' }}>
+                        <span style={{ fontSize: 9, fontWeight: 900, color: '#9090A5', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                          <Info size={11} color="#E50914" /> Sinopse do Conteúdo:
+                        </span>
+                        <p style={{ fontSize: '0.86rem', color: '#D0D0E5', margin: 0, lineHeight: 1.45 }}>
+                          {currentShowcase.synopsis}
+                        </p>
+                      </div>
+
+                      {/* AÇÃO E CTA: "ONDE ASSISTIR?" REDIRECIONANDO PARA O WHATSAPP */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+                        <a
+                          href={getMovieWhatsappUrl(currentShowcase.title)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            background: '#25D366',
+                            color: '#fff',
+                            padding: '10px 22px',
+                            borderRadius: 10,
+                            fontWeight: 800,
+                            fontSize: 13,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            textDecoration: 'none',
+                            boxShadow: '0 4px 18px rgba(37, 211, 102, 0.35)',
+                            fontFamily: 'Outfit, sans-serif',
+                            transition: 'transform 0.2s ease, background 0.2s ease'
+                          }}
+                          className="onde-assistir-btn"
+                        >
+                          <MessageCircle size={16} />
+                          Onde Assistir?
+                        </a>
+
+                        {/* Indicadores de Slide Dots */}
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          {MOVIE_SHOWCASE_ITEMS.map((_, i) => (
+                            <span
+                              key={i}
+                              onClick={() => setCurrentShowcaseIdx(i)}
+                              style={{
+                                width: i === currentShowcaseIdx ? 20 : 6,
+                                height: 6,
+                                borderRadius: 99,
+                                background: i === currentShowcaseIdx ? '#E50914' : 'rgba(255,255,255,0.25)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -1009,6 +1067,9 @@ export default function LandingPage() {
             grid-template-columns: 1fr !important;
             gap: 24px !important;
           }
+          .full-movie-showcase-banner {
+            min-height: 400px !important;
+          }
         }
         .category-card {
           transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.28s;
@@ -1020,6 +1081,11 @@ export default function LandingPage() {
         .saiba-como-assistir-btn:hover {
           transform: scale(1.03);
           background: #20ba59 !important;
+        }
+        .onde-assistir-btn:hover {
+          transform: translateY(-2px) scale(1.02);
+          background: #20ba59 !important;
+          box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45) !important;
         }
         
         .ticker-container {
