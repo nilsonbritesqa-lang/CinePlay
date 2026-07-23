@@ -14,7 +14,7 @@ const CATEGORIAS = [
   { id: 'onde-assistir', title: 'Onde Assistir', desc: 'Guias práticos de streaming e canais por conteúdo.', icon: '🔍', badge: 'Novo' },
 ];
 
-const MOVIE_SHOWCASE_ITEMS = [
+const INITIAL_SHOWCASE_ITEMS = [
   {
     id: 1,
     title: 'Duna: Parte 2',
@@ -62,14 +62,17 @@ export default function LandingPage() {
   const [sportsMatches, setSportsMatches] = useState<any[]>([]);
   const [whatsappConfig, setWhatsappConfig] = useState<any>(null);
 
+  // Lista dinâmica de Filmes e Séries conectada em tempo real à API TMDB
+  const [showcaseItems, setShowcaseItems] = useState<any[]>(INITIAL_SHOWCASE_ITEMS);
+
   // Navegação de Datas no Calendário Esportivo
   const [selectedDateOffset, setSelectedDateOffset] = useState(0); // 0 = Hoje, 1 = Amanhã, -1 = Ontem...
   const [loadingMatches, setLoadingMatches] = useState(false);
 
-  // Controle de sanfona (accordion) dos campeonatos
+  // Controle de sanfona (accordion) dos campeonatos — INICIAM TODOS FECHADOS CONFORME SOLICITADO
   const [expandedLeagues, setExpandedLeagues] = useState<Record<string, boolean>>({});
 
-  // Notícias/Posteres de Filmes e Séries passando com tempo suficiente (12s) e pausa no hover
+  // Rotação suave passando com tempo suficiente (12s) e pausa no hover
   const [currentShowcaseIdx, setCurrentShowcaseIdx] = useState(0);
   const [isBannerHovered, setIsBannerHovered] = useState(false);
 
@@ -82,22 +85,20 @@ export default function LandingPage() {
 
   // Rotação suave a cada 12 segundos (pausa se o usuário estiver com o mouse em cima)
   useEffect(() => {
-    if (isBannerHovered) return;
+    if (isBannerHovered || showcaseItems.length === 0) return;
     const showcaseInterval = setInterval(() => {
-      setCurrentShowcaseIdx(prev => (prev + 1) % MOVIE_SHOWCASE_ITEMS.length);
+      setCurrentShowcaseIdx(prev => (prev + 1) % showcaseItems.length);
     }, 12000);
     return () => clearInterval(showcaseInterval);
-  }, [isBannerHovered]);
+  }, [isBannerHovered, showcaseItems.length]);
 
-  // Precarregamento instantâneo de todas as imagens de backdrop e pôster em cache
+  // Precarregamento instantâneo de todas as imagens em memória
   useEffect(() => {
-    MOVIE_SHOWCASE_ITEMS.forEach(item => {
-      const img1 = new Image();
-      img1.src = item.image;
-      const img2 = new Image();
-      img2.src = item.poster;
+    showcaseItems.forEach(item => {
+      if (item.image) { const img1 = new Image(); img1.src = item.image; }
+      if (item.poster) { const img2 = new Image(); img2.src = item.poster; }
     });
-  }, []);
+  }, [showcaseItems]);
 
   // Calcula lista de dias para navegação
   const getDateOptions = () => {
@@ -122,7 +123,7 @@ export default function LandingPage() {
   const dateOptions = getDateOptions();
   const selectedDateObj = dateOptions.find(o => o.offset === selectedDateOffset) || dateOptions[1];
 
-  // Carrega dados dinâmicos da API
+  // Carrega jogos por data via API
   useEffect(() => {
     async function loadSportsData() {
       setLoadingMatches(true);
@@ -132,14 +133,8 @@ export default function LandingPage() {
 
         if (sportsRes?.success && sportsRes.pool?.length) {
           setSportsMatches(sportsRes.pool);
-          
-          // Expande os 3 primeiros campeonatos por padrão
-          const initialExpanded: Record<string, boolean> = {};
-          sportsRes.pool.forEach((match: any, index: number) => {
-            const league = match.league || 'Futebol';
-            if (index < 3) initialExpanded[league] = true;
-          });
-          setExpandedLeagues(initialExpanded);
+          // TODOS OS CAMPEONATOS INICIAM FECHADOS (SANFONAS FECHADAS)
+          setExpandedLeagues({});
         } else {
           setSportsMatches([]);
         }
@@ -152,6 +147,7 @@ export default function LandingPage() {
     loadSportsData();
   }, [selectedDateOffset]);
 
+  // Carrega dados dinâmicos da API TMDB
   useEffect(() => {
     async function loadData() {
       try {
@@ -164,9 +160,28 @@ export default function LandingPage() {
           setWhatsappConfig(configRes);
         }
 
-        const list: any[] = [];
-
+        // Conecta o showcase dinamicamente aos títulos ao vivo da API TMDB!
         if (tmdbRes?.success && tmdbRes.pool?.length) {
+          const tmdbShowcase = tmdbRes.pool
+            .filter((item: any) => item.poster && item.backdrop && item.synopsis && item.synopsis.length > 25)
+            .slice(0, 10)
+            .map((item: any) => ({
+              id: item.id,
+              title: item.title,
+              category: item.category || (item.type === 'Filme' ? '🎬 Destaque do Cinema' : '📺 Em Alta no Streaming'),
+              type: item.type,
+              rating: item.vote || 8.5,
+              synopsis: item.synopsis,
+              image: item.backdrop,
+              poster: item.poster
+            }));
+
+          if (tmdbShowcase.length > 0) {
+            setShowcaseItems(tmdbShowcase);
+          }
+
+          // Preenche a esteira (ticker) de posteres
+          const list: any[] = [];
           tmdbRes.pool.forEach((item: any) => {
             if (item.poster) {
               list.push({
@@ -180,10 +195,10 @@ export default function LandingPage() {
               });
             }
           });
-        }
 
-        if (list.length > 0) {
-          setTickerItems(list.sort(() => Math.random() - 0.5));
+          if (list.length > 0) {
+            setTickerItems(list.sort(() => Math.random() - 0.5));
+          }
         }
       } catch (err) {
         console.error('Erro ao carregar dados da LandingPage:', err);
@@ -221,9 +236,9 @@ export default function LandingPage() {
       fontFamily: 'Inter, sans-serif' 
     }}>
 
-      {/* Precarregador invisível de imagens para garantia de carregamento instantâneo */}
+      {/* Precarregador invisível de imagens em memória */}
       <div style={{ display: 'none' }} aria-hidden="true">
-        {MOVIE_SHOWCASE_ITEMS.map((item) => (
+        {showcaseItems.map((item) => (
           <div key={`preload-${item.id}`}>
             <img src={item.image} alt="" />
             <img src={item.poster} alt="" />
@@ -343,7 +358,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          2. SEÇÃO DUPLA: CATEGORIAS + SHOWCASE DE FILMES COMPLETO (ESQUERDA) + AGENDA ESPORTIVA (DIREITA)
+          2. SEÇÃO DUPLA: CATEGORIAS + SHOWCASE DADOM TMDB (ESQUERDA) + AGENDA ESPORTIVA (DIREITA)
       ═══════════════════════════════ */}
       <section id="categorias-e-jogos" style={{
         padding: '56px 24px',
@@ -359,7 +374,7 @@ export default function LandingPage() {
             alignItems: 'stretch'
           }} className="main-content-grid">
 
-            {/* COLUNA ESQUERDA: CATEGORIAS + SHOWCASE COM SINOPSE GRANDE NO TOPO E PÔSTER INTEIRO NO RODAPÉ */}
+            {/* COLUNA ESQUERDA: CATEGORIAS + BANNER SHOWCASE CONECTADO À API TMDB EM TEMPO REAL */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, height: '100%' }}>
               <div>
                 <div style={{ marginBottom: 14 }}>
@@ -407,17 +422,17 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* SHOWCASE EXPANDIDO DE FILMES E SÉRIES COM LAYOUT VERTICAL OTIMIZADO */}
+              {/* BANNER SHOWCASE CONECTADO ÁS APIS TMDB/OMDB COM SINOPSE AMPLA E PÔSTER SEM CORTE */}
               <div
                 onMouseEnter={() => setIsBannerHovered(true)}
                 onMouseLeave={() => setIsBannerHovered(false)}
                 style={{
                   flex: 1,
-                  minHeight: 480,
+                  minHeight: 500,
                   position: 'relative',
                   borderRadius: 18,
                   overflow: 'hidden',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
                   background: '#090914',
                   boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
                   display: 'flex',
@@ -426,8 +441,8 @@ export default function LandingPage() {
                 }}
                 className="full-movie-showcase-banner"
               >
-                {/* BACKDROP EM CAMADAS COM TRANSIÇÃO SUAVE */}
-                {MOVIE_SHOWCASE_ITEMS.map((item, idx) => {
+                {/* CAMADAS DE IMAGENS BACKDROP EMPILHADAS COM FADE SUAVE */}
+                {showcaseItems.map((item, idx) => {
                   const isActive = idx === currentShowcaseIdx;
                   return (
                     <div
@@ -452,7 +467,7 @@ export default function LandingPage() {
                           height: '100%',
                           objectFit: 'cover',
                           objectPosition: 'center 20%',
-                          filter: 'brightness(0.4) saturate(1.2)',
+                          filter: 'brightness(0.35) saturate(1.2)',
                         }}
                       />
                     </div>
@@ -462,12 +477,12 @@ export default function LandingPage() {
                 {/* Overlays Gradientes Cinematográficos */}
                 <div style={{
                   position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to bottom, rgba(7,7,13,0.85) 0%, rgba(7,7,13,0.65) 50%, rgba(7,7,13,0.95) 100%)',
+                  background: 'linear-gradient(to bottom, rgba(7,7,13,0.85) 0%, rgba(7,7,13,0.7) 45%, rgba(7,7,13,0.96) 100%)',
                   zIndex: 1
                 }} />
 
-                {/* CONTEÚDO: TÍTULO + SINOPSE AMPLA NO TOPO / PÔSTER SEM CORTE + CTA "ONDE ASSISTIR?" NO RODAPÉ */}
-                {MOVIE_SHOWCASE_ITEMS.map((item, idx) => {
+                {/* CONTEÚDO: TÍTULO GRANDE + SINOPSE LEVADA E AMPLA NO TOPO / PÔSTER SEM CORTE + CTA NO RODAPÉ */}
+                {showcaseItems.map((item, idx) => {
                   const isActive = idx === currentShowcaseIdx;
                   if (!isActive) return null;
 
@@ -477,17 +492,17 @@ export default function LandingPage() {
                       style={{
                         position: 'relative',
                         zIndex: 2,
-                        padding: '24px 28px',
+                        padding: '26px 30px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         height: '100%',
-                        gap: 16,
+                        gap: 18,
                         animation: 'fadeIn 0.5s ease'
                       }}
                     >
-                      {/* PARTE SUPERIOR: BADGES + NAVEGAÇÃO + TÍTULO GRANDE + SINOPSE MAIOR */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {/* TOPO: BADGES + BOTOES < > + TITULO + SINOPSE MAIOR */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                         {/* Header Badges + Controles < > */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -502,14 +517,14 @@ export default function LandingPage() {
                               fontSize: 10, fontWeight: 800, color: '#F59E0B', background: 'rgba(245,158,11,0.15)',
                               padding: '5px 10px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 4
                             }}>
-                              <Star size={12} fill="#F59E0B" color="#F59E0B" /> {item.rating} / 10
+                              <Star size={12} fill="#F59E0B" color="#F59E0B" /> {item.rating} / 10 (TMDB)
                             </span>
                           </div>
 
                           {/* Botões de Navegação < > */}
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
-                              onClick={() => setCurrentShowcaseIdx(prev => (prev - 1 + MOVIE_SHOWCASE_ITEMS.length) % MOVIE_SHOWCASE_ITEMS.length)}
+                              onClick={() => setCurrentShowcaseIdx(prev => (prev - 1 + showcaseItems.length) % showcaseItems.length)}
                               aria-label="Anterior"
                               style={{
                                 background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
@@ -520,7 +535,7 @@ export default function LandingPage() {
                               <ChevronLeft size={16} />
                             </button>
                             <button
-                              onClick={() => setCurrentShowcaseIdx(prev => (prev + 1) % MOVIE_SHOWCASE_ITEMS.length)}
+                              onClick={() => setCurrentShowcaseIdx(prev => (prev + 1) % showcaseItems.length)}
                               aria-label="Próximo"
                               style={{
                                 background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)',
@@ -534,29 +549,29 @@ export default function LandingPage() {
                         </div>
 
                         {/* Título Principal */}
-                        <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.65rem', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+                        <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.7rem', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>
                           {item.title}
                         </h3>
 
-                        {/* BLOCO DE SINOPSE EXPANDIDO OCUPANDO ÁREA MAIOR */}
+                        {/* BLOCO DE SINOPSE AMPLIADO (FONTE MAIOR E MAIS ESPAÇO) */}
                         <div style={{
-                          background: 'rgba(7,7,13,0.75)',
+                          background: 'rgba(7,7,13,0.82)',
                           backdropFilter: 'blur(16px)',
-                          border: '1px solid rgba(255,255,255,0.1)',
+                          border: '1px solid rgba(255,255,255,0.12)',
                           borderRadius: 12,
-                          padding: '14px 18px',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+                          padding: '16px 20px',
+                          boxShadow: '0 8px 28px rgba(0,0,0,0.5)',
                         }}>
                           <span style={{ fontSize: 10, fontWeight: 900, color: '#E50914', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                            <Info size={13} color="#E50914" /> Sinopse Oficial do Conteúdo:
+                            <Info size={14} color="#E50914" /> Sinopse Oficial TMDB:
                           </span>
-                          <p style={{ fontSize: '0.94rem', color: '#E0E0F5', margin: 0, lineHeight: 1.55, fontWeight: 400 }}>
+                          <p style={{ fontSize: '1.02rem', color: '#EAEAF5', margin: 0, lineHeight: 1.6, fontWeight: 400 }}>
                             {item.synopsis}
                           </p>
                         </div>
                       </div>
 
-                      {/* PARTE INFERIOR: PÔSTER INTEIRO SEM CORTES (ABAIXO DO TEXTO) + CTA "ONDE ASSISTIR?" */}
+                      {/* RODAPÉ: PÔSTER COMPLETO SEM CORTE (ABAIXO DO TEXTO) + CTA "ONDE ASSISTIR?" */}
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -575,14 +590,14 @@ export default function LandingPage() {
                               e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80';
                             }}
                             style={{
-                              height: 125,
+                              height: 120,
                               width: 'auto',
-                              maxHeight: 130,
+                              maxHeight: 125,
                               borderRadius: 10,
                               objectFit: 'contain',
                               background: '#07070D',
-                              border: '1.5px solid rgba(255,255,255,0.2)',
-                              boxShadow: '0 8px 22px rgba(0,0,0,0.85)',
+                              border: '1.5px solid rgba(255,255,255,0.25)',
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.9)',
                               flexShrink: 0
                             }}
                           />
@@ -626,9 +641,9 @@ export default function LandingPage() {
                             Onde Assistir?
                           </a>
 
-                          {/* Dots */}
+                          {/* Slide Dots */}
                           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            {MOVIE_SHOWCASE_ITEMS.map((_, i) => (
+                            {showcaseItems.map((_, i) => (
                               <span
                                 key={i}
                                 onClick={() => setCurrentShowcaseIdx(i)}
@@ -654,7 +669,7 @@ export default function LandingPage() {
 
             </div>
 
-            {/* COLUNA DIREITA: COLUNA SLIM DA AGENDA ESPORTIVA COM NAVEGAÇÃO DE DATAS */}
+            {/* COLUNA DIREITA: AGENDA ESPORTIVA COM SANFONAS INICIANDO FECHADAS */}
             <div style={{
               background: '#090914',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -731,12 +746,11 @@ export default function LandingPage() {
                   Sem partidas confirmadas para esta data. <br /> Use a barra acima para ver outros dias!
                 </div>
               ) : (
-                /* Lista de Campeonatos com Escudos Oficiais de Cada Liga */
+                /* Lista de Campeonatos — INICIAM FECHADAS POR PADRÃO CONFORME SOLICITADO */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {Object.entries(groupedMatches).map(([leagueName, matches]) => {
                     const isExpanded = expandedLeagues[leagueName] ?? false;
                     const sampleMatch = matches[0];
-                    const flag = sampleMatch?.leagueFlag || '⚽';
                     const leagueColor = sampleMatch?.leagueColor || '#009C3B';
                     const leagueLogo = sampleMatch?.leagueLogo || 'https://media.api-sports.io/football/leagues/71.png';
 
@@ -750,7 +764,7 @@ export default function LandingPage() {
                           overflow: 'hidden',
                         }}
                       >
-                        {/* Header do Campeonato COM ESCUDO OFICIAL DO CAMPEONATO */}
+                        {/* Header do Campeonato (Clique para abrir a sanfona) */}
                         <button
                           onClick={() => toggleLeague(leagueName)}
                           style={{

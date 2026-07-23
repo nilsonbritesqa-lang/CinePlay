@@ -54,10 +54,12 @@ export async function GET() {
             poolMap.set(item.id, {
               id: item.id,
               title: item.title || item.name || 'Sem título',
+              synopsis: item.overview && item.overview.trim().length > 10 ? item.overview : 'Confira os detalhes completos deste lançamento e saiba exatamente em qual canal ou plataforma de streaming assistir.',
               poster: poster(item.poster_path),
               backdrop: backdrop(item.backdrop_path),
-              vote: item.vote_average || 0,
-              type: item.title ? 'Filme' : 'Série'
+              vote: item.vote_average ? Number(item.vote_average.toFixed(1)) : 8.5,
+              type: item.title ? 'Filme' : 'Série',
+              category: item.title ? '🎬 Destaque do Cinema' : '📺 Em Alta no Streaming'
             });
           }
         });
