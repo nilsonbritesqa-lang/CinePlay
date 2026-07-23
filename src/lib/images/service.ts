@@ -1,8 +1,9 @@
 /**
- * Serviço de Imagens
- * - TMDB: posters e backdrops de filmes/séries
- * - API-Football: escudos de times
- * - Unsplash: imagens genéricas por tema
+ * Serviço de Imagens do CinePlay
+ * - TMDB: posters e backdrops oficiais de filmes/séries (100% fiéis)
+ * - OMDB: fallback oficial de pôsteres via IMDb
+ * - API-Football: escudos oficiais de clubes
+ * - Unsplash: imagens de fundo curadas para guias de streaming e TV
  */
 
 const TMDB_BASE = 'https://image.tmdb.org/t/p';
@@ -12,82 +13,95 @@ const TMDB_API  = 'https://api.themoviedb.org/3';
 // TMDB
 // =====================
 export const tmdb = {
-  /** URL de imagem TMDB */
   imageUrl(path: string, size: 'w300' | 'w500' | 'w780' | 'original' = 'w780'): string {
     return `${TMDB_BASE}/${size}${path}`;
   },
 
-  /** Busca filme por título */
   async searchMovie(query: string): Promise<TMDBSearchResult | null> {
     if (!process.env.TMDB_API_KEY) return null;
-    const res = await fetch(
-      `${TMDB_API}/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=pt-BR`,
-      { next: { revalidate: 3600 } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.results?.[0] ?? null;
+    try {
+      const res = await fetch(
+        `${TMDB_API}/search/movie?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=pt-BR`,
+        { next: { revalidate: 3600 } }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.results?.[0] ?? null;
+    } catch {
+      return null;
+    }
   },
 
-  /** Busca série por título */
   async searchSeries(query: string): Promise<TMDBSearchResult | null> {
     if (!process.env.TMDB_API_KEY) return null;
-    const res = await fetch(
-      `${TMDB_API}/search/tv?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=pt-BR`,
-      { next: { revalidate: 3600 } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.results?.[0] ?? null;
+    try {
+      const res = await fetch(
+        `${TMDB_API}/search/tv?api_key=${process.env.TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=pt-BR`,
+        { next: { revalidate: 3600 } }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.results?.[0] ?? null;
+    } catch {
+      return null;
+    }
   },
 
-  /** Filmes em estreia na semana */
   async upcomingMovies(): Promise<TMDBSearchResult[]> {
     if (!process.env.TMDB_API_KEY) return [];
-    const res = await fetch(
-      `${TMDB_API}/movie/upcoming?api_key=${process.env.TMDB_API_KEY}&language=pt-BR&region=BR`,
-      { next: { revalidate: 21600 } }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.results?.slice(0, 10) ?? [];
+    try {
+      const res = await fetch(
+        `${TMDB_API}/movie/upcoming?api_key=${process.env.TMDB_API_KEY}&language=pt-BR&region=BR`,
+        { next: { revalidate: 21600 } }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.results?.slice(0, 10) ?? [];
+    } catch {
+      return [];
+    }
   },
 
-  /** Séries populares / em exibição */
   async airingToday(): Promise<TMDBSearchResult[]> {
     if (!process.env.TMDB_API_KEY) return [];
-    const res = await fetch(
-      `${TMDB_API}/tv/airing_today?api_key=${process.env.TMDB_API_KEY}&language=pt-BR`,
-      { next: { revalidate: 21600 } }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.results?.slice(0, 10) ?? [];
+    try {
+      const res = await fetch(
+        `${TMDB_API}/tv/airing_today?api_key=${process.env.TMDB_API_KEY}&language=pt-BR`,
+        { next: { revalidate: 21600 } }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.results?.slice(0, 10) ?? [];
+    } catch {
+      return [];
+    }
   },
 
-  /** Providers de streaming para um filme (onde assistir) */
   async watchProviders(movieId: number, type: 'movie' | 'tv' = 'movie'): Promise<StreamingProvider[]> {
     if (!process.env.TMDB_API_KEY) return [];
-    const res = await fetch(
-      `${TMDB_API}/${type}/${movieId}/watch/providers?api_key=${process.env.TMDB_API_KEY}`,
-      { next: { revalidate: 86400 } }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    const br = data.results?.BR;
-    if (!br) return [];
-    const all = [
-      ...(br.flatrate ?? []),
-      ...(br.rent ?? []),
-      ...(br.buy ?? []),
-    ];
-    // Remove duplicatas
-    const seen = new Set<number>();
-    return all.filter(p => {
-      if (seen.has(p.provider_id)) return false;
-      seen.add(p.provider_id);
-      return true;
-    });
+    try {
+      const res = await fetch(
+        `${TMDB_API}/${type}/${movieId}/watch/providers?api_key=${process.env.TMDB_API_KEY}`,
+        { next: { revalidate: 86400 } }
+      );
+      if (!res.ok) return null as any;
+      const data = await res.json();
+      const br = data.results?.BR;
+      if (!br) return [];
+      const all = [
+        ...(br.flatrate ?? []),
+        ...(br.rent ?? []),
+        ...(br.buy ?? []),
+      ];
+      const seen = new Set<number>();
+      return all.filter(p => {
+        if (seen.has(p.provider_id)) return false;
+        seen.add(p.provider_id);
+        return true;
+      });
+    } catch {
+      return [];
+    }
   },
 };
 
@@ -95,26 +109,21 @@ export const tmdb = {
 // OMDB API
 // =====================
 export const omdb = {
-  /** Busca dados adicionais de filme ou série pelo título no OMDb */
   async searchByTitle(title: string, year?: string): Promise<OMDBSearchResult | null> {
     const apiKey = process.env.OMDB_API_KEY || 'a48d1250';
     let url = `https://www.omdbapi.com/?apikey=${apiKey}&t=${encodeURIComponent(title)}`;
-    if (year) {
-      url += `&y=${year}`;
-    }
+    if (year) url += `&y=${year}`;
     try {
       const res = await fetch(url, { next: { revalidate: 86400 } });
       if (!res.ok) return null;
       const data = await res.json();
       if (data.Response === 'False') return null;
       return data;
-    } catch (e) {
-      console.error('Erro ao buscar dados na API do OMDb:', e);
+    } catch {
       return null;
     }
   },
 
-  /** Busca dados de filme ou série pelo ID do IMDb no OMDb */
   async getById(imdbId: string): Promise<OMDBSearchResult | null> {
     const apiKey = process.env.OMDB_API_KEY || 'a48d1250';
     try {
@@ -126,8 +135,7 @@ export const omdb = {
       const data = await res.json();
       if (data.Response === 'False') return null;
       return data;
-    } catch (e) {
-      console.error('Erro ao buscar ID na API do OMDb:', e);
+    } catch {
       return null;
     }
   }
@@ -137,104 +145,64 @@ export const omdb = {
 // API-FOOTBALL (escudos de times)
 // =====================
 export const footballApi = {
-  /** Próximos jogos do dia */
-  async matchesToday(): Promise<FootballMatch[]> {
-    if (!process.env.API_FOOTBALL_KEY) return [];
-    const today = new Date().toISOString().split('T')[0];
-    const res = await fetch(
-      `https://v3.football.api-sports.io/fixtures?date=${today}&timezone=America/Sao_Paulo`,
-      {
-        headers: {
-          'x-rapidapi-host': 'v3.football.api-sports.io',
-          'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
-        },
-        next: { revalidate: 3600 },
-      }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.response ?? [];
-  },
-
-  /** Próximos jogos dos próximos N dias (para posts antecipados) */
-  async upcomingMatches(days = 3): Promise<FootballMatch[]> {
-    if (!process.env.API_FOOTBALL_KEY) return [];
-    const matches: FootballMatch[] = [];
-    for (let i = 1; i <= days; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
-      try {
-        const res = await fetch(
-          `https://v3.football.api-sports.io/fixtures?date=${dateStr}&timezone=America/Sao_Paulo&league=71,72,73,2,3,4`, // BR + Europeus
-          {
-            headers: {
-              'x-rapidapi-host': 'v3.football.api-sports.io',
-              'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
-            },
-            next: { revalidate: 7200 },
-          }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          matches.push(...(data.response ?? []));
-        }
-      } catch {}
-    }
-    return matches;
-  },
-
-  /** URL do escudo de um time */
   teamLogoUrl(teamId: number): string {
     return `https://media.api-sports.io/football/teams/${teamId}.png`;
   },
 };
 
 // =====================
-// FOOTBALL-DATA.ORG (gratuito, sem escudos)
+// FOOTBALL-DATA.ORG
 // =====================
 export const footballData = {
   async upcomingMatches(days = 3): Promise<SimpleMatch[]> {
-    if (!process.env.FOOTBALL_DATA_API_KEY) return [];
+    const token = process.env.FOOTBALL_DATA_TOKEN || process.env.FOOTBALL_DATA_API_KEY;
+    if (!token) return [];
     const from = new Date().toISOString().split('T')[0];
     const to = new Date(Date.now() + days * 86400000).toISOString().split('T')[0];
-    const res = await fetch(
-      `https://api.football-data.org/v4/matches?dateFrom=${from}&dateTo=${to}&competitions=BSA,BSB,CL,EL,PL,PD,FL1,BL1,SA`,
-      {
-        headers: { 'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY },
-        next: { revalidate: 3600 },
-      }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.matches ?? [];
+    try {
+      const res = await fetch(
+        `https://api.football-data.org/v4/matches?dateFrom=${from}&dateTo=${to}&competitions=BSA,BSB,CL,EL,PL,PD,FL1,BL1,SA`,
+        {
+          headers: { 'X-Auth-Token': token },
+          next: { revalidate: 3600 },
+        }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.matches ?? [];
+    } catch {
+      return [];
+    }
   },
 };
 
 // =====================
-// UNSPLASH (imagens genéricas)
+// UNSPLASH
 // =====================
 export const unsplash = {
   async randomPhoto(query: string): Promise<string | null> {
     if (!process.env.UNSPLASH_ACCESS_KEY) {
-      // Fallback: URL direta sem API key
-      return `https://source.unsplash.com/1280x720/?${encodeURIComponent(query)}`;
+      return null;
     }
-    const res = await fetch(
-      `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&orientation=landscape&content_filter=high`,
-      {
-        headers: { Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` },
-        next: { revalidate: 3600 },
-      }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.urls?.regular ?? null;
+    try {
+      const res = await fetch(
+        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&orientation=landscape&content_filter=high`,
+        {
+          headers: { Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` },
+          next: { revalidate: 3600 },
+        }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.urls?.regular ?? null;
+    } catch {
+      return null;
+    }
   },
 };
 
 // =====================
-// SELETOR DE IMAGEM POR CATEGORIA
+// PROTOCOLO DE SELEÇÃO DE IMAGEM CONTEXTUAL
 // =====================
 export async function getPostImage(params: {
   categoria: string;
@@ -244,42 +212,57 @@ export async function getPostImage(params: {
   backdropPath?: string;
   posterPath?: string;
 }): Promise<string> {
-  const { categoria, titulo, tmdbId, tmdbType, backdropPath, posterPath } = params;
+  const { categoria, titulo, backdropPath, posterPath } = params;
 
-  // Prioridade 1: backdrop do TMDB (ideal para filmes/séries — 1280px)
+  // 1. Filmes/Séries com backdrop ou poster do TMDB já fornecidos
   if (backdropPath) return tmdb.imageUrl(backdropPath, 'original');
-
-  // Prioridade 2: poster do TMDB
   if (posterPath) return tmdb.imageUrl(posterPath, 'w780');
 
-  // Prioridade 3: busca automática no TMDB
+  // 2. Busca ativa em Cinema
   if (categoria === 'cinema') {
     const movie = await tmdb.searchMovie(titulo);
     if (movie?.backdrop_path) return tmdb.imageUrl(movie.backdrop_path, 'original');
     if (movie?.poster_path) return tmdb.imageUrl(movie.poster_path, 'w780');
+    // Fallback OMDB
+    const omdbMovie = await omdb.searchByTitle(titulo);
+    if (omdbMovie?.Poster && omdbMovie.Poster !== 'N/A') return omdbMovie.Poster;
+    return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=85';
   }
 
+  // 3. Busca ativa em Séries
   if (categoria === 'series') {
     const series = await tmdb.searchSeries(titulo);
     if (series?.backdrop_path) return tmdb.imageUrl(series.backdrop_path, 'original');
     if (series?.poster_path) return tmdb.imageUrl(series.poster_path, 'w780');
+    // Fallback OMDB
+    const omdbSeries = await omdb.searchByTitle(titulo);
+    if (omdbSeries?.Poster && omdbSeries.Poster !== 'N/A') return omdbSeries.Poster;
+    return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&q=85';
   }
 
-  // Prioridade 4: Unsplash por tema
-  const themeMap: Record<string, string> = {
-    futebol: 'football stadium',
-    cinema: 'cinema movie',
-    series: 'tv series binge',
-    canais: 'television streaming',
-    'onde-assistir': 'streaming service',
+  // 4. Futebol & Esportes
+  if (categoria === 'futebol') {
+    // Retorna imagens de alta qualidade de futebol em estádio
+    const stadiumImages = [
+      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85',
+      'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85',
+      'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200&q=85',
+      'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=1200&q=85',
+    ];
+    return stadiumImages[Math.floor(Math.random() * stadiumImages.length)];
+  }
+
+  // 5. Canais / Onde Assistir / Streaming (Unsplash Direcionado)
+  const unsplashKeywords: Record<string, string> = {
+    canais: 'television broadcasting studio',
+    'onde-assistir': 'smart tv home cinema',
   };
 
-  const query = themeMap[categoria] ?? titulo;
+  const query = unsplashKeywords[categoria] ?? 'home cinema streaming';
   const unsplashUrl = await unsplash.randomPhoto(query);
   if (unsplashUrl) return unsplashUrl;
 
-  // Fallback final
-  return `/og-default.jpg`;
+  return 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=1200&q=85';
 }
 
 // =====================
@@ -303,26 +286,6 @@ export interface StreamingProvider {
   provider_name: string;
   logo_path: string;
   display_priority: number;
-}
-
-export interface FootballMatch {
-  fixture: {
-    id: number;
-    date: string;
-    status: { short: string; long: string };
-  };
-  league: {
-    id: number;
-    name: string;
-    country: string;
-    logo: string;
-    round: string;
-  };
-  teams: {
-    home: { id: number; name: string; logo: string };
-    away: { id: number; name: string; logo: string };
-  };
-  goals: { home: number | null; away: number | null };
 }
 
 export interface SimpleMatch {
