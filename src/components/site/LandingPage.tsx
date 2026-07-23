@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Star, Play, MessageCircle } from 'lucide-react';
+import { ArrowRight, Star, Play, MessageCircle, Calendar } from 'lucide-react';
 import HeroShowcase from './HeroShowcase';
 
 const CATEGORIAS = [
@@ -16,20 +16,30 @@ const CATEGORIAS = [
 
 export default function LandingPage() {
   const [tickerItems, setTickerItems] = useState<any[]>([]);
+  const [sportsMatches, setSportsMatches] = useState<any[]>([]);
+  const [whatsappConfig, setWhatsappConfig] = useState<any>(null);
 
   useEffect(() => {
-    async function loadTickerData() {
+    async function loadData() {
       try {
-        const [tmdbRes, sportsRes] = await Promise.all([
+        const [tmdbRes, sportsRes, configRes] = await Promise.all([
           fetch('/api/tmdb-pool').then(r => r.json()).catch(() => null),
-          fetch('/api/sports-pool').then(r => r.json()).catch(() => null)
+          fetch('/api/sports-pool').then(r => r.json()).catch(() => null),
+          fetch('/api/chatbot-config').then(r => r.json()).catch(() => null)
         ]);
+
+        if (configRes) {
+          setWhatsappConfig(configRes);
+        }
+
+        if (sportsRes?.success && sportsRes.pool?.length) {
+          setSportsMatches(sportsRes.pool);
+        }
 
         const list: any[] = [];
 
         if (sportsRes?.success && sportsRes.pool?.length) {
           sportsRes.pool.forEach((item: any) => {
-            // Só adiciona se tiver os times definidos
             if (item.homeTeam && item.awayTeam) {
               list.push({
                 id: `sport-${item.id}`,
@@ -74,8 +84,16 @@ export default function LandingPage() {
         console.error('Erro ao ler ticker data:', err);
       }
     }
-    loadTickerData();
+    loadData();
   }, []);
+
+  const getMatchWhatsappUrl = (matchTitle: string) => {
+    const num = whatsappConfig?.whatsapp_numero || '5511999999999';
+    const baseMsg = whatsappConfig?.whatsapp_mensagem || 'Olá! Vim pelo CinePlay e quero saber mais sobre como assistir conteúdo.';
+    const text = `${baseMsg} Quero saber como assistir ao jogo: ${matchTitle}`;
+    return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+  };
+
   return (
     <div style={{ 
       background: '#07070D url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.015\'/%3E%3C/svg%3E")', 
@@ -149,7 +167,7 @@ export default function LandingPage() {
                 Acessar o Blog <ArrowRight size={14} />
               </Link>
               <a
-                href="https://wa.me/5511999999999?text=Olá!%20Quero%20solicitar%20um%20teste%20gratuito%20do%20CinePlay."
+                href={whatsappConfig?.whatsapp_numero ? `https://wa.me/${whatsappConfig.whatsapp_numero}?text=${encodeURIComponent(whatsappConfig.whatsapp_mensagem || 'Olá! Quero solicitar um teste gratuito do CinePlay.')}` : 'https://wa.me/5511999999999?text=Olá!%20Quero%20solicitar%20um%20teste%20gratuito%20do%20CinePlay.'}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -158,14 +176,6 @@ export default function LandingPage() {
                   textDecoration: 'none', fontSize: 13,
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   transition: 'background 0.2s ease, border-color 0.2s ease'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
                 }}
                 id="cta-teste-gratis-hero"
               >
@@ -196,7 +206,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Lado Direito — Colagem Dinâmica Invadindo o Texto */}
+          {/* Lado Direito — Colagem Dinâmica de Filmes e Séries */}
           <div style={{ zIndex: 1 }} className="hero-visuals-container">
             <HeroShowcase />
           </div>
@@ -205,7 +215,165 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          2. CATEGORIAS
+          2. CALENDÁRIO DE JOGOS & TRANSMISSÕES (AGENDA ESPORTIVA)
+      ═══════════════════════════════ */}
+      {sportsMatches.length > 0 && (
+        <section id="calendario-jogos" style={{
+          padding: '56px 24px',
+          background: 'linear-gradient(to bottom, rgba(12,12,24,0.7) 0%, rgba(7,7,13,0.95) 100%)',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+        }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            {/* Header da Agenda */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(37, 211, 102, 0.1)', color: '#25D366',
+                  padding: '4px 10px', borderRadius: 99, fontSize: 9, fontWeight: 800,
+                  border: '1px solid rgba(37, 211, 102, 0.2)', marginBottom: 8,
+                  textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'Outfit'
+                }}>
+                  <Calendar size={11} /> Agenda de Transmissões Esportivas
+                </span>
+                <h2 style={{ fontFamily: 'Outfit', fontSize: '1.75rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>
+                  Próximos Jogos & <span style={{ color: '#25D366' }}>Onde Assistir</span>
+                </h2>
+              </div>
+              <p style={{ fontSize: 13, color: '#9090A5', maxWidth: 460, margin: 0 }}>
+                Confira os confrontos das principais ligas e saiba como assistir cada partida pelo WhatsApp.
+              </p>
+            </div>
+
+            {/* Grid de Partidas Esportivas */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
+              gap: 16
+            }}>
+              {sportsMatches.map((match) => (
+                <div
+                  key={match.id}
+                  style={{
+                    background: '#0D0D1A',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: 16,
+                    padding: '18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.4)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'transform 0.25s ease, border-color 0.25s ease',
+                  }}
+                  className="match-card"
+                >
+                  {/* Topo do Card */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 800, textTransform: 'uppercase',
+                      color: match.leagueColor || '#009C3B', letterSpacing: '0.06em',
+                      background: 'rgba(255,255,255,0.04)', padding: '3px 8px', borderRadius: 6,
+                      border: '1px solid rgba(255,255,255,0.06)'
+                    }}>
+                      {match.leagueFlag || '⚽'} {match.league || 'Futebol'}
+                    </span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 800,
+                      color: match.isLive ? '#E50914' : '#25D366',
+                      background: match.isLive ? 'rgba(229,9,20,0.12)' : 'rgba(37,211,102,0.12)',
+                      padding: '3px 8px', borderRadius: 99,
+                      border: `1px solid ${match.isLive ? '#E50914' : '#25D366'}30`
+                    }}>
+                      {match.overlay_badge || match.label || 'AGENDADO'}
+                    </span>
+                  </div>
+
+                  {/* Confronto / Escudos */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 16px' }}>
+                    {/* Mandante */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '38%', gap: 6 }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6,
+                        border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                      }}>
+                        {match.homeTeam?.logo ? (
+                          <img src={match.homeTeam.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        ) : <span style={{ fontSize: 18 }}>⚽</span>}
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                        {match.homeTeam?.name}
+                      </span>
+                    </div>
+
+                    {/* Placar ou VS */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <span style={{
+                        fontSize: match.isLive ? 15 : 12, fontWeight: 900,
+                        color: match.isLive ? '#E50914' : '#65657B',
+                      }}>
+                        {match.live_score || 'VS'}
+                      </span>
+                      <span style={{ fontSize: 9, color: '#65657B', textTransform: 'uppercase' }}>
+                        {match.subtitle?.split(' - ')[1] || 'Rodada'}
+                      </span>
+                    </div>
+
+                    {/* Visitante */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '38%', gap: 6 }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6,
+                        border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                      }}>
+                        {match.awayTeam?.logo ? (
+                          <img src={match.awayTeam.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        ) : <span style={{ fontSize: 18 }}>⚽</span>}
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                        {match.awayTeam?.name}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Botão Como Assistir? Direcionando ao WhatsApp */}
+                  <a
+                    href={getMatchWhatsappUrl(match.title)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      background: '#25D366',
+                      color: '#fff',
+                      padding: '10px 14px',
+                      borderRadius: 10,
+                      fontWeight: 800,
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      textDecoration: 'none',
+                      boxShadow: '0 4px 14px rgba(37, 211, 102, 0.25)',
+                      transition: 'transform 0.2s, background 0.2s',
+                      marginTop: 4
+                    }}
+                    className="como-assistir-btn"
+                  >
+                    <MessageCircle size={14} />
+                    Como assistir?
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════
+          3. CATEGORIAS
       ═══════════════════════════════ */}
       <section id="categorias" style={{ padding: '64px 24px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -252,9 +420,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          3. TICKER VISUAL — PÔSTERES EM MOVIMENTO
+          4. TICKER VISUAL — PÔSTERES EM MOVIMENTO
       ═══════════════════════════════ */}
-      {/* Tickers Duplicados Rodando em Direções Opostas */}
       <section style={{ 
         padding: '24px 0', 
         borderTop: '1px solid rgba(255,255,255,0.03)', 
@@ -539,7 +706,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════
-          4. CTA CENTRAL — TESTE GRÁTIS
+          5. CTA CENTRAL — TESTE GRÁTIS
       ═══════════════════════════════ */}
       <section id="teste-gratis" style={{
         padding: '64px 24px',
@@ -571,7 +738,7 @@ export default function LandingPage() {
 
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href="https://wa.me/5511999999999?text=Olá!%20Quero%20solicitar%20um%20teste%20gratuito%20do%20CinePlay."
+              href={whatsappConfig?.whatsapp_numero ? `https://wa.me/${whatsappConfig.whatsapp_numero}?text=${encodeURIComponent(whatsappConfig.whatsapp_mensagem || 'Olá! Quero solicitar um teste gratuito do CinePlay.')}` : 'https://wa.me/5511999999999?text=Olá!%20Quero%20solicitar%20um%20teste%20gratuito%20do%20CinePlay.'}
               target="_blank"
               rel="noopener noreferrer"
               id="cta-teste-gratis-section"
@@ -633,6 +800,14 @@ export default function LandingPage() {
         .category-card:hover {
           transform: translateY(-4px) scale(1.01);
           border-color: rgba(229,9,20,0.5) !important;
+        }
+        .match-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(37, 211, 102, 0.4) !important;
+        }
+        .como-assistir-btn:hover {
+          transform: scale(1.03);
+          background: '#20ba59' !important;
         }
         
         .ticker-container {

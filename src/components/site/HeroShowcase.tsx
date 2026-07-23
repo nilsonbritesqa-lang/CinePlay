@@ -139,35 +139,13 @@ export default function HeroShowcase() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [tmdbRes, sportsRes] = await Promise.allSettled([
-          fetch('/api/tmdb-pool').then(r => r.json()),
-          fetch('/api/sports-pool').then(r => r.json()),
-        ]);
-
-        let movies: PosterItem[] = [];
-        let sports: PosterItem[] = [];
-
-        if (tmdbRes.status === 'fulfilled' && tmdbRes.value?.pool?.length) {
-          movies = tmdbRes.value.pool;
+        const tmdbRes = await fetch('/api/tmdb-pool').then(r => r.json());
+        if (tmdbRes?.success && tmdbRes.pool?.length) {
+          const moviesOnly = tmdbRes.pool.filter((item: PosterItem) => item.poster);
+          setPool(moviesOnly.length > 0 ? moviesOnly : FALLBACK);
+        } else {
+          setPool(FALLBACK);
         }
-        if (sportsRes.status === 'fulfilled' && sportsRes.value?.pool?.length) {
-          sports = sportsRes.value.pool.filter((s: PosterItem) => 
-            (s.poster || s.homeTeam) && !s.title.includes('Temporada')
-          );
-        }
-
-        let items: PosterItem[] = [];
-        const maxLen = Math.max(movies.length, sports.length);
-        for (let i = 0; i < maxLen; i++) {
-          if (i < sports.length) items.push(sports[i]);
-          if (i < movies.length) items.push(movies[i]);
-        }
-
-        let finalPool = items.filter(item => item.poster || item.homeTeam);
-        if (finalPool.length < 5) {
-          finalPool = [...finalPool, ...FALLBACK].slice(0, 15);
-        }
-        setPool(finalPool);
       } catch {
         setPool(FALLBACK);
       } finally {
