@@ -473,15 +473,19 @@ export default function HeroShowcase() {
         }
         @media (max-width: 1024px) {
           .hero-video-bg {
-            left: -24px !important;
-            right: -24px !important;
-            top: -120px !important;
-            bottom: -20px !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            top: -60px !important;
+            bottom: 0 !important;
             opacity: 0.52 !important;
+            overflow: hidden !important;
           }
           .hero-showcase-container {
             --mobile-scale: 0.72 !important;
             height: 400px !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
           }
         }
         @media (max-width: 640px) {
