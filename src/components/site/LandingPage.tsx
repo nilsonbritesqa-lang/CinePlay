@@ -404,8 +404,8 @@ export default function LandingPage() {
             alignItems: 'stretch'
           }} className="main-content-grid">
 
-            {/* COLUNA ESQUERDA: CATEGORIAS + 2 CONTAINERS EM DESTAQUE (FILME + SÉRIE) SEM NENHUM ESPAÇO VAZIO */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, height: '100%' }}>
+            {/* COLUNA ESQUERDA: CATEGORIAS + 2 CONTAINERS EM DESTAQUE (FILME + SÉRIE) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div>
                 <div style={{ marginBottom: 14 }}>
                   <span style={{
@@ -465,7 +465,7 @@ export default function LandingPage() {
                   border: '1px solid rgba(229,9,20,0.25)',
                   background: '#090914',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
-                  minHeight: 330,
+                  height: 350,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -497,7 +497,7 @@ export default function LandingPage() {
                   );
                 })}
 
-                {/* Gradient Overlay Suave para Manter Leitura Perfeita */}
+                {/* Gradient Overlay Suave */}
                 <div style={{
                   position: 'absolute', inset: 0,
                   background: 'linear-gradient(to top, rgba(7,7,13,0.98) 0%, rgba(7,7,13,0.7) 45%, rgba(7,7,13,0.85) 100%)',
@@ -508,7 +508,7 @@ export default function LandingPage() {
                 {movieItems.map((item, idx) => {
                   if (idx !== currentMovieIdx) return null;
                   return (
-                    <div key={`movie-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div key={`movie-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 14 }}>
                       {/* Topo Badges + Nav */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -538,15 +538,15 @@ export default function LandingPage() {
                       </div>
 
                       {/* Corpo do Filme (Pôster + Sinopse) */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 16, alignItems: 'center' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '115px 1fr', gap: 16, alignItems: 'center', flex: 1 }}>
                         <img
                           src={item.poster}
                           alt={item.title}
                           onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80'; }}
-                          style={{ width: 110, height: 160, borderRadius: 10, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.8)' }}
+                          style={{ width: 115, height: 165, borderRadius: 10, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.8)' }}
                         />
 
-                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px' }}>
+                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px', height: 165, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                           <h3 style={{ fontFamily: 'Outfit', fontSize: '1.25rem', fontWeight: 900, color: '#fff', margin: '0 0 6px 0', lineHeight: 1.2 }}>
                             {item.title}
                           </h3>
@@ -589,7 +589,7 @@ export default function LandingPage() {
                   border: '1px solid rgba(99, 102, 241, 0.3)',
                   background: '#090914',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
-                  minHeight: 330,
+                  height: 350,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -632,7 +632,7 @@ export default function LandingPage() {
                 {seriesItems.map((item, idx) => {
                   if (idx !== currentSeriesIdx) return null;
                   return (
-                    <div key={`series-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div key={`series-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 14 }}>
                       {/* Topo Badges + Nav */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -662,15 +662,15 @@ export default function LandingPage() {
                       </div>
 
                       {/* Corpo da Série (Pôster + Sinopse) */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 16, alignItems: 'center' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '115px 1fr', gap: 16, alignItems: 'center', flex: 1 }}>
                         <img
                           src={item.poster}
                           alt={item.title}
                           onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80'; }}
-                          style={{ width: 110, height: 160, borderRadius: 10, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.8)' }}
+                          style={{ width: 115, height: 165, borderRadius: 10, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.8)' }}
                         />
 
-                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px' }}>
+                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px', height: 165, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                           <h3 style={{ fontFamily: 'Outfit', fontSize: '1.25rem', fontWeight: 900, color: '#fff', margin: '0 0 6px 0', lineHeight: 1.2 }}>
                             {item.title}
                           </h3>
@@ -702,7 +702,7 @@ export default function LandingPage() {
 
             </div>
 
-            {/* COLUNA DIREITA: AGENDA ESPORTIVA COM SANFONAS INICIANDO FECHADAS */}
+            {/* COLUNA DIREITA: AGENDA ESPORTIVA COM ALTURA ALINHADA PERFEITAMENTE À ESQUERDA */}
             <div style={{
               background: '#090914',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -711,11 +711,13 @@ export default function LandingPage() {
               boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 14
+              gap: 14,
+              maxHeight: 920,
+              boxSizing: 'border-box'
             }} className="slim-sports-column">
               
               {/* Header da Agenda com Navegador de Datas */}
-              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 12 }}>
+              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 12, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div>
                     <span style={{
@@ -779,8 +781,17 @@ export default function LandingPage() {
                   Sem partidas confirmadas para esta data. <br /> Use a barra acima para ver outros dias!
                 </div>
               ) : (
-                /* Lista de Campeonatos — INICIAM FECHADAS POR PADRÃO CONFORME SOLICITADO */
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                /* Lista de Campeonatos em Scroll Container (Mantém Alinhamento Exato com Coluna da Esquerda) */
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  overflowY: 'auto',
+                  flex: 1,
+                  paddingRight: 4,
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(229,9,20,0.4) rgba(255,255,255,0.04)'
+                }}>
                   {Object.entries(groupedMatches).map(([leagueName, matches]) => {
                     const isExpanded = expandedLeagues[leagueName] ?? false;
                     const sampleMatch = matches[0];
@@ -1219,6 +1230,9 @@ export default function LandingPage() {
           .main-content-grid {
             grid-template-columns: 1fr !important;
             gap: 24px !important;
+          }
+          .slim-sports-column {
+            max-height: 600px !important;
           }
         }
         .category-card {
