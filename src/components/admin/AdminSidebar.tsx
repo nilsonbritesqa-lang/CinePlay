@@ -158,11 +158,16 @@ export default function AdminSidebar() {
             {!collapsed && 'Ver Site'}
           </Link>
           <button
+            onClick={() => {
+              localStorage.removeItem('cineplay_admin_token');
+              document.cookie = 'cineplay_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              window.location.href = '/admin/login';
+            }}
             style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: collapsed ? '10px' : '10px 12px',
               borderRadius: 'var(--radius-md)',
-              color: 'var(--text-muted)', fontSize: 13,
+              color: '#EF4444', fontSize: 13,
               background: 'none', border: 'none', cursor: 'pointer',
               justifyContent: collapsed ? 'center' : 'flex-start',
               width: '100%',
