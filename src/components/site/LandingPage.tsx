@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import HeroShowcase from './HeroShowcase';
 import MatchDetailsModal from './MatchDetailsModal';
@@ -41,6 +41,11 @@ export default function LandingPage() {
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
 
+  // Estados do Trailer de Fundo Total
+  const [heroTrailerKey, setHeroTrailerKey] = useState<string | null>(null);
+  const [heroBackdrop, setHeroBackdrop] = useState<string | null>(null);
+  const [isHeroMuted, setIsHeroMuted] = useState<boolean>(true);
+
   const [movieItems, setMovieItems] = useState<any[]>([
     {
       id: 'm1',
@@ -73,6 +78,11 @@ export default function LandingPage() {
   const [isMovieHovered, setIsMovieHovered] = useState(false);
   const [isSeriesHovered, setIsSeriesHovered] = useState(false);
   const [whatsappConfig, setWhatsappConfig] = useState<any>(null);
+
+  const handleTrailerChange = useCallback((key: string | null, backdrop: string | null) => {
+    setHeroTrailerKey(key);
+    setHeroBackdrop(backdrop);
+  }, []);
 
   // Carrega jogos reais da API Sports Pool
   useEffect(() => {
@@ -229,7 +239,7 @@ export default function LandingPage() {
     <div style={{ background: '#07070D', minHeight: '100vh', color: '#fff', overflowX: 'hidden', width: '100%' }}>
       
       {/* ═════════════════════════════════════════════════════════════════
-          SEÇÃO HERO 3D COM SHOWCASE E CHAMADA DE IMPACTO
+          SEÇÃO HERO BANNER TOTAL COM VÍDEO / BACKDROP EM 100% DA ÁREA
       ═════════════════════════════════════════════════════════════════ */}
       <section style={{
         position: 'relative',
@@ -239,8 +249,69 @@ export default function LandingPage() {
         overflow: 'hidden',
         width: '100%'
       }} className="hero-section">
+
+        {/* VÍDEO / BACKDROP DE FUNDO DE LARGURA TOTAL DO BANNER HERO */}
+        {heroTrailerKey ? (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            overflow: 'hidden',
+            zIndex: 0,
+          }}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.85) 35%, rgba(7,7,13,0.4) 65%, rgba(7,7,13,0.9) 100%), linear-gradient(to bottom, #07070D 0%, transparent 20%, transparent 80%, #07070D 100%)',
+              zIndex: 1,
+            }} />
+            <iframe
+              key={`hero-bg-${heroTrailerKey}-${isHeroMuted ? 'muted' : 'unmuted'}`}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '100vw',
+                height: '56.25vw',
+                minHeight: '100%',
+                minWidth: '177.77vh',
+                transform: 'translate(-50%, -50%) scale(1.15)',
+                filter: 'saturate(1.2) brightness(0.65)',
+              }}
+              src={`https://www.youtube-nocookie.com/embed/${heroTrailerKey}?autoplay=1&mute=${isHeroMuted ? 1 : 0}&controls=0&loop=1&playlist=${heroTrailerKey}&playsinline=1`}
+              allow="autoplay; encrypted-media; picture-in-picture"
+              frameBorder="0"
+            />
+          </div>
+        ) : heroBackdrop ? (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            overflow: 'hidden',
+            zIndex: 0,
+          }}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.85) 35%, rgba(7,7,13,0.4) 65%, rgba(7,7,13,0.9) 100%), linear-gradient(to bottom, #07070D 0%, transparent 20%, transparent 80%, #07070D 100%)',
+              zIndex: 1,
+            }} />
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `url(${heroBackdrop})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              filter: 'blur(10px) brightness(0.4)',
+            }} />
+          </div>
+        ) : null}
         
-        <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', position: 'relative', zIndex: 2 }}>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)',
@@ -305,7 +376,11 @@ export default function LandingPage() {
 
             {/* Coluna Visual do Carrossel 3D */}
             <div style={{ position: 'relative', zIndex: 2, minWidth: 0, width: '100%' }} className="hero-visuals-container">
-              <HeroShowcase />
+              <HeroShowcase
+                onTrailerChange={handleTrailerChange}
+                isMuted={isHeroMuted}
+                onToggleMute={() => setIsHeroMuted(prev => !prev)}
+              />
             </div>
 
           </div>
@@ -325,9 +400,7 @@ export default function LandingPage() {
           alignItems: 'start'
         }} className="main-content-grid">
           
-          {/* -------------------------------------------------------------
-              COLUNA ESQUERDA: CATEGORIAS + DESTAQUES DUPLOS (FILME + SÉRIE)
-          ------------------------------------------------------------- */}
+          {/* COLUNA ESQUERDA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
             
             {/* Grid de Categorias */}
@@ -504,9 +577,7 @@ export default function LandingPage() {
           </div>
 
 
-          {/* -------------------------------------------------------------
-              COLUNA DIREITA: CALENDÁRIO ESPORTIVO SLIM FIT
-          ------------------------------------------------------------- */}
+          {/* COLUNA DIREITA: CALENDÁRIO ESPORTIVO */}
           <div style={{
             background: 'var(--bg-card)',
             border: '1px solid var(--border-default)',
@@ -523,7 +594,7 @@ export default function LandingPage() {
                 <span style={{ fontSize: 10, color: '#A0A0B5', fontWeight: 600 }}>{matches.length} partidas</span>
               </div>
 
-              {/* Navegação por Datas com Scroll Suave no Celular */}
+              {/* Navegação por Datas */}
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
                 {dateTabs.map(tab => (
                   <button
@@ -653,12 +724,6 @@ export default function LandingPage() {
           overflow-x: hidden !important;
           width: 100vw !important;
           max-width: 100vw !important;
-        }
-        @media (min-width: 1025px) {
-          .hero-visuals-container {
-            margin-left: -110px !important;
-            width: calc(100% + 110px) !important;
-          }
         }
         @media (max-width: 1024px) {
           .hero-grid {

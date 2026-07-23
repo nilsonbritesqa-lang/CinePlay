@@ -12,6 +12,12 @@ interface PosterItem {
   type: string;
 }
 
+interface HeroShowcaseProps {
+  onTrailerChange?: (trailerKey: string | null, backdropUrl: string | null) => void;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
+}
+
 const FALLBACK: PosterItem[] = [
   { id: 9004, title: 'Dune: Part Two', poster: 'https://image.tmdb.org/t/p/w500/c7D6n1clBL6Vo44x2Uo599026T.jpg', backdrop: 'https://image.tmdb.org/t/p/w1280/8Z8dHFw7JVhXPSmx0yg2mtGEyeb.jpg', vote: 8.8, type: 'Filme' },
   { id: 9005, title: 'The Last of Us', poster: 'https://image.tmdb.org/t/p/w500/u3bZ62I4rj75XyH2h45a60xa4iO.jpg', backdrop: 'https://image.tmdb.org/t/p/w1280/2rezQWg73XFWuKE5eZIBwJ7CBca.jpg', vote: 9.2, type: 'Série' },
@@ -38,12 +44,11 @@ function lerp(start: number, end: number, amt: number) {
   return (1 - amt) * start + amt * end;
 }
 
-export default function HeroShowcase() {
+export default function HeroShowcase({ onTrailerChange, isMuted = true, onToggleMute }: HeroShowcaseProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [pool, setPool] = useState<PosterItem[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Progress representa o índice visual atual
   const [progress, setProgress] = useState(0.0);
   const targetProgressRef = useRef(0);
 
@@ -54,10 +59,7 @@ export default function HeroShowcase() {
   const isHoveredRef = useRef(false);
   const dragStartRef = useRef<{ clientX: number; progress: number } | null>(null);
 
-  const [activeTrailerKey, setActiveTrailerKey] = useState<string | null>(null);
   const lastFetchedIdRef = useRef<number | null>(null);
-  
-  const [isMuted, setIsMuted] = useState(true);
 
   // Carrega lista TMDB
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function HeroShowcase() {
     loadData();
   }, []);
 
-  // Rotação controlada a cada 8 segundos (permite assistir ao trailer tranquilamente)
+  // Rotação controlada a cada 8 segundos
   useEffect(() => {
     if (pool.length === 0) return;
 
@@ -92,7 +94,7 @@ export default function HeroShowcase() {
     return () => clearInterval(interval);
   }, [pool]);
 
-  // Animação suave para mover o progress até o targetProgress (suavidade de transição)
+  // Animação suave para mover o progress até o targetProgress
   useEffect(() => {
     let animId: number;
     const animate = () => {
@@ -137,7 +139,7 @@ export default function HeroShowcase() {
 
   useEffect(() => {
     if (!protagonist) {
-      setActiveTrailerKey(null);
+      if (onTrailerChange) onTrailerChange(null, null);
       lastFetchedIdRef.current = null;
       return;
     }
@@ -150,20 +152,16 @@ export default function HeroShowcase() {
         const res = await fetch(endpoint);
         const data = await res.json();
         if (data.success && data.videoKey) {
-          setActiveTrailerKey(data.videoKey);
+          if (onTrailerChange) onTrailerChange(data.videoKey, protagonist.backdrop || null);
         } else {
-          setActiveTrailerKey(null);
+          if (onTrailerChange) onTrailerChange(null, protagonist.backdrop || null);
         }
       } catch {
-        setActiveTrailerKey(null);
+        if (onTrailerChange) onTrailerChange(null, protagonist.backdrop || null);
       }
     }
     fetchTrailer();
-  }, [protagonist]);
-
-  const toggleMute = () => {
-    setIsMuted(prev => !prev);
-  };
+  }, [protagonist, onTrailerChange]);
 
   const onDragStart = (clientX: number) => {
     isDraggingRef.current = true;
@@ -223,47 +221,6 @@ export default function HeroShowcase() {
         WebkitUserSelect: 'none',
       }}
     >
-      {/* TRAILER EM SEGUNDO PLANO SEM ERROS DE IFRAME */}
-      {activeTrailerKey ? (
-        <div className="hero-video-bg">
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.95) 20%, rgba(7,7,13,0.3) 55%, rgba(7,7,13,0.7) 80%, #07070D 100%), linear-gradient(to bottom, #07070D 0%, transparent 15%, transparent 85%, #07070D 100%)',
-            zIndex: 1,
-          }} />
-          <iframe
-            key={`trailer-${activeTrailerKey}-${isMuted ? 'muted' : 'unmuted'}`}
-            style={{
-              width: '100%',
-              height: '100%',
-              pointerEvents: 'none',
-              transform: 'scale(1.42)',
-              filter: 'saturate(1.2)',
-            }}
-            src={`https://www.youtube-nocookie.com/embed/${activeTrailerKey}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${activeTrailerKey}&playsinline=1`}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            frameBorder="0"
-          />
-        </div>
-      ) : protagonist?.backdrop ? (
-        <div className="hero-video-bg" style={{ filter: 'blur(12px) saturate(1.25)', opacity: 0.38 }}>
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.92) 22%, rgba(7,7,13,0.3) 50%, rgba(7,7,13,0.8) 80%, #07070D 100%)',
-            zIndex: 1,
-          }} />
-          <div style={{
-            position: 'absolute', inset: 0,
-            backgroundImage: `url(${protagonist.backdrop})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            transition: 'background-image 0.8s ease',
-          }} />
-        </div>
-      ) : null}
-
       {/* Glow de Fundo central */}
       <div style={{
         position: 'absolute', top: '50%', left: '50%',
@@ -402,9 +359,9 @@ export default function HeroShowcase() {
       </div>
 
       {/* Control de Som */}
-      {activeTrailerKey && (
+      {onToggleMute && (
         <button
-          onClick={toggleMute}
+          onClick={onToggleMute}
           aria-label={isMuted ? 'Ativar Áudio' : 'Mudar para Mudo'}
           style={{
             position: 'absolute',
@@ -432,28 +389,7 @@ export default function HeroShowcase() {
       )}
 
       <style jsx global>{`
-        .hero-video-bg {
-          position: absolute;
-          top: -110px;
-          bottom: -32px;
-          left: -110%;
-          right: -25%;
-          opacity: 0.58;
-          z-index: 0;
-          pointer-events: none;
-          overflow: hidden;
-          transition: opacity 0.8s ease;
-        }
         @media (max-width: 1024px) {
-          .hero-video-bg {
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            top: -60px !important;
-            bottom: 0 !important;
-            opacity: 0.52 !important;
-            overflow: hidden !important;
-          }
           .hero-showcase-container {
             --mobile-scale: 0.72 !important;
             height: 400px !important;
