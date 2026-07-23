@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Search, Calendar, User, Clock, ArrowRight } from 'lucide-react';
+import { Search, Calendar, Clock, ArrowRight } from 'lucide-react';
 import type { PostCard } from '@/lib/types';
 
 // Dados simulados ricos para o blog
@@ -48,25 +47,25 @@ export default function BlogPage() {
   });
 
   return (
-    <div style={{ background: '#07070D', minHeight: '100vh', padding: '120px 24px 80px', color: '#F0F0F5' }}>
+    <div style={{ background: '#07070D', minHeight: '100vh', padding: '110px 20px 60px', color: '#F0F0F5' }} className="blog-page-container">
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         
         {/* Header da página */}
-        <div style={{ textAlign: 'center', marginBottom: 50 }}>
-          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2.5rem', fontWeight: 900, marginBottom: 12 }}>
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(2rem, 5vw, 2.8rem)', fontWeight: 900, marginBottom: 10 }}>
             📰 Blog CinePlay
           </h1>
-          <p style={{ color: '#A0A0B5', fontSize: 16 }}>
+          <p style={{ color: '#A0A0B5', fontSize: 15, maxWidth: 600, margin: '0 auto' }}>
             Guias de streaming, lançamentos de filmes, futebol ao vivo e canais oficiais.
           </p>
         </div>
 
         {/* Busca e Filtros */}
         <div style={{
-          display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 48,
+          display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40,
           background: 'var(--bg-card)', border: '1px solid var(--border-default)',
-          borderRadius: 20, padding: 24
-        }}>
+          borderRadius: 16, padding: '20px'
+        }} className="blog-filter-card">
           {/* Busca por texto */}
           <div style={{ position: 'relative' }}>
             <Search style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#A0A0B5' }} size={18} />
@@ -76,22 +75,26 @@ export default function BlogPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{
-                width: '100%', padding: '14px 16px 14px 48px', borderRadius: 12,
+                width: '100%', padding: '12px 16px 12px 46px', borderRadius: 10,
                 background: '#07070D', border: '1px solid var(--border-subtle)',
                 color: '#fff', fontSize: 14, outline: 'none'
               }}
             />
           </div>
 
-          {/* Categorias Filtros */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Categorias Filtros com Scroll Touch Suave no Celular */}
+          <div style={{
+            display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4,
+            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none'
+          }}>
             <button
               onClick={() => setActiveCategory(null)}
               style={{
-                padding: '8px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                background: activeCategory === null ? '#E50914' : 'rgba(255,255,255,0.04)',
+                padding: '7px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                background: activeCategory === null ? '#E50914' : 'rgba(255,255,255,0.05)',
                 border: `1px solid ${activeCategory === null ? '#E50914' : 'var(--border-subtle)'}`,
-                color: '#fff', transition: 'all 0.2s'
+                color: '#fff', transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
+                fontFamily: 'Outfit, sans-serif'
               }}
             >
               Todos os Conteúdos
@@ -101,10 +104,11 @@ export default function BlogPage() {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 style={{
-                  padding: '8px 16px', borderRadius: 99, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                  background: activeCategory === cat ? CAT_COLORS[cat] : 'rgba(255,255,255,0.04)',
+                  padding: '7px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  background: activeCategory === cat ? CAT_COLORS[cat] : 'rgba(255,255,255,0.05)',
                   border: `1px solid ${activeCategory === cat ? CAT_COLORS[cat] : 'var(--border-subtle)'}`,
-                  color: '#fff', transition: 'all 0.2s', textTransform: 'capitalize'
+                  color: '#fff', transition: 'all 0.2s', textTransform: 'capitalize', whiteSpace: 'nowrap', flexShrink: 0,
+                  fontFamily: 'Outfit, sans-serif'
                 }}
               >
                 {cat.replace('-', ' ')}
@@ -113,13 +117,13 @@ export default function BlogPage() {
           </div>
         </div>
 
-        {/* Listagem de Posts */}
+        {/* Listagem de Posts Responsiva */}
         {filteredPosts.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
             {filteredPosts.map(post => (
               <article key={post.id} style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
-                borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column',
                 transition: 'transform 0.25s, border-color 0.25s'
               }}
               onMouseEnter={e => {
@@ -132,44 +136,44 @@ export default function BlogPage() {
               }}
               >
                 {/* Imagem Capa */}
-                <div style={{ position: 'relative', height: 200, width: '100%' }}>
+                <div style={{ position: 'relative', height: 180, width: '100%' }}>
                   <img
                     src={post.imagem_capa_url}
                     alt={post.titulo}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                   <span style={{
-                    position: 'absolute', top: 16, left: 16,
-                    padding: '4px 12px', borderRadius: 99, fontSize: 11, fontWeight: 700,
+                    position: 'absolute', top: 12, left: 12,
+                    padding: '3px 10px', borderRadius: 99, fontSize: 10, fontWeight: 800,
                     background: CAT_COLORS[post.categoria] || '#E50914', color: '#fff',
-                    textTransform: 'uppercase', letterSpacing: '0.04em'
+                    textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'Outfit'
                   }}>
                     {post.categoria}
                   </span>
                 </div>
 
                 {/* Conteúdo */}
-                <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', gap: 14, fontSize: 12, color: '#A0A0B5', marginBottom: 12 }}>
+                <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#A0A0B5', marginBottom: 10 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Calendar size={13} /> {post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR') : 'Hoje'}
+                      <Calendar size={12} /> {post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR') : 'Hoje'}
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Clock size={13} /> {post.tempo_leitura_min} min de leitura
+                      <Clock size={12} /> {post.tempo_leitura_min} min de leitura
                     </span>
                   </div>
 
-                  <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 10, color: '#fff', lineHeight: 1.4, fontFamily: 'Outfit' }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, color: '#fff', lineHeight: 1.35, fontFamily: 'Outfit' }}>
                     {post.titulo}
                   </h2>
-                  <p style={{ fontSize: 13, color: '#A0A0B5', lineHeight: 1.5, marginBottom: 20, flex: 1 }}>
+                  <p style={{ fontSize: 13, color: '#A0A0B5', lineHeight: 1.5, marginBottom: 18, flex: 1 }}>
                     {post.resumo}
                   </p>
 
                   <Link href={`/blog/${post.slug}`} style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 13, fontWeight: 700, color: '#fff', textDecoration: 'none',
-                    marginTop: 'auto'
+                    fontSize: 13, fontWeight: 700, color: '#E50914', textDecoration: 'none',
+                    marginTop: 'auto', fontFamily: 'Outfit, sans-serif'
                   }}>
                     Ler Artigo Completo <ArrowRight size={14} />
                   </Link>
@@ -178,14 +182,25 @@ export default function BlogPage() {
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border-default)' }}>
-            <span style={{ fontSize: 40 }}>🔍</span>
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 12, marginBottom: 6 }}>Nenhum artigo encontrado</h3>
-            <p style={{ color: '#A0A0B5', fontSize: 14 }}>Tente pesquisar por outros termos ou mudar os filtros.</p>
+          <div style={{ textAlign: 'center', padding: '50px 20px', background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border-default)' }}>
+            <span style={{ fontSize: 36 }}>🔍</span>
+            <h3 style={{ fontSize: 17, fontWeight: 700, marginTop: 10, marginBottom: 6 }}>Nenhum artigo encontrado</h3>
+            <p style={{ color: '#A0A0B5', fontSize: 13 }}>Tente pesquisar por outros termos ou mudar os filtros.</p>
           </div>
         )}
 
       </div>
+
+      <style jsx global>{`
+        @media (max-width: 640px) {
+          .blog-page-container {
+            padding: 90px 16px 40px !important;
+          }
+          .blog-filter-card {
+            padding: 14px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

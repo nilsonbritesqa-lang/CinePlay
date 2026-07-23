@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Star, Play, MessageCircle, ChevronDown, ChevronUp, Zap, ChevronLeft, ChevronRight, Info, Film, Tv } from 'lucide-react';
+import { ArrowRight, Star, Play, MessageCircle, ChevronDown, ChevronUp, Zap, ChevronLeft, ChevronRight, Info, Film, Tv, Layers } from 'lucide-react';
 import HeroShowcase from './HeroShowcase';
 
 const CATEGORIAS = [
@@ -72,6 +72,9 @@ export default function LandingPage() {
   // Navegação de Datas no Calendário Esportivo
   const [selectedDateOffset, setSelectedDateOffset] = useState(0); // 0 = Hoje, 1 = Amanhã, -1 = Ontem...
   const [loadingMatches, setLoadingMatches] = useState(false);
+
+  // Controle de expansão de ligas esportivas (Mostrar todas vs Principais)
+  const [showAllLeagues, setShowAllLeagues] = useState(false);
 
   // Controle de sanfona (accordion) dos campeonatos — INICIAM TODOS FECHADOS CONFORME SOLICITADO
   const [expandedLeagues, setExpandedLeagues] = useState<Record<string, boolean>>({});
@@ -258,6 +261,9 @@ export default function LandingPage() {
     return acc;
   }, {});
 
+  const allLeagueEntries = Object.entries(groupedMatches);
+  const visibleLeagueEntries = showAllLeagues ? allLeagueEntries : allLeagueEntries.slice(0, 8);
+
   return (
     <div style={{ 
       background: '#07070D url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.015\'/%3E%3C/svg%3E")', 
@@ -283,7 +289,7 @@ export default function LandingPage() {
         position: 'relative',
         padding: '110px 24px 32px',
         background: 'radial-gradient(circle at 10% 20%, rgba(229, 9, 20, 0.06) 0%, transparent 60%)',
-      }}>
+      }} className="hero-section">
         <div style={{
           position: 'absolute', top: '10%', right: '10%', width: '400px', height: '400px',
           background: 'radial-gradient(circle, rgba(229,9,20,0.04) 0%, transparent 70%)',
@@ -300,7 +306,7 @@ export default function LandingPage() {
         }} className="hero-grid">
 
           {/* Lado Esquerdo - Tipografia Compacta */}
-          <div style={{ zIndex: 2, paddingRight: 20 }}>
+          <div style={{ zIndex: 2, paddingRight: 20 }} className="hero-text-col">
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               background: 'rgba(229, 9, 20, 0.06)', color: '#E50914',
@@ -314,7 +320,7 @@ export default function LandingPage() {
 
             <h1 style={{
               fontFamily: 'Outfit, sans-serif',
-              fontSize: 'clamp(2.1rem, 4vw, 3.1rem)',
+              fontSize: 'clamp(2rem, 4vw, 3.1rem)',
               fontWeight: 900, lineHeight: 1.05, marginBottom: 12,
               letterSpacing: '-0.03em', color: '#fff'
             }}>
@@ -327,7 +333,7 @@ export default function LandingPage() {
               em qual canal, plataforma ou streaming. Simples assim.
             </p>
 
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }} className="hero-cta-group">
               <Link href="/blog" style={{
                 background: '#E50914', color: '#fff', padding: '10px 20px',
                 borderRadius: 8, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -336,6 +342,7 @@ export default function LandingPage() {
               }}
               onMouseEnter={e => { e.currentTarget.style.background = '#b8070f'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#E50914'; }}
+              className="mobile-full-btn"
               >
                 Acessar o Blog <ArrowRight size={14} />
               </Link>
@@ -350,6 +357,7 @@ export default function LandingPage() {
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   transition: 'background 0.2s ease, border-color 0.2s ease'
                 }}
+                className="mobile-full-btn"
                 id="cta-teste-gratis-hero"
               >
                 <MessageCircle size={14} /> Solicite Teste Grátis
@@ -357,7 +365,7 @@ export default function LandingPage() {
             </div>
 
             {/* Social Proof */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="hero-social-proof">
               <div style={{ display: 'flex' }}>
                 {[
                   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80',
@@ -394,14 +402,14 @@ export default function LandingPage() {
         padding: '56px 24px',
         borderTop: '1px solid rgba(255,255,255,0.04)',
         background: 'linear-gradient(to bottom, rgba(12,12,24,0.6) 0%, rgba(7,7,13,0.95) 100%)',
-      }}>
+      }} className="main-section">
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1.2fr 0.9fr',
             gap: 32,
-            alignItems: 'stretch'
+            alignItems: 'start'
           }} className="main-content-grid">
 
             {/* COLUNA ESQUERDA: CATEGORIAS + 2 CONTAINERS EM DESTAQUE (FILME + SÉRIE) */}
@@ -422,7 +430,7 @@ export default function LandingPage() {
                   </h2>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }} className="categories-grid">
                   {CATEGORIAS.map(cat => (
                     <Link
                       key={cat.id}
@@ -465,11 +473,12 @@ export default function LandingPage() {
                   border: '1px solid rgba(229,9,20,0.25)',
                   background: '#090914',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
-                  height: 350,
+                  minHeight: 350,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                 }}
+                className="showcase-card-container"
               >
                 {/* BACKDROP VIBRANTE E BEM VISÍVEL */}
                 {movieItems.map((item, idx) => {
@@ -508,7 +517,7 @@ export default function LandingPage() {
                 {movieItems.map((item, idx) => {
                   if (idx !== currentMovieIdx) return null;
                   return (
-                    <div key={`movie-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 14 }}>
+                    <div key={`movie-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 14 }} className="card-content-inner">
                       {/* Topo Badges + Nav */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -538,15 +547,16 @@ export default function LandingPage() {
                       </div>
 
                       {/* Corpo do Filme (Pôster + Sinopse) */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '115px 1fr', gap: 16, alignItems: 'center', flex: 1 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '115px 1fr', gap: 16, alignItems: 'center', flex: 1 }} className="card-media-synopsis">
                         <img
                           src={item.poster}
                           alt={item.title}
                           onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80'; }}
                           style={{ width: 115, height: 165, borderRadius: 10, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.8)' }}
+                          className="poster-img-responsive"
                         />
 
-                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px', height: 165, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px', minHeight: 165, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                           <h3 style={{ fontFamily: 'Outfit', fontSize: '1.25rem', fontWeight: 900, color: '#fff', margin: '0 0 6px 0', lineHeight: 1.2 }}>
                             {item.title}
                           </h3>
@@ -557,7 +567,7 @@ export default function LandingPage() {
                       </div>
 
                       {/* Rodapé CTA */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }} className="card-footer-cta">
                         <span style={{ fontSize: 11, color: '#25D366', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#25D366' }} /> Guia Oficial no WhatsApp
                         </span>
@@ -589,11 +599,12 @@ export default function LandingPage() {
                   border: '1px solid rgba(99, 102, 241, 0.3)',
                   background: '#090914',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
-                  height: 350,
+                  minHeight: 350,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                 }}
+                className="showcase-card-container"
               >
                 {/* BACKDROP VIBRANTE E BEM VISÍVEL */}
                 {seriesItems.map((item, idx) => {
@@ -632,7 +643,7 @@ export default function LandingPage() {
                 {seriesItems.map((item, idx) => {
                   if (idx !== currentSeriesIdx) return null;
                   return (
-                    <div key={`series-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 14 }}>
+                    <div key={`series-content-${item.id}`} style={{ position: 'relative', zIndex: 2, padding: '22px 24px', display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 14 }} className="card-content-inner">
                       {/* Topo Badges + Nav */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -662,15 +673,16 @@ export default function LandingPage() {
                       </div>
 
                       {/* Corpo da Série (Pôster + Sinopse) */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '115px 1fr', gap: 16, alignItems: 'center', flex: 1 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '115px 1fr', gap: 16, alignItems: 'center', flex: 1 }} className="card-media-synopsis">
                         <img
                           src={item.poster}
                           alt={item.title}
                           onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80'; }}
                           style={{ width: 115, height: 165, borderRadius: 10, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)', boxShadow: '0 8px 20px rgba(0,0,0,0.8)' }}
+                          className="poster-img-responsive"
                         />
 
-                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px', height: 165, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ background: 'rgba(7,7,13,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '14px 16px', minHeight: 165, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                           <h3 style={{ fontFamily: 'Outfit', fontSize: '1.25rem', fontWeight: 900, color: '#fff', margin: '0 0 6px 0', lineHeight: 1.2 }}>
                             {item.title}
                           </h3>
@@ -681,7 +693,7 @@ export default function LandingPage() {
                       </div>
 
                       {/* Rodapé CTA */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }} className="card-footer-cta">
                         <span style={{ fontSize: 11, color: '#25D366', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#25D366' }} /> Guia Oficial no WhatsApp
                         </span>
@@ -702,7 +714,7 @@ export default function LandingPage() {
 
             </div>
 
-            {/* COLUNA DIREITA: AGENDA ESPORTIVA COM ALTURA ALINHADA PERFEITAMENTE À ESQUERDA */}
+            {/* COLUNA DIREITA: AGENDA ESPORTIVA COM FORMATO ESTILO FLASHSCORE (SEM NENHUM CARD AMASSADO) */}
             <div style={{
               background: '#090914',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -712,7 +724,6 @@ export default function LandingPage() {
               display: 'flex',
               flexDirection: 'column',
               gap: 14,
-              maxHeight: 920,
               boxSizing: 'border-box'
             }} className="slim-sports-column">
               
@@ -740,9 +751,10 @@ export default function LandingPage() {
                   display: 'flex',
                   gap: 6,
                   overflowX: 'auto',
-                  paddingBottom: 4,
+                  paddingBottom: 6,
+                  WebkitOverflowScrolling: 'touch',
                   scrollbarWidth: 'none',
-                }}>
+                }} className="date-tabs-scroll">
                   {dateOptions.map((opt) => {
                     const isSelected = opt.offset === selectedDateOffset;
                     return (
@@ -754,7 +766,7 @@ export default function LandingPage() {
                           color: isSelected ? '#000' : '#A0A0B5',
                           border: isSelected ? '1px solid #25D366' : '1px solid rgba(255,255,255,0.08)',
                           borderRadius: 8,
-                          padding: '5px 10px',
+                          padding: '6px 12px',
                           fontSize: 10,
                           fontWeight: isSelected ? 900 : 700,
                           cursor: 'pointer',
@@ -772,27 +784,27 @@ export default function LandingPage() {
               </div>
 
               {loadingMatches ? (
-                <div style={{ padding: '30px 0', textAlign: 'center', color: '#9090A5', fontSize: 12 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(37,211,102,0.2)', borderTopColor: '#25D366', display: 'inline-block', animation: 'spin 0.8s linear infinite', marginRight: 8 }} />
+                <div style={{ padding: '40px 0', textAlign: 'center', color: '#9090A5', fontSize: 12 }}>
+                  <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid rgba(37,211,102,0.2)', borderTopColor: '#25D366', display: 'inline-block', animation: 'spin 0.8s linear infinite', marginRight: 8 }} />
                   Buscando transmissões para {selectedDateObj.dayName}...
                 </div>
               ) : sportsMatches.length === 0 ? (
-                <div style={{ padding: '30px 16px', textAlign: 'center', color: '#9090A5', fontSize: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 10 }}>
-                  Sem partidas confirmadas para esta data. <br /> Use a barra acima para ver outros dias!
+                <div style={{ padding: '36px 16px', textAlign: 'center', color: '#9090A5', fontSize: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 10 }}>
+                  Sem partidas confirmadas para esta data. <br /> Use a barra acima para navegar em outros dias!
                 </div>
               ) : (
-                /* Lista de Campeonatos em Scroll Container (Mantém Alinhamento Exato com Coluna da Esquerda) */
+                /* Lista de Campeonatos com flexShrink: 0 para NUNCA AMASSAR OU COMPRIMIR OS CARDS */
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 8,
+                  gap: 10,
+                  maxHeight: 780,
                   overflowY: 'auto',
-                  flex: 1,
                   paddingRight: 4,
                   scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(229,9,20,0.4) rgba(255,255,255,0.04)'
+                  scrollbarColor: 'rgba(229,9,20,0.5) rgba(255,255,255,0.04)'
                 }}>
-                  {Object.entries(groupedMatches).map(([leagueName, matches]) => {
+                  {visibleLeagueEntries.map(([leagueName, matches]) => {
                     const isExpanded = expandedLeagues[leagueName] ?? false;
                     const sampleMatch = matches[0];
                     const leagueColor = sampleMatch?.leagueColor || '#009C3B';
@@ -803,9 +815,10 @@ export default function LandingPage() {
                         key={leagueName}
                         style={{
                           background: '#0B0B18',
-                          border: '1px solid rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.07)',
                           borderRadius: 10,
                           overflow: 'hidden',
+                          flexShrink: 0, /* IMPEDE AMASSAR OS CARDS! */
                         }}
                       >
                         {/* Header do Campeonato (Clique para abrir a sanfona) */}
@@ -813,8 +826,9 @@ export default function LandingPage() {
                           onClick={() => toggleLeague(leagueName)}
                           style={{
                             width: '100%',
-                            padding: '10px 12px',
-                            background: 'rgba(255,255,255,0.02)',
+                            minHeight: 44, /* GARANTE ALTURA MÍNIMA CONFORTÁVEL */
+                            padding: '10px 14px',
+                            background: 'rgba(255,255,255,0.03)',
                             border: 'none',
                             display: 'flex',
                             alignItems: 'center',
@@ -823,30 +837,31 @@ export default function LandingPage() {
                             color: '#fff',
                             outline: 'none',
                             transition: 'background 0.2s ease',
+                            flexShrink: 0,
                           }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             {/* ESCUDO / LOGO OFICIAL DO CAMPEONATO */}
                             <img
                               src={leagueLogo}
                               alt=""
                               onError={(e) => { e.currentTarget.src = 'https://upload.wikimedia.org/wikipedia/commons/d/d3/Soccerball.svg'; }}
-                              style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }}
+                              style={{ width: 20, height: 20, objectFit: 'contain', flexShrink: 0 }}
                             />
-                            <span style={{ fontSize: 11, fontWeight: 800, fontFamily: 'Outfit', color: '#fff' }}>
+                            <span style={{ fontSize: 12, fontWeight: 800, fontFamily: 'Outfit', color: '#fff' }}>
                               {leagueName}
                             </span>
                             <span style={{
-                              fontSize: 8, fontWeight: 800, color: leagueColor,
-                              background: `${leagueColor}18`, padding: '1px 6px', borderRadius: 99
+                              fontSize: 9, fontWeight: 800, color: leagueColor,
+                              background: `${leagueColor}18`, padding: '2px 8px', borderRadius: 99
                             }}>
-                              {matches.length}
+                              {matches.length} {matches.length === 1 ? 'jogo' : 'jogos'}
                             </span>
                           </div>
                           <div style={{ color: '#65657B', display: 'flex', alignItems: 'center' }}>
-                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                           </div>
                         </button>
 
@@ -857,7 +872,7 @@ export default function LandingPage() {
                               <div
                                 key={match.id}
                                 style={{
-                                  padding: '8px 12px',
+                                  padding: '10px 14px',
                                   borderTop: '1px solid rgba(255,255,255,0.04)',
                                   background: match.isLive ? 'rgba(229,9,20,0.05)' : 'transparent',
                                   display: 'flex',
@@ -875,8 +890,8 @@ export default function LandingPage() {
                                     {match.isLive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#E50914', animation: 'spin 1s ease infinite' }} />}
                                     {match.overlay_badge || match.label || 'AGENDADO'}
                                   </span>
-                                  <span style={{ fontSize: 8, color: '#65657B' }}>
-                                    {match.subtitle?.split(' - ')[1] || 'Rodada'}
+                                  <span style={{ fontSize: 9, color: '#65657B' }}>
+                                    {match.subtitle?.split(' - ')[1] || 'Transmissão Oficial'}
                                   </span>
                                 </div>
 
@@ -922,22 +937,22 @@ export default function LandingPage() {
                                   style={{
                                     background: '#25D366',
                                     color: '#fff',
-                                    padding: '6px 8px',
+                                    padding: '7px 10px',
                                     borderRadius: 6,
                                     fontWeight: 800,
                                     fontSize: 10,
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    gap: 4,
+                                    gap: 5,
                                     textDecoration: 'none',
                                     boxShadow: '0 2px 6px rgba(37, 211, 102, 0.2)',
-                                    marginTop: 2,
+                                    marginTop: 4,
                                     transition: 'transform 0.15s ease, background 0.15s ease'
                                   }}
                                   className="saiba-como-assistir-btn"
                                 >
-                                  <MessageCircle size={11} />
+                                  <MessageCircle size={12} />
                                   Saiba como Assistir
                                 </a>
                               </div>
@@ -947,6 +962,36 @@ export default function LandingPage() {
                       </div>
                     );
                   })}
+
+                  {/* Botão de Alternar Exibição de Ligas (Mostrar Todas vs Principais) */}
+                  {allLeagueEntries.length > 8 && (
+                    <button
+                      onClick={() => setShowAllLeagues(!showAllLeagues)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: 8,
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: '#fff',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        marginTop: 4,
+                        transition: 'background 0.2s ease',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                    >
+                      <Layers size={13} />
+                      {showAllLeagues ? 'Recolher Lista de Ligas' : `Ver Todos os ${allLeagueEntries.length} Campeonatos`}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -1142,7 +1187,7 @@ export default function LandingPage() {
         padding: '64px 24px',
         background: '#090912 url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.015\'/%3E%3C/svg%3E")',
         borderTop: '1px solid rgba(255,255,255,0.03)',
-      }}>
+      }} className="cta-section-container">
         <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
           <span style={{
             display: 'inline-block', background: 'rgba(229,9,20,0.08)', color: '#E50914',
@@ -1154,7 +1199,7 @@ export default function LandingPage() {
           </span>
 
           <h2 style={{
-            fontFamily: 'Outfit', fontSize: 'clamp(1.7rem, 3.2vw, 2.6rem)',
+            fontFamily: 'Outfit', fontSize: 'clamp(1.6rem, 3.2vw, 2.6rem)',
             fontWeight: 900, color: '#fff', marginBottom: 14, lineHeight: 1.1, letterSpacing: '-0.02em'
           }}>
             Quer saber onde assistir <br />
@@ -1166,7 +1211,7 @@ export default function LandingPage() {
             séries, futebol ao vivo, BBB e muito mais — em segundos.
           </p>
 
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }} className="cta-btn-group">
             <a
               href={whatsappConfig?.whatsapp_numero ? `https://wa.me/${whatsappConfig.whatsapp_numero}?text=${encodeURIComponent(whatsappConfig.whatsapp_mensagem || 'Olá! Quero solicitar um teste gratuito do CinePlay.')}` : 'https://wa.me/5511999999999?text=Olá!%20Quero%20solicitar%20um%20teste%20gratuito%20do%20CinePlay.'}
               target="_blank"
@@ -1180,6 +1225,7 @@ export default function LandingPage() {
                 fontFamily: 'Outfit',
                 transition: 'background 0.2s ease'
               }}
+              className="mobile-full-btn"
               onMouseEnter={e => { e.currentTarget.style.background = '#b8070f'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#E50914'; }}
             >
@@ -1192,6 +1238,7 @@ export default function LandingPage() {
               border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', fontSize: 14, fontFamily: 'Outfit',
               transition: 'background 0.2s ease'
             }}
+            className="mobile-full-btn"
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
             >
@@ -1201,6 +1248,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* CSS RESPONSIVO COMPLETO DE ALTA QUALIDADE */}
       <style jsx global>{`
         .hero-visuals-container {
           margin-left: -110px !important;
@@ -1221,7 +1269,7 @@ export default function LandingPage() {
             margin-left: 0 !important;
             margin-top: 16px;
           }
-          .hero-grid > div:first-child {
+          .hero-text-col {
             padding-right: 0 !important;
             display: flex;
             flex-direction: column;
@@ -1229,12 +1277,52 @@ export default function LandingPage() {
           }
           .main-content-grid {
             grid-template-columns: 1fr !important;
-            gap: 24px !important;
+            gap: 28px !important;
           }
           .slim-sports-column {
-            max-height: 600px !important;
+            max-height: 650px !important;
           }
         }
+
+        @media (max-width: 640px) {
+          .hero-section {
+            padding: 90px 16px 24px !important;
+          }
+          .main-section {
+            padding: 36px 14px !important;
+          }
+          .cta-section-container {
+            padding: 40px 16px !important;
+          }
+          .mobile-full-btn {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .card-content-inner {
+            padding: 16px 16px !important;
+          }
+          .card-media-synopsis {
+            grid-template-columns: 90px 1fr !important;
+            gap: 12px !important;
+          }
+          .poster-img-responsive {
+            width: 90px !important;
+            height: 135px !important;
+          }
+          .categories-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+          }
+          .card-footer-cta {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+          }
+          .onde-assistir-btn {
+            justify-content: center !important;
+          }
+        }
+
         .category-card {
           transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.28s;
         }

@@ -480,8 +480,20 @@ export default function HeroShowcase() {
             opacity: 0.52 !important;
           }
           .hero-showcase-container {
-            --mobile-scale: 0.74 !important;
-            height: 380px !important;
+            --mobile-scale: 0.72 !important;
+            height: 400px !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .hero-showcase-container {
+            --mobile-scale: 0.54 !important;
+            height: 330px !important;
+          }
+        }
+        @media (max-width: 420px) {
+          .hero-showcase-container {
+            --mobile-scale: 0.46 !important;
+            height: 300px !important;
           }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
