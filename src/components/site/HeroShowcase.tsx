@@ -210,13 +210,16 @@ export default function HeroShowcase() {
     return () => cancelAnimationFrame(animId);
   }, [targetMouse]);
 
-  // Buscar Trailer Silencioso do Protagonista no Youtube
-  const currentIntIndex = pool.length > 0 ? Math.round(progress) % pool.length : 0;
+  // Buscar Trailer Silencioso do Protagonista no Youtube (garantindo índice circular positivo)
+  const currentIntIndex = pool.length > 0 
+    ? ((Math.round(progress) % pool.length) + pool.length) % pool.length 
+    : 0;
   const protagonist = pool[currentIntIndex];
 
   useEffect(() => {
     if (!protagonist) {
       setActiveTrailerKey(null);
+      lastFetchedIdRef.current = null;
       return;
     }
     if (lastFetchedIdRef.current === protagonist.id) return;
