@@ -87,10 +87,17 @@ export default function AdminAgentesPage() {
 
   async function rodarAgente(id: string) {
     setRodando(id);
+    const cookies = typeof document !== 'undefined' ? document.cookie.split('; ') : [];
+    const adminCookie = cookies.find(row => row.startsWith('cineplay_admin_token='));
+    const token = adminCookie ? adminCookie.split('=')[1] : 'cineplay-admin-2026';
+
     try {
       await fetch('/api/agentes/run', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ agente_id: id }),
       });
     } finally {
