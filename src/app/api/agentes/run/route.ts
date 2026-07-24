@@ -30,11 +30,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const { agente_id, config } = body;
 
+    // Mapa de agentes padrão para resolver o tipo e dados com base no agente_id
+    const agentMap: Record<string, { tipo: any; nome: string; provider_ia: any }> = {
+      '1': { tipo: 'futebol', nome: 'Agente Futebol', provider_ia: 'gemini' },
+      '2': { tipo: 'cinema', nome: 'Agente Cinema', provider_ia: 'groq' },
+      '3': { tipo: 'series', nome: 'Agente Séries', provider_ia: 'gemini' },
+      '4': { tipo: 'canais', nome: 'Agente Canais', provider_ia: 'openai' },
+      '5': { tipo: 'onde-assistir', nome: 'Onde Assistir', provider_ia: 'groq' },
+      'futebol': { tipo: 'futebol', nome: 'Agente Futebol', provider_ia: 'gemini' },
+      'cinema': { tipo: 'cinema', nome: 'Agente Cinema', provider_ia: 'groq' },
+      'series': { tipo: 'series', nome: 'Agente Séries', provider_ia: 'gemini' },
+      'canais': { tipo: 'canais', nome: 'Agente Canais', provider_ia: 'openai' },
+      'onde-assistir': { tipo: 'onde-assistir', nome: 'Onde Assistir', provider_ia: 'groq' }
+    };
+
+    const resolved = agentMap[String(agente_id)] || { tipo: 'onde-assistir', nome: 'Agente Autônomo', provider_ia: getDefaultProvider() };
+
     const agenteConfig: AgentConfig = {
       id: agente_id ?? 'manual',
-      nome: config?.nome ?? 'Agente Autônomo',
-      tipo: config?.tipo ?? 'onde-assistir',
-      provider_ia: config?.provider_ia ?? getDefaultProvider(),
+      nome: config?.nome ?? resolved.nome,
+      tipo: config?.tipo ?? resolved.tipo,
+      provider_ia: config?.provider_ia ?? resolved.provider_ia ?? getDefaultProvider(),
       modelo_ia: config?.modelo_ia,
       temperatura: config?.temperatura ?? 0.7,
       auto_publicar: config?.auto_publicar ?? true,

@@ -25,22 +25,24 @@ export async function GET(request: NextRequest) {
           .from('posts')
           .select('*')
           .eq('slug', slug)
-          .single();
+          .maybeSingle();
 
-        if (data && !error) {
-          // Incrementa visualizações
-          await supabase.from('posts').update({ visualizacoes: (data.visualizacoes || 0) + 1 }).eq('id', data.id);
-          return NextResponse.json({ success: true, post: data });
+        if (error) throw error;
+        if (!data) {
+          return NextResponse.json({ success: false, error: 'Post não encontrado' }, { status: 404 });
         }
+
+        // Incrementa visualizações
+        await supabase.from('posts').update({ visualizacoes: (data.visualizacoes || 0) + 1 }).eq('id', data.id);
+        return NextResponse.json({ success: true, post: data });
       } else {
         let query = supabase.from('posts').select('*').order('publicado_em', { ascending: false });
         if (categoria) {
           query = query.eq('categoria', categoria);
         }
         const { data, error } = await query;
-        if (data && !error && data.length > 0) {
-          return NextResponse.json({ success: true, posts: data });
-        }
+        if (error) throw error;
+        return NextResponse.json({ success: true, posts: data || [] });
       }
     } catch (e) {
       console.warn('[API /posts] Erro na busca do Supabase:', e);

@@ -29,7 +29,7 @@ export interface AIGenerateResult {
 // ===== MODELOS PADRÃO POR PROVIDER =====
 export const DEFAULT_MODELS: Record<AIProvider, string> = {
   groq: 'llama-3.3-70b-versatile',
-  gemini: 'gemini-1.5-pro',
+  gemini: 'gemini-1.5-flash',
   claude: 'claude-3-5-haiku-20241022',
   openai: 'gpt-4o-mini',
 };
