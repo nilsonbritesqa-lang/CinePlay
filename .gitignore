@@ -30,9 +30,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (TODOS os arquivos de ambiente ficam 100% locais e ignorados pelo Git)
 .env*
-!.env.example
 
 # vercel
 .vercel
