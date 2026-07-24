@@ -164,8 +164,8 @@ export default function BlogPage() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 11, color: '#6B6B85' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Calendar size={12} /> {new Date(post.publicado_em || Date.now()).toLocaleDateString('pt-BR')}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }} suppressHydrationWarning>
+                      <Calendar size={12} /> {post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR') : '2026-07-23'}
                     </span>
                     <Link
                       href={`/blog/${post.slug}`}
