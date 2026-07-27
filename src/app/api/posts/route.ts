@@ -87,6 +87,44 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  const supabase = getSupabaseService();
+  if (!supabase) {
+    return NextResponse.json({ success: false, error: 'Banco de dados não configurado' }, { status: 500 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, titulo, slug, resumo, conteudo_html, categoria, imagem_capa_url, publicado_em } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'ID do post é obrigatório' }, { status: 400 });
+    }
+
+    const updateData: Record<string, any> = {};
+    if (titulo !== undefined) updateData.titulo = titulo;
+    if (slug !== undefined) updateData.slug = slug;
+    if (resumo !== undefined) updateData.resumo = resumo;
+    if (conteudo_html !== undefined) updateData.conteudo_html = conteudo_html;
+    if (categoria !== undefined) updateData.categoria = categoria;
+    if (imagem_capa_url !== undefined) updateData.imagem_capa_url = imagem_capa_url;
+    if (publicado_em !== undefined) updateData.publicado_em = publicado_em;
+
+    const { data, error } = await supabase
+      .from('posts')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, post: data });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
