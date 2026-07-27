@@ -555,7 +555,7 @@ img {
 }
 
 /* =====================
-   RICH ARTICLE TYPOGRAPHY & TABLE STYLES
+   ESTILO JORNALÍSTICO G1 / GLOBO ESPORTE
    ===================== */
 .post-content, .article-content {
   color: #D0D0DB;
@@ -568,9 +568,10 @@ img {
   font-size: 1.7rem;
   font-weight: 800;
   color: #FFFFFF;
-  margin: 2.2rem 0 1.2rem;
+  margin: 2.5rem 0 1.2rem;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(229, 9, 20, 0.4);
+  border-bottom: 2px solid rgba(229, 9, 20, 0.5);
+  letter-spacing: -0.01em;
 }
 
 .post-content h3, .article-content h3 {
@@ -578,40 +579,63 @@ img {
   font-size: 1.35rem;
   font-weight: 700;
   color: #F0F0F5;
-  margin: 1.8rem 0 0.85rem;
+  margin: 2rem 0 0.9rem;
 }
 
 .post-content p, .article-content p {
-  margin-bottom: 1.3rem;
+  margin-bottom: 1.4rem;
+  font-size: 1.08rem;
+  line-height: 1.85;
+  color: #E0E0EC;
+}
+
+.post-content p:first-of-type {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #FFFFFF;
+  line-height: 1.8;
 }
 
 .post-content table, .article-content table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin: 1.8rem 0;
-  border-radius: 12px;
+  margin: 2rem 0;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: #0E0E18;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .post-content table, .article-content table {
+    display: table;
+    white-space: normal;
+  }
 }
 
 .post-content th, .article-content th {
-  background: rgba(229, 9, 20, 0.18);
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.3) 0%, rgba(20, 20, 32, 0.95) 100%);
   color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.95rem;
-  padding: 12px 16px;
+  padding: 14px 18px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .post-content td, .article-content td {
-  padding: 12px 16px;
+  padding: 14px 18px;
   color: #D0D0DB;
-  font-size: 0.92rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .post-content tr:last-child td, .article-content tr:last-child td {
@@ -619,24 +643,28 @@ img {
 }
 
 .post-content tr:nth-child(even), .article-content tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .post-content blockquote, .article-content blockquote {
-  border-left: 4px solid #E50914;
-  background: linear-gradient(135deg, rgba(229, 9, 20, 0.12) 0%, rgba(15, 15, 26, 0.9) 100%);
-  padding: 16px 20px;
-  margin: 1.8rem 0;
-  border-radius: 0 12px 12px 0;
+  border-left: 4px solid #25D366;
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(15, 15, 26, 0.95) 100%);
+  padding: 20px 24px;
+  margin: 2.2rem 0;
+  border-radius: 0 14px 14px 0;
   color: #FFFFFF;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
 }
 
 .post-content ul, .article-content ul {
-  margin: 1.2rem 0 1.5rem 1.4rem;
+  margin: 1.4rem 0 1.8rem 1.4rem;
+  list-style-type: square;
 }
 
 .post-content li, .article-content li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.7rem;
+  color: #E0E0EC;
+  line-height: 1.7;
 }
 

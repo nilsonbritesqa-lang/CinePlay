@@ -1,94 +1,118 @@
-'use client';
-
-import { use, useState, useEffect } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Calendar, User, Clock, ArrowLeft, MessageCircle } from 'lucide-react';
-import type { PostCard, CTA } from '@/lib/types';
-import { CTABlock } from '@/components/site/CTABlock';
+import Image from 'next/image';
+import { notFound } from 'next/navigation';
+import { Calendar, Clock, User, ArrowLeft, Share2, MessageCircle, CheckCircle2, Flame } from 'lucide-react';
+import type { PostCard } from '@/lib/types';
+import { PostCardComponent } from '@/components/site/PostCard';
 
 interface PostDetail extends PostCard {
   conteudo_html?: string;
   conteudo_completo?: string;
 }
 
-export default function PostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = use(params);
-  const slug = resolvedParams.slug;
-  const [post, setPost] = useState<PostDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+async function getPost(slug: string): Promise<PostDetail | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hjmsabirunfywjxfsuly.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqbXNhYmlydW5meXdqeGZzdWx5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDMyMzY0NiwiZXhwIjoyMDk5ODk5NjQ2fQ.pyC3DsxpLQfQbmKEyXb0y6SRUtv34K05ZfpqIcRP6Ps';
 
-  const [cta, setCta] = useState<{ texto_pre: string; texto_botao: string; url_destino: string; cor_botao: string } | null>(null);
-
-  useEffect(() => {
-    async function fetchPost() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/posts?slug=${encodeURIComponent(slug)}`);
-        const data = await res.json();
-        if (data.success && data.post) {
-          setPost(data.post);
-
-          // Dispara rastreamento inteligente de tráfego (IP, Dispositivo, Origem)
-          fetch('/api/analytics/track', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              slug,
-              referer: typeof document !== 'undefined' ? document.referrer : '',
-              user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : ''
-            })
-          }).catch(() => {});
-        }
-      } catch (err) {
-        console.error('Erro ao buscar post:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    async function loadCta() {
-      try {
-        const res = await fetch('/api/ctas');
-        const data = await res.json();
-        if (data.success && data.patrocinadores && data.patrocinadores.length > 0) {
-          const firstPat = data.patrocinadores[0];
-          if (firstPat.ctas && firstPat.ctas.length > 0) {
-            setCta(firstPat.ctas[0]);
-          }
-        }
-      } catch (err) {
-        console.error('Erro ao carregar CTA:', err);
-      }
-    }
-
-    fetchPost();
-    loadCta();
-  }, [slug]);
-
-  if (loading) {
-    return (
-      <div style={{ background: '#07070D', minHeight: '100vh', padding: '160px 24px', textAlign: 'center', color: '#A0A0B5' }}>
-        Carregando artigo...
-      </div>
-    );
+  try {
+    const res = await fetch(`${url}/rest/v1/posts?slug=eq.${encodeURIComponent(slug)}`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    const posts = await res.json();
+    return Array.isArray(posts) && posts.length > 0 ? posts[0] : null;
+  } catch {
+    return null;
   }
+}
+
+async function getRelatedPosts(category: string, currentSlug: string): Promise<PostCard[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hjmsabirunfywjxfsuly.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqbXNhYmlydW5meXdqeGZzdWx5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDMyMzY0NiwiZXhwIjoyMDk5ODk5NjQ2fQ.pyC3DsxpLQfQbmKEyXb0y6SRUtv34K05ZfpqIcRP6Ps';
+
+  try {
+    const res = await fetch(`${url}/rest/v1/posts?categoria=eq.${category}&slug=neq.${encodeURIComponent(currentSlug)}&limit=3&order=publicado_em.desc`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
 
   if (!post) {
-    return (
-      <div style={{ background: '#07070D', minHeight: '100vh', padding: '160px 24px', textAlign: 'center', color: '#F0F0F5' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 12 }}>Artigo não encontrado</h1>
-        <p style={{ color: '#A0A0B5', marginBottom: 24 }}>O artigo solicitado não existe ou foi removido.</p>
-        <Link href="/blog" className="btn btn-primary">Voltar para o Blog</Link>
-      </div>
-    );
+    return {
+      title: 'Artigo Não Encontrado — CinePlay',
+      robots: { index: false, follow: false },
+    };
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cine-play-seven.vercel.app';
+  const canonicalUrl = `${baseUrl}/blog/${post.slug}`;
+  const title = `${post.titulo} | Guia CinePlay`;
+  const description = post.resumo || `Confira a matéria completa sobre ${post.titulo} com informações atualizadas de transmissão ao vivo em HD.`;
+  const imageUrl = post.imagem_capa_url || `${baseUrl}/og-default.jpg`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: 'CinePlay Portal',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.titulo,
+        },
+      ],
+      type: 'article',
+      publishedTime: post.publicado_em || new Date().toISOString(),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
+
+export default async function SinglePostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getPost(slug);
+
+  if (!post) {
+    notFound();
+  }
+
+  const relatedPosts = await getRelatedPosts(post.categoria, post.slug);
   const htmlContent = post.conteudo_html || post.conteudo_completo || post.resumo;
+  const pubDate = post.publicado_em ? new Date(post.publicado_em) : new Date();
+  const dateFormatted = pubDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const timeFormatted = pubDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  const shareUrl = `https://cine-play-seven.vercel.app/blog/${post.slug}`;
+  const whatsappShare = `https://api.whatsapp.com/send?text=${encodeURIComponent(`Confira: ${post.titulo} — ${shareUrl}`)}`;
 
   return (
-    <article style={{ background: '#07070D', minHeight: '100vh', padding: '120px 24px 80px', color: '#F0F0F5' }}>
+    <article style={{ background: '#07070D', minHeight: '100vh', padding: '110px 20px 80px', color: '#F0F0F5' }}>
       
-      {/* Schema JSON-LD para SEO no Google Search e Discover */}
+      {/* Schema JSON-LD Estruturado para Google Search & Discover */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -96,113 +120,192 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
             '@context': 'https://schema.org',
             '@type': 'NewsArticle',
             headline: post.titulo,
-            image: post.imagem_capa_url,
+            image: [post.imagem_capa_url || 'https://cine-play-seven.vercel.app/og-default.jpg'],
             datePublished: post.publicado_em || new Date().toISOString(),
+            dateModified: post.publicado_em || new Date().toISOString(),
             author: {
               '@type': 'Organization',
-              name: 'CinePlay Editorial',
+              name: 'CinePlay Redação Jornalística',
+              url: 'https://cine-play-seven.vercel.app',
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'CinePlay',
+              logo: {
+                '@type': 'ImageObject',
+                url: 'https://cine-play-seven.vercel.app/logo-cineplay.png',
+              },
             },
             description: post.resumo,
-          })
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': shareUrl,
+            },
+          }),
         }}
       />
 
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      <div style={{ maxWidth: 860, margin: '0 auto' }}>
         
-        {/* Botão de retorno */}
-        <Link href="/blog" style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          fontSize: 14, fontWeight: 700, color: '#A0A0B5', textDecoration: 'none',
-          marginBottom: 32, transition: 'color 0.2s'
-        }}>
-          <ArrowLeft size={16} /> Voltar para o Blog
-        </Link>
+        {/* Navegação Superior */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <Link href="/blog" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            fontSize: 13, fontWeight: 700, color: '#A0A0B5', textDecoration: 'none',
+            background: 'rgba(255,255,255,0.05)', padding: '6px 14px', borderRadius: 99,
+            border: '1px solid rgba(255,255,255,0.08)', transition: 'all 0.2s'
+          }}>
+            <ArrowLeft size={14} /> Voltar para Notícias
+          </Link>
 
-        {/* Categoria Badge */}
-        <span style={{
-          display: 'inline-block', padding: '4px 12px', borderRadius: 99,
-          fontSize: 11, fontWeight: 700, background: 'rgba(229, 9, 20, 0.12)', color: '#E50914',
-          border: '1px solid rgba(229, 9, 20, 0.3)', textTransform: 'uppercase',
-          letterSpacing: '0.04em', marginBottom: 16
-        }}>
-          {post.categoria}
-        </span>
+          <a
+            href={whatsappShare}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 12, fontWeight: 700, color: '#25D366', background: 'rgba(37,211,102,0.1)',
+              padding: '6px 14px', borderRadius: 99, border: '1px solid rgba(37,211,102,0.3)',
+              textDecoration: 'none'
+            }}
+          >
+            <Share2 size={13} /> Compartilhar Notícia
+          </a>
+        </div>
 
-        {/* Título Principal */}
+        {/* Chapéu Editorial (Estilo G1) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 900,
+            background: 'rgba(229, 9, 20, 0.15)', color: '#E50914',
+            border: '1px solid rgba(229, 9, 20, 0.3)', textTransform: 'uppercase',
+            letterSpacing: '0.06em'
+          }}>
+            <Flame size={12} /> {post.categoria.toUpperCase()}
+          </span>
+          <span style={{ fontSize: 12, color: '#6B6B85', fontWeight: 600 }}>• GUIA DE TRANSMISSÃO</span>
+        </div>
+
+        {/* Título Principal de Notícia (H1) */}
         <h1 style={{
           fontFamily: 'Outfit, sans-serif',
-          fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
+          fontSize: 'clamp(2rem, 4.5vw, 3.2rem)',
           fontWeight: 900,
-          lineHeight: 1.2,
-          marginBottom: 20,
-          color: '#fff'
+          lineHeight: 1.18,
+          marginBottom: 16,
+          color: '#FFFFFF',
+          letterSpacing: '-0.02em'
         }}>
           {post.titulo}
         </h1>
 
-        {/* Metadados */}
-        <div style={{
-          display: 'flex', gap: 20, fontSize: 13, color: '#A0A0B5',
-          borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 24,
-          marginBottom: 32, flexWrap: 'wrap'
+        {/* Linha Fina / Subtítulo Jornalístico */}
+        <p style={{
+          fontSize: 'clamp(1.05rem, 2vw, 1.25rem)',
+          lineHeight: 1.55,
+          color: '#A0A0B5',
+          marginBottom: 24,
+          fontWeight: 500,
+          borderLeft: '3px solid #E50914',
+          paddingLeft: 16
         }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <User size={14} /> Por CinePlay Editorial
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Calendar size={14} /> {post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR') : 'Hoje'}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Clock size={14} /> {post.tempo_leitura_min || 3} minutos de leitura
-          </span>
+          {post.resumo}
+        </p>
+
+        {/* Bloco de Autor, Data e Leitura (Estilo Portal de Notícias) */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 14, fontSize: 13, color: '#8E8EA8',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          padding: '14px 0', marginBottom: 32
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#fff' }}>
+              <div style={{ width: 28, height: 28, borderRadius: 99, background: '#E50914', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900 }}>
+                CP
+              </div>
+              <span>Por Redação CinePlay</span>
+              <CheckCircle2 size={14} color="#10B981" />
+            </div>
+            <span>•</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Calendar size={14} color="#8B5CF6" /> {dateFormatted} às {timeFormatted}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#D0D0DB' }}>
+            <Clock size={14} color="#F59E0B" /> {post.tempo_leitura_min || 5} min de leitura
+          </div>
         </div>
 
-        {/* Imagem de Capa */}
-        <div style={{ borderRadius: 24, overflow: 'hidden', marginBottom: 40, border: '1px solid rgba(255,255,255,0.05)' }}>
+        {/* Imagem de Capa HD com Legenda */}
+        <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)' }}>
           <img
-            src={post.imagem_capa_url}
+            src={post.imagem_capa_url || '/og-default.jpg'}
             alt={post.titulo}
-            style={{ width: '100%', height: 'auto', display: 'block' }}
+            style={{ width: '100%', height: 'auto', display: 'block', maxHeight: 480, objectFit: 'cover' }}
           />
+          <div style={{ background: 'rgba(7,7,13,0.85)', padding: '10px 16px', fontSize: 12, color: '#A0A0B5', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            📷 Imagem Ilustrativa / Divulgação Oficial — Transmissões CinePlay 2026
+          </div>
         </div>
 
-        {/* Conteúdo HTML do Artigo */}
+        {/* Corpo do Artigo Noticioso */}
         <div
           className="post-content"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
           style={{
-            fontSize: '1.05rem',
-            lineHeight: 1.8,
-            color: '#D0D0DB',
+            fontSize: '1.08rem',
+            lineHeight: 1.85,
+            color: '#E0E0EC',
+            marginBottom: 48
           }}
         />
 
-        {/* Banner CTA WhatsApp de Conversão Dinâmico */}
+        {/* Caixa de Conversão Direta via WhatsApp Oficial */}
         <div style={{
-          marginTop: 48, padding: '24px', borderRadius: 20,
-          background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(7, 7, 13, 0.9) 100%)',
-          border: '1px solid rgba(37, 211, 102, 0.3)', textAlign: 'center'
+          padding: '28px 32px', borderRadius: 24,
+          background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(15, 15, 26, 0.95) 100%)',
+          border: '1px solid rgba(37, 211, 102, 0.35)', textAlign: 'center', marginBottom: 60,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
         }}>
-          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
-            {cta?.texto_pre || 'Dúvidas sobre transmissões ao vivo e canais?'}
+          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: 8 }}>
+            💬 Quer assistir a este conteúdo com sinal em alta definição?
           </h3>
-          <p style={{ color: '#A0A0B5', fontSize: 14, marginBottom: 18 }}>
-            Fale diretamente com o atendimento oficial para tirar suas dúvidas e consultar horários.
+          <p style={{ color: '#A0A0B5', fontSize: 14, maxWidth: 600, margin: '0 auto 20px', lineHeight: 1.6 }}>
+            Entre em contato com a equipe de atendimento oficial do CinePlay via WhatsApp para verificar a programação completa e tirar dúvidas sobre a sua Smart TV ou dispositivo móvel.
           </p>
           <a
-            href={cta?.url_destino || "https://wa.me/5511999998888?text=Ol%C3%A1!+Vim+pelo+CinePlay"}
+            href="https://wa.me/5511999998888?text=Ol%C3%A1!+Estou+lendo+no+blog+sobre:+${encodeURIComponent(post.titulo)}+e+gostaria+de+saber+mais."
             target="_blank"
             rel="noopener noreferrer"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '12px 24px', borderRadius: 99, background: cta?.cor_botao || '#25D366',
-              color: '#fff', fontWeight: 800, fontSize: 14, textDecoration: 'none',
-              boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)'
+              padding: '14px 28px', borderRadius: 99, background: '#25D366',
+              color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none',
+              boxShadow: '0 6px 20px rgba(37, 211, 102, 0.4)', transition: 'all 0.2s ease',
+              fontFamily: 'Outfit, sans-serif'
             }}
           >
-            <MessageCircle size={18} /> {cta?.texto_botao || 'Falar no WhatsApp'}
+            <MessageCircle size={18} /> Falar no WhatsApp Oficial
           </a>
         </div>
+
+        {/* Bloco de Posts Relacionados (Aumenta o tempo de permanência no site) */}
+        {relatedPosts.length > 0 && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 40 }}>
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+              📰 Leia Também — Notícias Relacionadas
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+              {relatedPosts.map(rel => (
+                <PostCardComponent key={rel.id} post={rel} />
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </article>
