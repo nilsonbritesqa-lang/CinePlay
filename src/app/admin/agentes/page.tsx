@@ -20,7 +20,7 @@ const INICIAL_AGENTES = [
     temperatura: 0.7, auto_publicar: true, requer_aprovacao: false,
     ultima_execucao: '2026-07-17T18:00:00Z', proxima_execucao: '2026-07-17T20:00:00Z',
     total_posts: 142, logs: [
-      { status: 'sucesso', msg: 'Gerou post: Flamengo x Palmeiras 18/07', ago: '2h' },
+      { status: 'sucesso', msg: 'Gerou post: Flamengo x Palmeiras AO VIVO', ago: '2h' },
       { status: 'sucesso', msg: 'Gerou post: Brasileirão Rodada 15', ago: '6h' },
     ],
     apis: ['football-data.org', 'API-Football (escudos)'],
@@ -33,7 +33,7 @@ const INICIAL_AGENTES = [
     temperatura: 0.8, auto_publicar: true, requer_aprovacao: false,
     ultima_execucao: '2026-07-17T09:00:00Z', proxima_execucao: '2026-07-18T09:00:00Z',
     total_posts: 89, logs: [
-      { status: 'sucesso', msg: 'Gerou: Onde assistir Deadpool & Wolverine', ago: '4h' },
+      { status: 'sucesso', msg: 'Gerou: Onde assistir estreias do cinema', ago: '4h' },
     ],
     apis: ['TMDB (filmes)', 'TMDB (onde assistir)'],
     keywords: ['onde assistir', 'estreias', 'onde ver online', 'estreia hoje'],
@@ -45,34 +45,22 @@ const INICIAL_AGENTES = [
     temperatura: 0.75, auto_publicar: true, requer_aprovacao: false,
     ultima_execucao: '2026-07-17T17:00:00Z', proxima_execucao: '2026-07-17T21:00:00Z',
     total_posts: 76, logs: [
-      { status: 'sucesso', msg: 'Gerou: Stranger Things S5 data estreia', ago: '1h' },
+      { status: 'sucesso', msg: 'Gerou: Lançamentos de séries da semana', ago: '1h' },
     ],
     apis: ['TMDB (séries)', 'TMDB (episódios)'],
     keywords: ['quando estreia', 'onde assistir', 'nova temporada', 'novos episódios'],
   },
   {
-    id: '4', nome: 'Agente Canais', tipo: '📡', categoria: 'canais',
+    id: '4', nome: 'Agente Canais e Guias TV', tipo: '📡', categoria: 'canais',
     provider_ia: 'gemini' as AIProvider, modelo: 'gemini-1.5-pro',
-    ativo: false, posts_por_dia: 2, dias_antecipacao: 0,
-    temperatura: 0.6, auto_publicar: false, requer_aprovacao: true,
-    ultima_execucao: '2026-07-16T10:00:00Z', proxima_execucao: 'Manual',
-    total_posts: 23, logs: [
-      { status: 'erro', msg: 'Timeout na API de grade de programação', ago: '1d' },
-    ],
-    apis: [],
-    keywords: ['canais disponíveis', 'guia de canais', 'como assistir canal'],
-  },
-  {
-    id: '5', nome: 'Agente Onde Assistir', tipo: '🔍', categoria: 'onde-assistir',
-    provider_ia: 'groq' as AIProvider, modelo: 'llama-3.3-70b-versatile',
-    ativo: true, posts_por_dia: 4, dias_antecipacao: 0,
+    ativo: true, posts_por_dia: 3, dias_antecipacao: 0,
     temperatura: 0.65, auto_publicar: true, requer_aprovacao: false,
     ultima_execucao: '2026-07-17T19:30:00Z', proxima_execucao: '2026-07-17T21:30:00Z',
     total_posts: 198, logs: [
-      { status: 'sucesso', msg: 'Gerou: Como assistir futebol grátis 2026', ago: '30min' },
+      { status: 'sucesso', msg: 'Gerou: Guia de canais e onde assistir transmissões', ago: '30min' },
     ],
-    apis: ['Google Trends RSS'],
-    keywords: ['onde assistir', 'como assistir', 'grátis', 'streaming barato'],
+    apis: ['Google Trends RSS', 'TMDB'],
+    keywords: ['canais disponíveis', 'guia de canais', 'como assistir canal', 'onde assistir'],
   },
 ];
 

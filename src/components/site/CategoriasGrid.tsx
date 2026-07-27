@@ -3,16 +3,15 @@
 import Link from 'next/link';
 
 const CATEGORIAS = [
-  { href: '/futebol',       emoji: '⚽', label: 'Futebol',       desc: 'Ao vivo e transmissões', color: 'var(--cat-futebol)' },
-  { href: '/filmes',        emoji: '🎬', label: 'Filmes',        desc: 'Estreias e onde ver',    color: 'var(--cat-cinema)' },
-  { href: '/series',        emoji: '📺', label: 'Séries',        desc: 'Novidades do streaming', color: 'var(--cat-series)' },
-  { href: '/canais',        emoji: '📡', label: 'Canais',        desc: 'Guia completo',          color: 'var(--cat-canais)' },
-  { href: '/onde-assistir', emoji: '🔍', label: 'Onde Assistir', desc: 'Encontre tudo aqui',    color: 'var(--cat-onde-assistir)' },
+  { href: '/blog?categoria=futebol', emoji: '⚽', label: 'Futebol', desc: 'Ao vivo e transmissões', color: 'var(--cat-futebol)' },
+  { href: '/blog?categoria=cinema',  emoji: '🎬', label: 'Cinema',  desc: 'Estreias e filmes',      color: 'var(--cat-cinema)' },
+  { href: '/blog?categoria=series',  emoji: '📺', label: 'Séries',  desc: 'Temporadas e episódios', color: 'var(--cat-series)' },
+  { href: '/blog?categoria=canais',  emoji: '📡', label: 'Canais TV', desc: 'Grade e esportes ao vivo', color: 'var(--cat-canais)' },
 ];
 
 export default function CategoriasGrid() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
       {CATEGORIAS.map(cat => (
         <Link
           key={cat.href}

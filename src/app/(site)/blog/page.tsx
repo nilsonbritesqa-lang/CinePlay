@@ -10,7 +10,6 @@ const CAT_COLORS: Record<string, string> = {
   cinema: '#8B5CF6',
   series: '#3B82F6',
   canais: '#F59E0B',
-  'onde-assistir': '#EF4444',
 };
 
 export default function BlogPage() {

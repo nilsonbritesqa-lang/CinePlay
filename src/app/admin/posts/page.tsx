@@ -459,7 +459,6 @@ export default function AdminPostsPage() {
                     <option value="cinema">Cinema</option>
                     <option value="series">Séries</option>
                     <option value="canais">Canais</option>
-                    <option value="onde-assistir">Onde Assistir</option>
                   </select>
                 </div>
                 <div>

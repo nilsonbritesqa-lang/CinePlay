@@ -6,11 +6,10 @@ import type { PostCard } from '@/lib/types';
 import { Clock, Eye } from 'lucide-react';
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string; emoji: string }> = {
-  futebol:       { label: 'Futebol',       color: 'var(--cat-futebol)',       emoji: '⚽' },
-  cinema:        { label: 'Cinema',        color: 'var(--cat-cinema)',        emoji: '🎬' },
-  series:        { label: 'Séries',        color: 'var(--cat-series)',        emoji: '📺' },
-  canais:        { label: 'Canais',        color: 'var(--cat-canais)',        emoji: '📡' },
-  'onde-assistir': { label: 'Onde Assistir', color: 'var(--cat-onde-assistir)', emoji: '🔍' },
+  futebol: { label: 'Futebol', color: 'var(--cat-futebol)', emoji: '⚽' },
+  cinema:  { label: 'Cinema',  color: 'var(--cat-cinema)',  emoji: '🎬' },
+  series:  { label: 'Séries',  color: 'var(--cat-series)',  emoji: '📺' },
+  canais:  { label: 'Canais',  color: 'var(--cat-canais)',  emoji: '📡' },
 };
 
 function formatDate(dateStr: string | null) {
@@ -26,11 +25,11 @@ interface PostCardProps {
 }
 
 export function PostCardComponent({ post, featured = false }: PostCardProps) {
-  const cat = CATEGORY_CONFIG[post.categoria] ?? CATEGORY_CONFIG['onde-assistir'];
+  const cat = CATEGORY_CONFIG[post.categoria] ?? CATEGORY_CONFIG['canais'];
 
   if (featured) {
     return (
-      <Link href={`/${post.categoria === 'cinema' ? 'filmes' : post.categoria}/${post.slug}`} style={{ display: 'block' }}>
+      <Link href={`/blog/${post.slug}`} style={{ display: 'block' }}>
         <article style={{
           position: 'relative',
           borderRadius: 'var(--radius-xl)',
@@ -124,7 +123,7 @@ export function PostCardComponent({ post, featured = false }: PostCardProps) {
 
   // Card normal
   return (
-    <Link href={`/${post.categoria === 'cinema' ? 'filmes' : post.categoria}/${post.slug}`} style={{ display: 'block' }}>
+    <Link href={`/blog/${post.slug}`} style={{ display: 'block' }}>
       <article className="card" style={{ overflow: 'hidden', cursor: 'pointer' }}>
         {/* Thumb */}
         <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>

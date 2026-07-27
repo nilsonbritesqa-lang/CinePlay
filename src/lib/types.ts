@@ -2,8 +2,7 @@ export type Categoria =
   | 'futebol' 
   | 'cinema' 
   | 'series' 
-  | 'canais' 
-  | 'onde-assistir';
+  | 'canais';
 
 export type StatusPost = 'rascunho' | 'publicado' | 'agendado';
 
@@ -11,8 +10,7 @@ export type TipoAgente =
   | 'futebol' 
   | 'cinema' 
   | 'series' 
-  | 'canais' 
-  | 'onde-assistir';
+  | 'canais';
 
 export type TipoExibicaoCTA = 'inline' | 'banner' | 'sidebar';
 
