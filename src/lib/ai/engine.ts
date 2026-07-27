@@ -57,8 +57,9 @@ REGRAS CRÍTICAS DE ESTILO E INVIOLABILIDADE:
 2. FOCO ESTRATÉGICO EM "ONDE ASSISTIR" PARA SEO: O termo "onde assistir" deve ser usado de forma orgânica nos títulos e introduções de matérias de futebol, cinema, séries e canais (ex: "Onde assistir Botafogo x Grêmio ao vivo", "Onde assistir o novo filme do cinema").
 3. REGRA DE CONVERSÃO CINEPLAY: Em todos os artigos, informe ao leitor que a transmissão em alta definição (Full HD/4K) para Smart TV ou celular pode ser consultada e liberada falando com a equipe no suporte oficial do WhatsApp. Use caixas de destaque estilizadas <blockquote> com chamadas atraentes.
 4. PROIBIÇÃO DE CONCORRENTES: NUNCA mencione marcas ou nomes de plataformas de streaming concorrentes (como Netflix, Amazon Prime, Premiere, Disney+, Globoplay, HBO Max, Paramount+, etc.).
-5. RIGOR DE DATAS E HORÁRIOS: Use estritamente as datas, horários e times fornecidos no contexto. Nunca invente ou afirme que uma partida adiada ocorrerá em data específica sem confirmação oficial.
-6. FORMATAÇÃO RICA DE NOTÍCIA: Estruture com títulos de matérias reais <h2> e <h3>, listas <ul> e tabelas organizadas <table> para horários e detalhes da transmissão.`;
+5. PROIBIÇÃO DE PALAVRAS "GRÁTIS" OU "GRATUITO": NUNCA use os termos "grátis", "gratuito" ou "de graça" nos títulos ou conteúdos. Substitua por "Ao Vivo em HD", "Transmissão Oficial", "Onde Assistir".
+6. RIGOR DE DATAS E HORÁRIOS: Use estritamente as datas, horários e times fornecidos no contexto. Nunca invente ou afirme que uma partida adiada ocorrerá em data específica sem confirmação oficial.
+7. FORMATAÇÃO RICA DE NOTÍCIA: Estruture com títulos de matérias reais <h2> e <h3>, listas <ul> e tabelas organizadas <table> para horários e detalhes da transmissão.`;
 
 // =====================
 // GERAÇÃO GENÉRICA COM IA
@@ -156,10 +157,36 @@ export async function runAgenteFutebol(config: AgentConfig): Promise<PostGerado[
   // Busca dados de partidas confirmadas
   const jogosHoje = await footballData.upcomingMatches(0).catch(() => []);
   const jogosProximos = await footballData.upcomingMatches(config.dias_antecipacao).catch(() => []);
+  // Times e competições de grande torcida no Brasil para máxima atração de tráfego
+  const TIMES_POPULARES = [
+    'flamengo', 'palmeiras', 'sao paulo', 'são paulo', 'corinthians', 'santos',
+    'gremio', 'grêmio', 'internacional', 'botafogo', 'fluminense', 'vasco',
+    'atletico mineiro', 'atlético-mg', 'cruzeiro', 'bahia', 'fortaleza', 'sport',
+    'real madrid', 'barcelona', 'manchester city', 'liverpool', 'psg', 'bayern'
+  ];
 
-  // Filtra jogos ativos e confirmados (ignora adiados, cancelados ou suspensos)
+  function prioridadePartida(j: typeof jogosHoje[0]): number {
+    let score = 0;
+    const home = (j.homeTeam?.name || '').toLowerCase();
+    const away = (j.awayTeam?.name || '').toLowerCase();
+    const comp = (j.competition?.name || '').toLowerCase();
+
+    if (TIMES_POPULARES.some(t => home.includes(t))) score += 20;
+    if (TIMES_POPULARES.some(t => away.includes(t))) score += 20;
+
+    if (comp.includes('brasileir') || comp.includes('serie a') || comp.includes('bsa')) score += 30;
+    if (comp.includes('libertadores') || comp.includes('cli')) score += 30;
+    if (comp.includes('copa do brasil')) score += 25;
+    if (comp.includes('champions league') || comp.includes('cl')) score += 20;
+    if (comp.includes('sudamericana') || comp.includes('sul-americana')) score += 15;
+
+    return score;
+  }
+
+  // Filtra jogos ativos e ordena priorizando grandes clássicos e times populares do Brasil
   const todosJogos = [...jogosHoje, ...jogosProximos]
     .filter(j => j.status !== 'POSTPONED' && j.status !== 'CANCELLED' && j.status !== 'SUSPENDED')
+    .sort((a, b) => prioridadePartida(b) - prioridadePartida(a))
     .slice(0, config.posts_por_dia);
 
   // SE NÃO HOUVER JOGOS CONFIRMADOS: NÃO ALUCINA! Faz fallback para Guia Editorial de Futebol
@@ -375,7 +402,7 @@ export async function runAgenteOndeAssistir(config: AgentConfig): Promise<PostGe
   const posts: PostGerado[] = [];
 
   const topicos = [
-    { titulo: 'Como Assistir Futebol ao Vivo no Celular ou Smart TV sem Travamentos', keywords: ['futebol ao vivo gratis', 'assistir futebol online no celular'] },
+    { titulo: 'Como Assistir Futebol ao Vivo no Celular ou Smart TV sem Travamentos', keywords: ['futebol ao vivo em hd', 'assistir futebol online no celular'] },
     { titulo: 'Guia Definitivo: Como Ter Filmes, Séries e Canais ao Vivo em Alta Definição', keywords: ['melhor serviço de streaming', 'assistir tv online hd'] },
     { titulo: 'Como Assistir Jogos da Semana e Programação de Esportes Online', keywords: ['canais ao vivo online', 'transmissao de futebol ao vivo'] },
   ];
