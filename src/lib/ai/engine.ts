@@ -49,14 +49,14 @@ export interface PostGerado {
 // =====================
 // PROMPT JORNALÍSTICO ANTIALUCINAÇÃO
 // =====================
-const PROMPT_JORNALISTA_BASE = `Você é um jornalista sênior e colunista especialista em esportes, cinema, séries e guia de TV no Brasil.
+const PROMPT_JORNALISTA_BASE = `Você é um jornalista sênior e especialista em SEO focado em entretenimento, esportes ao vivo, cinema e séries no Brasil.
 REGRAS CRÍTICAS INVIOLÁVEIS:
-1. NUNCA crie artigos promovendo aplicativos genéricos de terceiros (como "melhores apps de streaming" ou recomendando assinar Netflix/Disney/GloboPlay). Foco EXCLUSIVO em coberturas de partidas de futebol, lançamentos de cinema/séries, novidades de canais de TV e onde assistir ao vivo.
-2. NUNCA invente informações, placares, horários ou times que não foram fornecidos no contexto.
-3. OTIMIZAÇÃO SEO & GEO: Escreva parágrafos iniciais diretos e claros para serem citados por IAs (ChatGPT, Gemini, Claude) e destacados no Google Discover.
-4. Estruture o artigo utilizando visual rico: cabeçalhos <h2>, <h3>, tabelas formatadas <table>, listas <ul> e caixas de destaque <blockquote style="border-left: 4px solid #E50914; background: rgba(229, 9, 20, 0.1); padding: 12px; margin: 16px 0; border-radius: 8px;">.
-5. Em cada artigo, informe onde assistir com clareza e insira a chamada direta para o atendimento exclusivo no WhatsApp ("Para assistir sem travamentos e com suporte técnico imediato na sua Smart TV ou celular, fale no WhatsApp").
-6. Mantenha extensão de 600 a 1200 palavras com português impecável.`;
+1. NUNCA MENCIONE NOMES DE PLATAFORMAS CONCORRENTES OU MARCAS DE STREAMING (como Netflix, Amazon Prime, Premiere, Disney+, Globoplay, HBO Max, Paramount+, etc.).
+2. COMO TRATAR "ONDE ASSISTIR": Em todos os artigos, ao explicar onde assistir a um jogo, filme ou série, oriente o leitor de que a transmissão em alta definição (Full HD/4K) para celular ou Smart TV está disponível através do suporte e atendimento oficial. Coloque a frase persuasiva: "Assista ao vivo em alta definição sem travamentos na sua Smart TV ou celular! Para consultar a transmissão e liberar seu acesso, fale agora com nosso atendimento no WhatsApp."
+3. NUNCA invente informações de partidas, placares ou horários que não estejam no contexto.
+4. OTIMIZAÇÃO SEO & CONVERSÃO: Escreva títulos e parágrafos iniciais focados na intenção de busca do usuário (ex: "onde assistir Remo x Corinthians", "assistir futebol ao vivo no celular"), atraindo o leitor do Google/ChatGPT e convertendo-o a clicar no botão de WhatsApp / CTA.
+5. Estruture o artigo com visual rico e limpo: cabeçalhos <h2>, <h3>, tabelas explicativas <table>, listas <ul> e caixas de destaque <blockquote style="border-left: 4px solid #E50914; background: rgba(229, 9, 20, 0.1); padding: 14px; margin: 16px 0; border-radius: 12px; color: #fff;">.
+6. Mantenha extensão de 600 a 1200 palavras com linguagem clara, atraente e persuasiva.`;
 
 // =====================
 // GERAÇÃO GENÉRICA COM IA
@@ -160,10 +160,11 @@ export async function runAgenteFutebol(config: AgentConfig): Promise<PostGerado[
   // SE NÃO HOUVER JOGOS CONFIRMADOS: NÃO ALUCINA! Faz fallback para Guia Editorial de Futebol
   if (todosJogos.length === 0) {
     const contextoFallback = `
-TEMA: Guia Completo de Transmissões de Futebol esta Semana no Brasil.
-CAMPEONATOS COBERTOS: Brasileirão Série A, Copa do Brasil, Libertadores, Sul-Americana e Liga dos Campeões.
-OBJETIVO: Informar o leitor onde encontrar cada campeonato nas plataformas de streaming (Premiere, Prime Video, Paramount+, Max, Disney+/ESPN).
-FOCO DE CONVERSÃO: Explicar como tirar dúvidas sobre a grade de programação entrando em contato pelo WhatsApp.
+TEMA: Guia Completo de Transmissões dos Jogos de Futebol esta Semana.
+CAMPEONATOS COBERTOS: Brasileirão Série A, Copa do Brasil, Libertadores, Sul-Americana e Ligas Europeias.
+OBJETIVO: Informar o torcedor sobre os horários dos jogos e como assistir em HD na Smart TV ou celular.
+FOCO DE CONVERSÃO EXCLUSIVO: Explicar como tirar dúvidas sobre a grade de partidas e liberar o sinal ao vivo entrando em contato no atendimento oficial via WhatsApp.
+NÃO MENCIONE MARCAS OU PLATAFORMAS CONCORRENTES.
     `.trim();
 
     try {
@@ -199,10 +200,10 @@ DATA E HORA: ${dataStr} às ${horaStr} (Horário de Brasília)
 STATUS: ${jogo.status}
 
 TAREFA:
-Crie um artigo jornalístico pré-jogo detalhado e atraente.
-Explique onde o torcedor poderá assistir ao vivo (canais e streamings oficiais).
-Analise o momento atual dos dois times na temporada de forma factual.
+Crie um artigo jornalístico pré-jogo detalhado e atraente para atração de tráfego orgânico no Google e IAs.
 Palavras-chave obrigatórias: "onde assistir ${jogo.homeTeam.name} x ${jogo.awayTeam.name}", "ao vivo", "transmissão ${jogo.homeTeam.name}".
+SEÇÃO ONDE ASSISTIR: Explique que o torcedor pode assistir à transmissão ao vivo sem travamentos no celular ou Smart TV. Direcione o leitor a clicar no botão de WhatsApp para solicitar seu teste ou liberação de sinal imediata.
+IMPORTANTE: NUNCA MENCIONE NOMES DE CONCORRENTES OU OUTROS STREAMINGS.
     `.trim();
 
     try {
@@ -242,8 +243,9 @@ export async function runAgenteCinema(config: AgentConfig): Promise<PostGerado[]
 
   if (aProcessar.length === 0) {
     const contextoFallback = `
-TEMA: Os Lançamentos de Cinema e Streaming Mais Aguardados do Mês.
-OBJETIVO: Apresentar os destaques das telonas e dos serviços de streaming com notas de avaliação e onde assistir.
+TEMA: Os Grandes Lançamentos do Cinema e Filmes Mais Aguardados.
+OBJETIVO: Apresentar a sinopse, notas de avaliação e orientar o leitor sobre como assistir em alta definição no conforto de casa através do suporte oficial no WhatsApp.
+NENHUMA MARCA CONCORRENTE DEVE SER MENCIONADA.
     `.trim();
 
     try {
@@ -260,18 +262,16 @@ OBJETIVO: Apresentar os destaques das telonas e dos serviços de streaming com n
 
   for (const filme of aProcessar) {
     const dataEstreia = new Date(filme.release_date ?? '');
-    const providers = filme.id ? await tmdb.watchProviders(filme.id).catch(() => []) : [];
-    const plataformas = providers.map(p => p.provider_name).join(', ') || 'Streaming Oficial e Cinemas';
 
     const contexto = `
 FILME OFICIAL: ${filme.title}
 SINOPSE: ${filme.overview}
 DATA DE ESTREIA BR: ${dataEstreia.toLocaleDateString('pt-BR')}
 AVALIAÇÃO TMDB: ${filme.vote_average?.toFixed(1)}/10
-PLATAFORMAS CONFIRMADAS: ${plataformas}
 
-Escreva uma crítica e guia de exibição sobre "${filme.title}".
-Foque em: onde assistir, expectativa de bilheteria e por que vale a pena assistir.
+Escreva uma análise completa e guia de exibição sobre "${filme.title}".
+Na seção "Onde Assistir", explique como assistir ao filme em 4K/Full HD no celular ou Smart TV sem travamentos, orientando o leitor a consultar o suporte no WhatsApp.
+LEMBRE-SE: NÃO MENCIONE NOMES DE PLATAFORMAS CONCORRENTES.
     `.trim();
 
     try {
@@ -314,8 +314,9 @@ export async function runAgenteSeries(config: AgentConfig): Promise<PostGerado[]
 
   if (aProcessar.length === 0) {
     const contextoFallback = `
-TEMA: As Séries Mais Assistidas no Streaming em 2026.
-OBJETIVO: Apresentar o ranking das séries do momento na Netflix, Max, Prime Video e Disney+.
+TEMA: As Séries de Maior Sucesso e Lançamentos da Temporada.
+OBJETIVO: Apresentar os episódios do momento e orientar o leitor a liberar o catálogo completo pelo atendimento no WhatsApp.
+NENHUMA MARCA CONCORRENTE DEVE SER MENCIONADA.
     `.trim();
 
     try {
@@ -331,16 +332,14 @@ OBJETIVO: Apresentar o ranking das séries do momento na Netflix, Max, Prime Vid
   }
 
   for (const serie of aProcessar) {
-    const providers = serie.id ? await tmdb.watchProviders(serie.id, 'tv').catch(() => []) : [];
-    const plataformas = providers.map(p => p.provider_name).join(', ') || 'Plataformas de Streaming';
-
     const contexto = `
-SÉRIIE EM EXIBIÇÃO: ${serie.name}
+SÉRIE EM EXIBIÇÃO: ${serie.name}
 SINOPSE: ${serie.overview}
 AVALIAÇÃO: ${serie.vote_average?.toFixed(1)}/10
-ONDE ASSISTIR: ${plataformas}
 
-Escreva sobre os novos episódios de "${serie.name}", onde assistir e resumo do enredo.
+Escreva sobre os novos episódios de "${serie.name}", novidades da trama e onde assistir.
+Na seção "Onde Assistir", explique como assistir a todos os episódios em qualidade extrema sem travamentos via Smart TV ou celular falando no WhatsApp oficial.
+NÃO MENCIONE PLATAFORMAS CONCORRENTES.
     `.trim();
 
     try {
@@ -371,9 +370,9 @@ export async function runAgenteOndeAssistir(config: AgentConfig): Promise<PostGe
   const posts: PostGerado[] = [];
 
   const topicos = [
-    { titulo: 'Como Assistir Futebol ao Vivo no Celular ou Smart TV em 2026', keywords: ['futebol ao vivo gratis', 'assistir futebol online'] },
-    { titulo: 'Melhores Plataformas de Streaming de Filmes e Séries em 2026', keywords: ['melhor app streaming', 'streaming barato'] },
-    { titulo: 'Como Assistir Canais de TV Fechada e Esportes Online em HD', keywords: ['canais ao vivo online', 'tv por assinatura gratis'] },
+    { titulo: 'Como Assistir Futebol ao Vivo no Celular ou Smart TV sem Travamentos', keywords: ['futebol ao vivo gratis', 'assistir futebol online no celular'] },
+    { titulo: 'Guia Definitivo: Como Ter Filmes, Séries e Canais ao Vivo em Alta Definição', keywords: ['melhor serviço de streaming', 'assistir tv online hd'] },
+    { titulo: 'Como Assistir Jogos da Semana e Programação de Esportes Online', keywords: ['canais ao vivo online', 'transmissao de futebol ao vivo'] },
   ];
 
   const aProcessar = topicos.slice(0, config.posts_por_dia);
@@ -383,7 +382,9 @@ export async function runAgenteOndeAssistir(config: AgentConfig): Promise<PostGe
 GUIA EDITORIAL EVERGREEN: "${topico.titulo}"
 PALAVRAS-CHAVE SEO OBRIGATÓRIAS: ${topico.keywords.join(', ')}
 
-Escreva um guia completo com passo a passo, comparando custos, facilidade de uso e onde solicitar suporte no WhatsApp.
+Escreva um guia completo com passo a passo de como o leitor pode ter a melhor experiência de transmissão ao vivo no celular, computador ou Smart TV.
+Destaque a facilidade de solicitar um teste e tirar dúvidas diretamente no atendimento via WhatsApp.
+REGRA DE OURO: NÃO MENCIONE NOMES DE OUTROS SERVIÇOS OU STREAMINGS CONCORRENTES.
     `.trim();
 
     try {
@@ -406,8 +407,8 @@ export async function runAgenteCanais(config: AgentConfig): Promise<PostGerado[]
   const posts: PostGerado[] = [];
 
   const topicos = [
-    'Quais Canais Transmitem o Brasileirão 2026 ao Vivo?',
-    'Guia Completo: Todos os Canais de Esportes e PPV Disponíveis no Streaming',
+    'Guia Completo: Como Assistir aos Canais de Esportes e Futebol ao Vivo',
+    'Guia da Grade de Programação de Filmes, Séries e Esportes no Streaming',
   ];
 
   const aProcessar = topicos.slice(0, config.posts_por_dia);
@@ -415,7 +416,9 @@ export async function runAgenteCanais(config: AgentConfig): Promise<PostGerado[]
   for (const topico of aProcessar) {
     const contexto = `
 GUIA DE CANAIS: "${topico}"
-Detalhamento de canais esportivos, de filmes e programas ao vivo no Brasil.
+Detalhamento de transmissão de esportes, filmes e entretenimento ao vivo no Brasil.
+Oriente o leitor a consultar a lista completa de canais e liberar o acesso entrando em contato pelo WhatsApp oficial.
+NENHUMA MARCA CONCORRENTE DEVE SER CITADA.
     `.trim();
 
     try {
