@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ success: false, error: 'Post não encontrado' }, { status: 404 });
         }
 
-        // Incrementa visualizações
+        // Incrementa visualizações reais
         await supabase.from('posts').update({ visualizacoes: (data.visualizacoes || 0) + 1 }).eq('id', data.id);
         return NextResponse.json({ success: true, post: data });
       } else {
@@ -49,51 +49,63 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Retorna lista padrão se não houver dados no banco
+  // Retorna lista vazia caso não haja conexão ou não haja posts cadastrados
   return NextResponse.json({
     success: true,
-    posts: [
-      {
-        id: '1',
-        slug: 'onde-assistir-brasileirao-2026',
-        titulo: 'Onde Assistir o Brasileirão 2026: Todos os Canais e Plataformas',
-        resumo: 'Guia completo com todos os canais que transmitem o Campeonato Brasileiro 2026, incluindo TV aberta e streaming.',
-        conteudo_html: `
-          <h2>Os Direitos de Transmissão do Brasileirão 2026</h2>
-          <p>O Campeonato Brasileiro de 2026 conta com um modelo pulverizado de transmissão. Com o fim dos contratos de exclusividade centralizados, diversas plataformas dividem a exibição das partidas em HD e 4K.</p>
-          
-          <h2>Onde Assistir na TV Aberta e Fechada</h2>
-          <p>A TV Globo mantém a exibição de partidas aos domingos e quartas-feiras. Na TV fechada, SporTV e Premiere cobrem os demais jogos no formato pay-per-view com narração oficial.</p>
-
-          <h2>Onde Assistir Online via Streaming</h2>
-          <p>Para acompanhar pelo celular, computador ou Smart TV, a CazéTV no YouTube e as plataformas integradas transmitem partidas ao vivo com sinal em alta definição.</p>
-        `,
-        categoria: 'futebol',
-        imagem_capa_url: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=80',
-        publicado_em: new Date().toISOString(),
-        visualizacoes: 12430,
-        tempo_leitura_min: 5,
-        gerado_por_ia: true,
-      },
-      {
-        id: '2',
-        slug: 'melhores-series-streaming-julho-2026',
-        titulo: 'As Melhores Séries no Streaming em Julho de 2026',
-        resumo: 'Confira quais são as séries de suspense e drama mais aclamadas do momento e onde assistir cada uma delas.',
-        conteudo_html: `
-          <h2>Estreias Imperdíveis do Mês</h2>
-          <p>Os serviços de streaming iniciam o mês com lançamentos de peso. De ficção científica a dramas policiais, há opções imperdíveis em todas as plataformas.</p>
-
-          <h2>Como Assistir em Ultra HD 4K</h2>
-          <p>Assista aos episódios com áudio original, dublado e resolução máxima em Smart TVs ou dispositivos móveis.</p>
-        `,
-        categoria: 'series',
-        imagem_capa_url: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&q=80',
-        publicado_em: new Date().toISOString(),
-        visualizacoes: 8720,
-        tempo_leitura_min: 4,
-        gerado_por_ia: true,
-      }
-    ]
+    posts: []
   });
+}
+
+export async function POST(request: NextRequest) {
+  const supabase = getSupabaseService();
+  if (!supabase) {
+    return NextResponse.json({ success: false, error: 'Banco de dados não configurado' }, { status: 500 });
+  }
+
+  try {
+    const body = await request.json();
+    const { titulo, slug, resumo, conteudo_html, categoria, imagem_capa_url, gerado_por_ia } = body;
+
+    const { data, error } = await supabase.from('posts').insert([{
+      titulo,
+      slug,
+      resumo: resumo || titulo,
+      conteudo_html: conteudo_html || '<p>Conteúdo do post...</p>',
+      categoria: categoria || 'geral',
+      imagem_capa_url: imagem_capa_url || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=80',
+      visualizacoes: 0,
+      gerado_por_ia: !!gerado_por_ia,
+      publicado_em: new Date().toISOString(),
+      status: 'publicado'
+    }]).select().single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, post: data });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'ID não fornecido' }, { status: 400 });
+  }
+
+  const supabase = getSupabaseService();
+  if (!supabase) {
+    return NextResponse.json({ success: false, error: 'Banco de dados não configurado' }, { status: 500 });
+  }
+
+  try {
+    const { error } = await supabase.from('posts').delete().eq('id', id);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
 }

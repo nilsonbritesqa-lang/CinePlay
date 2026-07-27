@@ -153,9 +153,18 @@ export default function ChatbotAdminPage() {
                   <span style={{ fontSize: 12, color: '#A0A0B5', fontWeight: 600 }}>Número (com código do país, sem +)</span>
                   <input
                     value={config?.whatsapp_numero || ''}
-                    onChange={e => setConfig((p: any) => ({ ...p, whatsapp_numero: e.target.value }))}
+                    onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let formatted = digits;
+                      if (digits.length > 2 && digits.length <= 7) {
+                        formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                      } else if (digits.length > 7) {
+                        formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                      }
+                      setConfig((p: any) => ({ ...p, whatsapp_numero: formatted }));
+                    }}
                     style={inputStyle}
-                    placeholder="Ex: 5511999999999"
+                    placeholder="Ex: (11) 99999-8888"
                   />
                 </label>
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

@@ -55,27 +55,50 @@ export default function AdminPostsPage() {
 
     setIsSubmitting(true);
     const slug = newTitle.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    const newPost: PostItem = {
-      id: Date.now().toString(),
-      titulo: newTitle,
-      slug,
-      categoria: newCategory,
-      status: 'publicado',
-      visualizacoes: 0,
-      gerado_por_ia: false,
-      publicado_em: new Date().toISOString().split('T')[0]
-    };
 
-    setPosts([newPost, ...posts]);
-    setNewTitle('');
-    setNewContent('');
-    setShowModal(false);
-    setIsSubmitting(false);
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: newTitle,
+          slug,
+          categoria: newCategory,
+          conteudo_html: newContent || `<p>${newTitle}</p>`,
+          gerado_por_ia: false,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.post) {
+        setPosts([data.post, ...posts]);
+      } else {
+        alert('Erro ao criar post: ' + (data.error || 'Tente novamente'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão ao criar post.');
+    } finally {
+      setNewTitle('');
+      setNewContent('');
+      setShowModal(false);
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeletePost = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este post?')) {
-      setPosts(posts.filter(p => p.id !== id));
+  const handleDeletePost = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir permanentemente este post?')) {
+      try {
+        const res = await fetch(`/api/posts?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          setPosts(posts.filter(p => p.id !== id));
+        } else {
+          alert('Erro ao excluir post: ' + (data.error || 'Tente novamente'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Erro de conexão ao excluir post.');
+      }
     }
   };
 

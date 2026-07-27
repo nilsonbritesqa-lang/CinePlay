@@ -71,8 +71,9 @@ export default function AdminCTAsPage() {
   const getFinalUrl = () => {
     if (linkType === 'whatsapp') {
       const cleanNum = whatsappNum.replace(/\D/g, '');
+      const fullNum = cleanNum.startsWith('55') ? cleanNum : `55${cleanNum}`;
       const encodedMsg = encodeURIComponent(whatsappMsg);
-      return `https://wa.me/${cleanNum}?text=${encodedMsg}`;
+      return `https://wa.me/${fullNum}?text=${encodedMsg}`;
     }
     return form.url_destino;
   };
@@ -229,8 +230,21 @@ export default function AdminCTAsPage() {
                 <>
                   <div>
                     <label className="form-label">Número do WhatsApp (com DDD)</label>
-                    <input className="form-input" placeholder="Ex: 5599999999999" value={whatsappNum}
-                      onChange={e => setWhatsappNum(e.target.value)} />
+                    <input
+                      className="form-input"
+                      placeholder="Ex: (11) 99999-8888"
+                      value={whatsappNum}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                        let formatted = digits;
+                        if (digits.length > 2 && digits.length <= 7) {
+                          formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                        } else if (digits.length > 7) {
+                          formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                        }
+                        setWhatsappNum(formatted);
+                      }}
+                    />
                   </div>
                   <div>
                     <label className="form-label">Mensagem Personalizada Automática</label>

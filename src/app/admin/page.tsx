@@ -40,33 +40,43 @@ export default function AdminDashboard() {
   const totalViews = posts.reduce((sum, p) => sum + (p.visualizacoes || 0), 0);
   const iaPostsCount = posts.filter(p => p.gerado_por_ia).length;
 
+  const [mensagemStatus, setMensagemStatus] = useState<string | null>(null);
+
   const rodarTodosAgentes = async () => {
     setRodando(true);
+    setMensagemStatus('Rodando todos os agentes de IA...');
     const cookies = typeof document !== 'undefined' ? document.cookie.split('; ') : [];
     const adminCookie = cookies.find(row => row.startsWith('cineplay_admin_token='));
     const token = adminCookie ? adminCookie.split('=')[1] : 'cineplay-admin-2026';
 
     try {
-      // Roda agente de futebol
-      await fetch('/api/agentes/run', {
+      const res = await fetch('/api/agentes/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ agente_id: '1' }),
+        body: JSON.stringify({ agente_id: 'all' }),
       });
-      alert('Agentes de IA executados com sucesso!');
-      // Recarrega posts
-      const res = await fetch('/api/posts');
       const data = await res.json();
-      if (data.success && data.posts) {
-        setPosts(data.posts);
+      if (data.ok) {
+        setMensagemStatus(`✨ Agentes executados com sucesso! ${data.posts_salvos || data.posts_gerados || 0} novos posts salvos.`);
+      } else {
+        setMensagemStatus(`❌ Erro ao rodar agentes: ${data.error || 'Tente novamente'}`);
+      }
+
+      // Recarrega posts atualizados do banco
+      const resPosts = await fetch('/api/posts');
+      const dataPosts = await resPosts.json();
+      if (dataPosts.success && dataPosts.posts) {
+        setPosts(dataPosts.posts);
       }
     } catch (e) {
       console.error(e);
+      setMensagemStatus('❌ Erro de conexão ao disparar agentes.');
     } finally {
       setRodando(false);
+      setTimeout(() => setMensagemStatus(null), 8000);
     }
   };
 
@@ -98,6 +108,18 @@ export default function AdminDashboard() {
             <strong>Dados em Tempo Real:</strong> Painel conectado e sincronizado com o banco de dados Supabase em produção.
           </p>
         </div>
+
+        {mensagemStatus && (
+          <div style={{
+            background: mensagemStatus.includes('❌') ? 'rgba(239,68,68,0.1)' : 'rgba(139,92,246,0.15)',
+            border: `1px solid ${mensagemStatus.includes('❌') ? 'rgba(239,68,68,0.3)' : 'rgba(139,92,246,0.3)'}`,
+            color: mensagemStatus.includes('❌') ? '#EF4444' : '#A78BFA',
+            borderRadius: 12, padding: '12px 20px', marginBottom: 24,
+            fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 10
+          }}>
+            <span>{mensagemStatus}</span>
+          </div>
+        )}
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>

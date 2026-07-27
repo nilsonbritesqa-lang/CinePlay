@@ -85,14 +85,18 @@ export default function AdminAgentesPage() {
     setAgentes(prev => prev.map(a => a.id === id ? { ...a, ativo: !a.ativo } : a));
   }
 
+  const [mensagemStatus, setMensagemStatus] = useState<string | null>(null);
+
   async function rodarAgente(id: string) {
     setRodando(id);
+    const agenteObj = agentes.find(a => a.id === id);
+    setMensagemStatus(`Rodando ${agenteObj?.nome || 'agente'}...`);
     const cookies = typeof document !== 'undefined' ? document.cookie.split('; ') : [];
     const adminCookie = cookies.find(row => row.startsWith('cineplay_admin_token='));
     const token = adminCookie ? adminCookie.split('=')[1] : 'cineplay-admin-2026';
 
     try {
-      await fetch('/api/agentes/run', {
+      const res = await fetch('/api/agentes/run', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -100,8 +104,18 @@ export default function AdminAgentesPage() {
         },
         body: JSON.stringify({ agente_id: id }),
       });
+      const data = await res.json();
+      if (data.ok) {
+        setMensagemStatus(`✨ ${agenteObj?.nome || 'Agente'} executado com sucesso! ${data.posts_salvos || data.posts_gerados || 0} novo(s) post(s) gerado(s).`);
+      } else {
+        setMensagemStatus(`❌ Falha no agente: ${data.error || 'Erro ao processar'}`);
+      }
+    } catch (e) {
+      console.error(e);
+      setMensagemStatus('❌ Erro de conexão ao rodar o agente.');
     } finally {
-      setTimeout(() => setRodando(null), 2000);
+      setTimeout(() => setRodando(null), 1000);
+      setTimeout(() => setMensagemStatus(null), 8000);
     }
   }
 
@@ -109,6 +123,17 @@ export default function AdminAgentesPage() {
     <div style={{ display: 'flex', width: '100%' }}>
       <AdminSidebar />
       <main style={{ flex: 1, padding: '32px', overflow: 'auto' }}>
+        {mensagemStatus && (
+          <div style={{
+            background: mensagemStatus.includes('❌') ? 'rgba(239,68,68,0.1)' : 'rgba(139,92,246,0.15)',
+            border: `1px solid ${mensagemStatus.includes('❌') ? 'rgba(239,68,68,0.3)' : 'rgba(139,92,246,0.3)'}`,
+            color: mensagemStatus.includes('❌') ? '#EF4444' : '#A78BFA',
+            borderRadius: 12, padding: '12px 20px', marginBottom: 24,
+            fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 10
+          }}>
+            <span>{mensagemStatus}</span>
+          </div>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <div>
             <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>
