@@ -32,8 +32,6 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ success: false, error: 'Post não encontrado' }, { status: 404 });
         }
 
-        // Incrementa visualizações reais
-        await supabase.from('posts').update({ visualizacoes: (data.visualizacoes || 0) + 1 }).eq('id', data.id);
         return NextResponse.json({ success: true, post: data });
       } else {
         let query = supabase.from('posts').select('*').order('publicado_em', { ascending: false });

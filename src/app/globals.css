@@ -553,3 +553,90 @@ img {
   .admin-main { margin-left: 0; padding: 20px 16px; }
   .grid-posts { grid-template-columns: 1fr; }
 }
+
+/* =====================
+   RICH ARTICLE TYPOGRAPHY & TABLE STYLES
+   ===================== */
+.post-content, .article-content {
+  color: #D0D0DB;
+  font-size: 1.08rem;
+  line-height: 1.85;
+}
+
+.post-content h2, .article-content h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 2.2rem 0 1.2rem;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(229, 9, 20, 0.4);
+}
+
+.post-content h3, .article-content h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #F0F0F5;
+  margin: 1.8rem 0 0.85rem;
+}
+
+.post-content p, .article-content p {
+  margin-bottom: 1.3rem;
+}
+
+.post-content table, .article-content table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.8rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0E0E18;
+}
+
+.post-content th, .article-content th {
+  background: rgba(229, 9, 20, 0.18);
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.post-content td, .article-content td {
+  padding: 12px 16px;
+  color: #D0D0DB;
+  font-size: 0.92rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.post-content tr:last-child td, .article-content tr:last-child td {
+  border-bottom: none;
+}
+
+.post-content tr:nth-child(even), .article-content tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.post-content blockquote, .article-content blockquote {
+  border-left: 4px solid #E50914;
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.12) 0%, rgba(15, 15, 26, 0.9) 100%);
+  padding: 16px 20px;
+  margin: 1.8rem 0;
+  border-radius: 0 12px 12px 0;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.post-content ul, .article-content ul {
+  margin: 1.2rem 0 1.5rem 1.4rem;
+}
+
+.post-content li, .article-content li {
+  margin-bottom: 0.5rem;
+}
+

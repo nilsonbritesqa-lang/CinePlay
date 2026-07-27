@@ -155,7 +155,10 @@ export async function runAgenteFutebol(config: AgentConfig): Promise<PostGerado[
   const jogosHoje = await footballData.upcomingMatches(0).catch(() => []);
   const jogosProximos = await footballData.upcomingMatches(config.dias_antecipacao).catch(() => []);
 
-  const todosJogos = [...jogosHoje, ...jogosProximos].slice(0, config.posts_por_dia);
+  // Filtra jogos ativos e confirmados (ignora adiados, cancelados ou suspensos)
+  const todosJogos = [...jogosHoje, ...jogosProximos]
+    .filter(j => j.status !== 'POSTPONED' && j.status !== 'CANCELLED' && j.status !== 'SUSPENDED')
+    .slice(0, config.posts_por_dia);
 
   // SE NÃO HOUVER JOGOS CONFIRMADOS: NÃO ALUCINA! Faz fallback para Guia Editorial de Futebol
   if (todosJogos.length === 0) {

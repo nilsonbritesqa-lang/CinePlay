@@ -291,15 +291,17 @@ export async function getPostImage(params: {
     return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&q=85';
   }
 
-  // 4. Futebol & Esportes (Pôsteres de Jogos Exclusivos com DALL-E 3 ou Estádio HD)
-  if (categoria === 'futebol') {
-    // Tenta gerar pôster exclusivo da partida via DALL-E 3
+  // 4. Futebol & Esportes (Pôsteres de Jogos Exclusivos ou Estádios HD)
+  const tituloLower = titulo.toLowerCase();
+  const isEsporteOuFutebol = categoria === 'futebol' || tituloLower.includes('futebol') || tituloLower.includes(' ao vivo') || tituloLower.includes(' x ') || tituloLower.includes(' vs ');
+
+  if (isEsporteOuFutebol) {
     const matchPoster = await openaiImage.generateImage(`Match day poster banner for soccer game ${titulo}`);
     if (matchPoster) return matchPoster;
 
     const stadiumImages = [
-      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85',
       'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85',
+      'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85',
       'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200&q=85',
       'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=1200&q=85',
     ];
@@ -310,14 +312,13 @@ export async function getPostImage(params: {
   const tvPoster = await openaiImage.generateImage(`TV show or broadcast banner for ${titulo}`);
   if (tvPoster) return tvPoster;
 
-  const unsplashKeywords: Record<string, string> = {
-    canais: 'television broadcasting studio',
-    'onde-assistir': 'smart tv home cinema',
-  };
+  if (categoria === 'canais' || tituloLower.includes('canais')) {
+    return 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85';
+  }
 
-  const query = unsplashKeywords[categoria] ?? 'home cinema streaming';
-  const unsplashUrl = await unsplash.randomPhoto(query);
-  if (unsplashUrl) return unsplashUrl;
+  if (categoria === 'onde-assistir' || tituloLower.includes('assistir')) {
+    return 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=1200&q=85';
+  }
 
   return 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=1200&q=85';
 }
