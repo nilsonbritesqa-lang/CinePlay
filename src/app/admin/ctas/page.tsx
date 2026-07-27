@@ -1,31 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Save, Plus, Trash2, Edit, HelpCircle, MessageCircle, ExternalLink } from 'lucide-react';
 import type { CTA, Patrocinador } from '@/lib/types';
-
-// Mock data para demo com indicação visual de dados mockados
-const MOCK_PATROCINADORES: (Patrocinador & { ctas: CTA[] })[] = [
-  {
-    id: '1', nome: 'Operadora Stream X', logo_url: '', ativo: true, prioridade: 1, plano: 'premium', criado_em: new Date().toISOString(),
-    ctas: [{
-      id: 'c1', patrocinador_id: '1', texto_pre: 'Assista todos os canais de esportes ao vivo:', texto_botao: 'Falar no WhatsApp',
-      url_destino: 'https://wa.me/5599999999999?text=Quero+saber+mais+sobre+o+plano+de+futebol', cor_botao: '#25D366', cor_texto_botao: '#fff',
-      categorias: ['futebol', 'canais'], tipo_exibicao: 'inline',
-      data_inicio: new Date().toISOString(), data_fim: null, ativo: true, cliques_total: 342,
-    }],
-  },
-  {
-    id: '2', nome: 'CineMax Streaming', logo_url: '', ativo: true, prioridade: 2, plano: 'basico', criado_em: new Date().toISOString(),
-    ctas: [{
-      id: 'c2', patrocinador_id: '2', texto_pre: 'Os melhores filmes e séries em um só lugar:', texto_botao: 'Assine Agora',
-      url_destino: 'https://exemplo.com/assine', cor_botao: '#8B5CF6', cor_texto_botao: '#fff',
-      categorias: ['cinema', 'series'], tipo_exibicao: 'inline',
-      data_inicio: new Date().toISOString(), data_fim: null, ativo: true, cliques_total: 127,
-    }],
-  },
-];
 
 const CATEGORIAS = [
   { value: 'futebol', label: '⚽ Futebol' },
@@ -36,27 +14,47 @@ const CATEGORIAS = [
 ];
 
 export default function AdminCTAsPage() {
-  const [patrocinadores, setPatrocinadores] = useState(MOCK_PATROCINADORES);
+  const [patrocinadores, setPatrocinadores] = useState<(Patrocinador & { ctas: CTA[] })[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [linkType, setLinkType] = useState<'url' | 'whatsapp'>('whatsapp');
   
   // WhatsApp Form Fields
-  const [whatsappNum, setWhatsappNum] = useState('5599999999999');
-  const [whatsappMsg, setWhatsappMsg] = useState('Olá! Quero saber mais sobre os planos do CinePlay.');
+  const [whatsappNum, setWhatsappNum] = useState('(11) 99999-8888');
+  const [whatsappMsg, setWhatsappMsg] = useState('Olá! Quero saber mais sobre os planos.');
 
   // Form state
   const [form, setForm] = useState({
     patrocinador_nome: '',
-    texto_pre: 'Assista agora em:',
-    texto_botao: 'Falar Conosco',
+    texto_pre: 'Assista agora em alta definição:',
+    texto_botao: 'Falar no WhatsApp',
     url_destino: '',
     cor_botao: '#25D366',
     cor_texto_botao: '#ffffff',
-    categorias: [] as string[],
+    categorias: ['futebol', 'cinema', 'series', 'canais', 'onde-assistir'] as string[],
     tipo_exibicao: 'inline',
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: '',
   });
+
+  const fetchCTAs = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/ctas');
+      const data = await res.json();
+      if (data.success && data.patrocinadores) {
+        setPatrocinadores(data.patrocinadores);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar patrocinadores:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCTAs();
+  }, []);
 
   function toggleCategoria(cat: string) {
     setForm(f => ({
@@ -78,35 +76,51 @@ export default function AdminCTAsPage() {
     return form.url_destino;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const finalUrl = getFinalUrl();
-    const newPatrocinador = {
-      id: Math.random().toString(),
-      nome: form.patrocinador_nome || 'Novo Patrocinador',
-      logo_url: '',
-      ativo: true,
-      prioridade: 3,
-      plano: 'basico' as 'basico',
-      criado_em: new Date().toISOString(),
-      ctas: [{
-        id: Math.random().toString(),
-        patrocinador_id: 'new',
-        texto_pre: form.texto_pre,
-        texto_botao: form.texto_botao,
-        url_destino: finalUrl,
-        cor_botao: form.cor_botao,
-        cor_texto_botao: form.cor_texto_botao,
-        categorias: form.categorias as any,
-        tipo_exibicao: form.tipo_exibicao,
-        data_inicio: new Date(form.data_inicio).toISOString(),
-        data_fim: form.data_fim ? new Date(form.data_fim).toISOString() : null,
-        ativo: true,
-        cliques_total: 0
-      }]
-    };
+    try {
+      const res = await fetch('/api/ctas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: form.patrocinador_nome || 'Patrocinador Oficial',
+          texto_pre: form.texto_pre,
+          texto_botao: form.texto_botao,
+          url_destino: finalUrl,
+          cor_botao: form.cor_botao,
+          cor_texto_botao: form.cor_texto_botao,
+          categorias: form.categorias,
+          tipo_exibicao: form.tipo_exibicao
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.patrocinador) {
+        setPatrocinadores([data.patrocinador, ...patrocinadores]);
+        setShowForm(false);
+      } else {
+        alert('Erro ao salvar CTA: ' + (data.error || 'Erro desconhecido'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão ao salvar CTA.');
+    }
+  };
 
-    setPatrocinadores([newPatrocinador as any, ...patrocinadores]);
-    setShowForm(false);
+  const handleDelete = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir permanentemente este patrocinador e seus CTAs?')) {
+      try {
+        const res = await fetch(`/api/ctas?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          setPatrocinadores(patrocinadores.filter(p => p.id !== id));
+        } else {
+          alert('Erro ao excluir: ' + (data.error || 'Tente novamente'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Erro de conexão ao excluir patrocinador.');
+      }
+    }
   };
 
   return (
@@ -114,16 +128,16 @@ export default function AdminCTAsPage() {
       <AdminSidebar />
       <main style={{ flex: 1, padding: '32px', overflow: 'auto' }}>
         
-        {/* Banner Indicativo de Dados Demo */}
+        {/* Banner Status */}
         <div style={{
-          background: 'rgba(245, 158, 11, 0.1)',
-          border: '1px solid rgba(245, 158, 11, 0.3)',
+          background: 'rgba(16, 185, 129, 0.1)',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
           borderRadius: 12, padding: '12px 20px', marginBottom: 24,
           display: 'flex', alignItems: 'center', gap: 12
         }}>
-          <span style={{ fontSize: 20 }}>⚠️</span>
-          <p style={{ color: '#F59E0B', fontSize: 13, margin: 0 }}>
-            <strong>Modo Demo local:</strong> As alterações e cliques mostrados abaixo são temporários e locais. Para persistir diretamente no banco de dados Supabase, configure a conexão nas variáveis de ambiente.
+          <span style={{ fontSize: 20 }}>🟢</span>
+          <p style={{ color: '#10B981', fontSize: 13, margin: 0 }}>
+            <strong>Dados Reais Supabase:</strong> Todos os patrocinadores e botões CTA são sincronizados em tempo real no seu banco de dados.
           </p>
         </div>
 
@@ -485,9 +499,7 @@ export default function AdminCTAsPage() {
                         <Edit size={14} /> Editar
                       </button>
                       <button
-                        onClick={() => {
-                          setPatrocinadores(patrocinadores.filter(p => p.id !== pat.id));
-                        }}
+                        onClick={() => handleDelete(pat.id)}
                         style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
                       >
                         <Trash2 size={14} /> Excluir

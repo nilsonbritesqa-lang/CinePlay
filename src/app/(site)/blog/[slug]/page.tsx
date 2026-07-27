@@ -25,6 +25,17 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
         const data = await res.json();
         if (data.success && data.post) {
           setPost(data.post);
+
+          // Dispara rastreamento inteligente de tráfego (IP, Dispositivo, Origem)
+          fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug,
+              referer: typeof document !== 'undefined' ? document.referrer : '',
+              user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : ''
+            })
+          }).catch(() => {});
         }
       } catch (err) {
         console.error('Erro ao buscar post:', err);
@@ -52,6 +63,26 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
       </div>
     );
   }
+
+  const [cta, setCta] = useState<{ texto_pre: string; texto_botao: string; url_destino: string; cor_botao: string } | null>(null);
+
+  useEffect(() => {
+    async function loadCta() {
+      try {
+        const res = await fetch('/api/ctas');
+        const data = await res.json();
+        if (data.success && data.patrocinadores && data.patrocinadores.length > 0) {
+          const firstPat = data.patrocinadores[0];
+          if (firstPat.ctas && firstPat.ctas.length > 0) {
+            setCta(firstPat.ctas[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar CTA:', err);
+      }
+    }
+    loadCta();
+  }, []);
 
   const htmlContent = post.conteudo_html || post.conteudo_completo || post.resumo;
 
@@ -147,30 +178,30 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
           }}
         />
 
-        {/* Banner CTA WhatsApp de Conversão */}
+        {/* Banner CTA WhatsApp de Conversão Dinâmico */}
         <div style={{
           marginTop: 48, padding: '24px', borderRadius: 20,
           background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(7, 7, 13, 0.9) 100%)',
           border: '1px solid rgba(37, 211, 102, 0.3)', textAlign: 'center'
         }}>
           <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 8 }}>
-            Dúvidas sobre transmissões ao vivo e canais?
+            {cta?.texto_pre || 'Dúvidas sobre transmissões ao vivo e canais?'}
           </h3>
           <p style={{ color: '#A0A0B5', fontSize: 14, marginBottom: 18 }}>
-            Fale com a nossa equipe de atendimento no WhatsApp para consultar grades de jogos e suporte.
+            Fale diretamente com o atendimento oficial para tirar suas dúvidas e consultar horários.
           </p>
           <a
-            href="https://wa.me/5511999999999?text=Ol%C3%A1!+Vim+pelo+CinePlay+e+quero+saber+mais+sobre+transmiss%C3%B5es"
+            href={cta?.url_destino || "https://wa.me/5511999998888?text=Ol%C3%A1!+Vim+pelo+CinePlay"}
             target="_blank"
             rel="noopener noreferrer"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '12px 24px', borderRadius: 99, background: '#25D366',
+              padding: '12px 24px', borderRadius: 99, background: cta?.cor_botao || '#25D366',
               color: '#fff', fontWeight: 800, fontSize: 14, textDecoration: 'none',
-              boxShadow: '0 4px 20px rgba(37, 211, 102, 0.4)'
+              boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)'
             }}
           >
-            <MessageCircle size={18} /> Conversar no WhatsApp
+            <MessageCircle size={18} /> {cta?.texto_botao || 'Falar no WhatsApp'}
           </a>
         </div>
 
