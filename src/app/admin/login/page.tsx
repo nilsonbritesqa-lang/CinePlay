@@ -27,6 +27,7 @@ export default function AdminLoginPage() {
 
       if (data.success) {
         localStorage.setItem('cineplay_admin_token', data.token);
+        document.cookie = `cineplay_admin_token=${data.token}; path=/; max-age=604800; SameSite=Lax`;
         router.push('/admin');
       } else {
         setError(data.error || 'Credenciais inválidas.');

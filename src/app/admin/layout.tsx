@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import AdminAuthGuard from '@/components/admin/AdminAuthGuard';
 
 export const metadata: Metadata = {
   title: 'Painel Admin — CinePlay',
@@ -8,8 +9,10 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex' }}>
-      {children}
-    </div>
+    <AdminAuthGuard>
+      <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex' }}>
+        {children}
+      </div>
+    </AdminAuthGuard>
   );
 }
