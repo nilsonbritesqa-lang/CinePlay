@@ -17,6 +17,8 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [cta, setCta] = useState<{ texto_pre: string; texto_botao: string; url_destino: string; cor_botao: string } | null>(null);
+
   useEffect(() => {
     async function fetchPost() {
       setLoading(true);
@@ -43,7 +45,24 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
         setLoading(false);
       }
     }
+
+    async function loadCta() {
+      try {
+        const res = await fetch('/api/ctas');
+        const data = await res.json();
+        if (data.success && data.patrocinadores && data.patrocinadores.length > 0) {
+          const firstPat = data.patrocinadores[0];
+          if (firstPat.ctas && firstPat.ctas.length > 0) {
+            setCta(firstPat.ctas[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar CTA:', err);
+      }
+    }
+
     fetchPost();
+    loadCta();
   }, [slug]);
 
   if (loading) {
@@ -63,26 +82,6 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
       </div>
     );
   }
-
-  const [cta, setCta] = useState<{ texto_pre: string; texto_botao: string; url_destino: string; cor_botao: string } | null>(null);
-
-  useEffect(() => {
-    async function loadCta() {
-      try {
-        const res = await fetch('/api/ctas');
-        const data = await res.json();
-        if (data.success && data.patrocinadores && data.patrocinadores.length > 0) {
-          const firstPat = data.patrocinadores[0];
-          if (firstPat.ctas && firstPat.ctas.length > 0) {
-            setCta(firstPat.ctas[0]);
-          }
-        }
-      } catch (err) {
-        console.error('Erro ao carregar CTA:', err);
-      }
-    }
-    loadCta();
-  }, []);
 
   const htmlContent = post.conteudo_html || post.conteudo_completo || post.resumo;
 
