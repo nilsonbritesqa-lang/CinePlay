@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Play, Pause, Settings2, RefreshCw, ChevronDown, ChevronUp, Save, X } from 'lucide-react';
 import type { AIProvider } from '@/lib/ai/providers';
@@ -8,19 +8,19 @@ import type { AIProvider } from '@/lib/ai/providers';
 const PROVIDERS: { value: AIProvider; label: string; models: string[] }[] = [
   {
     value: 'gemini', label: '🟢 Google Gemini',
-    models: ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro']
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-pro']
   },
   {
     value: 'openai', label: '🔵 OpenAI / GPT',
-    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo', 'o1-mini', 'o1-preview']
+    models: ['gpt-4o', 'gpt-4o-mini', 'o3-mini', 'o1', 'o1-mini', 'gpt-4-turbo', 'gpt-3.5-turbo']
   },
   {
     value: 'groq', label: '⚡ GROQ (Ultra rápido)',
-    models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it']
+    models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'deepseek-r1-distill-llama-70b', 'gemma2-9b-it']
   },
   {
-    value: 'claude', label: '🟠 Anthropic Claude (Requer API Key)',
-    models: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229']
+    value: 'claude', label: '🟠 Anthropic Claude',
+    models: ['claude-3-7-sonnet', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229']
   },
 ];
 
@@ -110,6 +110,20 @@ export default function AdminAgentesPage() {
   const [mensagemStatus, setMensagemStatus] = useState<string | null>(null);
   const [salvando, setSalvando] = useState<string | null>(null);
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('cineplay_agentes_config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAgentes(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao carregar do localStorage:', e);
+    }
+  }, []);
+
   function toggleAgente(id: string) {
     setAgentes(prev => prev.map(a => a.id === id ? { ...a, ativo: !a.ativo } : a));
   }
@@ -118,7 +132,6 @@ export default function AdminAgentesPage() {
     setAgentes(prev => prev.map(a => {
       if (a.id !== id) return a;
       const updated = { ...a, [field]: value };
-      // When provider changes, reset model to the first model of the new provider
       if (field === 'provider_ia') {
         const models = getModelsForProvider(value as AIProvider);
         updated.modelo = models[0] || '';
@@ -133,8 +146,13 @@ export default function AdminAgentesPage() {
     setSalvando(id);
     setMensagemStatus(`💾 Salvando configurações do ${agente.nome}...`);
 
-    // Simulate save (configs are kept in state — in production you'd POST to an API)
-    await new Promise(r => setTimeout(r, 600));
+    await new Promise(r => setTimeout(r, 300));
+
+    try {
+      localStorage.setItem('cineplay_agentes_config', JSON.stringify(agentes));
+    } catch (e) {
+      console.error('Erro ao salvar no localStorage:', e);
+    }
 
     setMensagemStatus(`✅ ${agente.nome} salvo com sucesso! Provider: ${agente.provider_ia}, Modelo: ${agente.modelo}, Temp: ${agente.temperatura}`);
     setSalvando(null);

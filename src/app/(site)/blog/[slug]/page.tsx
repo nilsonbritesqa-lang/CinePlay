@@ -7,6 +7,7 @@ import { PostCardComponent } from '@/components/site/PostCard';
 import { PostInteractiveSection } from '@/components/site/PostInteractiveSection';
 import { ViewCounter } from '@/components/site/ViewCounter';
 import { DEFAULT_AUTHORS } from '@/lib/authors/service';
+import { extractTeamsFromTitle } from '@/lib/teams/crests';
 
 interface PostDetail extends PostCard {
   conteudo_html?: string;
@@ -178,6 +179,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const shareUrl = `https://cine-play-seven.vercel.app/blog/${post.slug}`;
 
+  // Busca os escudos dos times mencionados no título
+  const { home: teamHome, away: teamAway } = extractTeamsFromTitle(post.titulo);
+
   // Formata o conteúdo HTML garantindo uma estrutura rica e completa
   let rawContent = post.conteudo_html || post.conteudo_completo || `<p>${post.resumo}</p>`;
   
@@ -296,6 +300,42 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <span style={{ color: '#444' }}>•</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Clock size={13} color="#F59E0B" /> {post.tempo_leitura_min || 5} min</span>
             </div>
+
+            {/* Placar / Banner de Confronto com Escudos Oficiais */}
+            {(teamHome || teamAway) && (
+              <div style={{ background: 'linear-gradient(135deg, rgba(15,15,26,0.95), rgba(229,9,20,0.18))', border: '1px solid rgba(229,9,20,0.3)', borderRadius: 20, padding: '24px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.6)' }}>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  {teamHome ? (
+                    <>
+                      <img src={teamHome.crestUrl} alt={teamHome.name} style={{ width: 68, height: 68, objectFit: 'contain', margin: '0 auto 8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
+                      <div style={{ fontWeight: 900, fontSize: 16, color: '#FFF', fontFamily: 'Outfit, sans-serif' }}>{teamHome.name}</div>
+                    </>
+                  ) : (
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#A0A0B5' }}>Mandante</div>
+                  )}
+                </div>
+
+                <div style={{ textAlign: 'center', padding: '0 8px' }}>
+                  <span style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 99, background: '#E50914', color: '#fff', fontWeight: 900, fontSize: 14, letterSpacing: '0.08em', boxShadow: '0 4px 15px rgba(229,9,20,0.4)' }}>
+                    VS
+                  </span>
+                  <div style={{ fontSize: 11, color: '#10B981', fontWeight: 800, marginTop: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    ● TRANSMISSÃO CINEPLAY
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  {teamAway ? (
+                    <>
+                      <img src={teamAway.crestUrl} alt={teamAway.name} style={{ width: 68, height: 68, objectFit: 'contain', margin: '0 auto 8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
+                      <div style={{ fontWeight: 900, fontSize: 16, color: '#FFF', fontFamily: 'Outfit, sans-serif' }}>{teamAway.name}</div>
+                    </>
+                  ) : (
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#A0A0B5' }}>Visitante</div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Cover Image */}
             <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', background: '#0F0F1A', aspectRatio: '16/9' }}>
