@@ -40,6 +40,7 @@ export default function DiscoveryEngine() {
   const [scanningIdx, setScanningIdx] = useState(-1);
   const [showResult, setShowResult] = useState(false);
   const [resultItem, setResultItem] = useState<MediaItem | null>(null);
+  const [whatsappTargetUrl, setWhatsappTargetUrl] = useState<string>('https://wa.me/5511999999999?text=Olá!%20Vim%20pelo%20CinePlay');
 
   // Pools dinâmicos carregados da API
   const [sportsPool, setSportsPool] = useState<MediaItem[]>([]);
@@ -48,14 +49,34 @@ export default function DiscoveryEngine() {
 
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Carregar dados reais das APIs
+  // Carregar dados reais das APIs e CTA ativo
   useEffect(() => {
     async function fetchPools() {
       try {
-        const [tmdbRes, sportsRes] = await Promise.all([
+        const [tmdbRes, sportsRes, ctaRes, configRes] = await Promise.all([
           fetch('/api/tmdb-pool').then(r => r.json()).catch(() => null),
-          fetch('/api/sports-pool').then(r => r.json()).catch(() => null)
+          fetch('/api/sports-pool').then(r => r.json()).catch(() => null),
+          fetch('/api/ctas').then(r => r.json()).catch(() => null),
+          fetch('/api/chatbot-config').then(r => r.json()).catch(() => null)
         ]);
+
+        if (ctaRes?.success && ctaRes.patrocinadores?.length > 0) {
+          const activeSponsor = ctaRes.patrocinadores.find((p: any) => p.ativo && p.ctas?.some((c: any) => c.ativo));
+          if (activeSponsor) {
+            const activeCta = activeSponsor.ctas.find((c: any) => c.ativo);
+            if (activeCta && activeCta.url_destino) {
+              let url = activeCta.url_destino;
+              if (!url.startsWith('http')) {
+                const clean = url.replace(/\D/g, '');
+                url = `https://wa.me/${clean}?text=${encodeURIComponent('Olá! Quero saber onde assistir no CinePlay.')}`;
+              }
+              setWhatsappTargetUrl(url);
+            }
+          }
+        } else if (configRes?.whatsapp_numero) {
+          const num = configRes.whatsapp_numero.replace(/\D/g, '');
+          setWhatsappTargetUrl(`https://wa.me/${num}?text=${encodeURIComponent('Olá! Quero saber onde assistir no CinePlay.')}`);
+        }
 
         if (sportsRes?.success && sportsRes.pool?.length) {
           const formattedSports = sportsRes.pool.map((item: any) => ({
@@ -396,21 +417,22 @@ export default function DiscoveryEngine() {
                 </div>
               </div>
 
-              {/* Botão rápido para acessar link */}
+              {/* Botão rápido para acessar link WhatsApp/CTA */}
               <div style={{ flexShrink: 0 }}>
                 <a
-                  href="https://wa.me/5511999999999?text=Olá!%20Quero%20saber%20onde%20assistir%20este%20conteúdo%20no%20CinePlay."
+                  href={whatsappTargetUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    width: 32, height: 32, borderRadius: '50%', background: '#E50914',
+                    width: 34, height: 34, borderRadius: '50%', background: '#25D366',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', boxShadow: '0 4px 10px rgba(229, 9, 20, 0.3)',
+                    color: '#fff', boxShadow: '0 4px 12px rgba(37, 211, 102, 0.4)',
                     transition: 'all 0.2s'
                   }}
                   className="pulsing-button"
+                  title="Falar no WhatsApp"
                 >
-                  <Play size={12} fill="#fff" style={{ marginLeft: 2 }} />
+                  <Play size={13} fill="#fff" style={{ marginLeft: 2 }} />
                 </a>
               </div>
             </div>
@@ -508,7 +530,7 @@ export default function DiscoveryEngine() {
         }
         .pulsing-button:hover {
           transform: scale(1.08);
-          background: #b8070f !important;
+          background: #10B981 !important;
         }
       `}</style>
     </div>

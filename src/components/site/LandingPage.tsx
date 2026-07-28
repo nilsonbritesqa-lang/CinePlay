@@ -80,6 +80,7 @@ export default function LandingPage() {
   const [isMovieHovered, setIsMovieHovered] = useState(false);
   const [isSeriesHovered, setIsSeriesHovered] = useState(false);
   const [whatsappConfig, setWhatsappConfig] = useState<any>(null);
+  const [activeCta, setActiveCta] = useState<any>(null);
 
   const handleTrailerChange = useCallback((key: string | null, backdrop: string | null) => {
     setHeroTrailerKey(key);
@@ -105,14 +106,23 @@ export default function LandingPage() {
     fetchSports();
   }, [selectedDateOffset]);
 
-  // Carrega TMDB Pool e WhatsApp Config
+  // Carrega TMDB Pool, CTAs Ativos e WhatsApp Config
   useEffect(() => {
     async function loadData() {
       try {
-        const [tmdbRes, configRes] = await Promise.all([
+        const [tmdbRes, configRes, ctasRes] = await Promise.all([
           fetch('/api/tmdb-pool').then(r => r.json()).catch(() => null),
-          fetch('/api/chatbot-config').then(r => r.json()).catch(() => null)
+          fetch('/api/chatbot-config').then(r => r.json()).catch(() => null),
+          fetch('/api/ctas').then(r => r.json()).catch(() => null),
         ]);
+
+        if (ctasRes?.success && ctasRes.patrocinadores?.length > 0) {
+          const activeSponsor = ctasRes.patrocinadores.find((p: any) => p.ativo && p.ctas?.some((c: any) => c.ativo));
+          if (activeSponsor) {
+            const foundCta = activeSponsor.ctas.find((c: any) => c.ativo);
+            if (foundCta) setActiveCta(foundCta);
+          }
+        }
 
         if (configRes) {
           setWhatsappConfig(configRes);
@@ -178,18 +188,21 @@ export default function LandingPage() {
     loadData();
   }, []);
 
-  const getMatchWhatsappUrl = (matchTitle: string) => {
-    const num = whatsappConfig?.whatsapp_numero || '5511999999999';
-    const baseMsg = whatsappConfig?.whatsapp_mensagem || 'Olá! Vim pelo CinePlay e quero saber mais sobre como assistir conteúdo.';
-    const text = `${baseMsg} Quero saber como assistir ao jogo: ${matchTitle}`;
-    return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
-  };
-
   const getMovieWhatsappUrl = (title: string) => {
-    const num = whatsappConfig?.whatsapp_numero || '5511999999999';
-    const baseMsg = whatsappConfig?.whatsapp_mensagem || 'Olá! Vim pelo CinePlay e quero saber como assistir com alta qualidade.';
-    const text = `${baseMsg} Quero saber onde e como assistir: ${title}`;
-    return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+    const textMsg = `Olá! Vim pelo CinePlay e quero saber onde e como assistir: ${title}`;
+    if (activeCta && activeCta.url_destino) {
+      let dest = activeCta.url_destino;
+      if (!dest.startsWith('http')) {
+        const clean = dest.replace(/\D/g, '');
+        return `https://wa.me/${clean}?text=${encodeURIComponent(textMsg)}`;
+      }
+      if ((dest.includes('wa.me') || dest.includes('api.whatsapp.com')) && !dest.includes('text=')) {
+        return `${dest}${dest.includes('?') ? '&' : '?'}text=${encodeURIComponent(textMsg)}`;
+      }
+      return dest;
+    }
+    const num = (whatsappConfig?.whatsapp_numero || '5511999999999').replace(/\D/g, '');
+    return `https://wa.me/${num}?text=${encodeURIComponent(textMsg)}`;
   };
 
   // Rotação suave dos containers de filmes e séries
@@ -233,6 +246,27 @@ export default function LandingPage() {
 
     return { offset, label, fullDate: d.toLocaleDateString('pt-BR') };
   });
+
+  const getMatchWhatsappUrl = (matchTitle?: string) => {
+    const textMsg = matchTitle
+      ? `Olá! Gostaria de saber onde assistir à partida: ${matchTitle}`
+      : `Olá! Vim pelo site CinePlay e gostaria de obter informações sobre o conteúdo.`;
+
+    if (activeCta && activeCta.url_destino) {
+      let dest = activeCta.url_destino;
+      if (!dest.startsWith('http')) {
+        const clean = dest.replace(/\D/g, '');
+        return `https://wa.me/${clean}?text=${encodeURIComponent(textMsg)}`;
+      }
+      if ((dest.includes('wa.me') || dest.includes('api.whatsapp.com')) && !dest.includes('text=')) {
+        return `${dest}${dest.includes('?') ? '&' : '?'}text=${encodeURIComponent(textMsg)}`;
+      }
+      return dest;
+    }
+
+    const num = (whatsappConfig?.whatsapp_numero || '5511999999999').replace(/\D/g, '');
+    return `https://wa.me/${num}?text=${encodeURIComponent(textMsg)}`;
+  };
 
   const leagueEntries = Object.entries(matchesByLeague);
   const displayedLeagues = showAllLeagues ? leagueEntries : leagueEntries.slice(0, 8);
@@ -280,7 +314,7 @@ export default function LandingPage() {
                 minHeight: '100%',
                 minWidth: '177.77vh',
                 transform: 'translate(-50%, -50%) scale(1.15)',
-                filter: 'saturate(1.25) brightness(0.92) contrast(1.05)',
+                filter: 'saturate(1.2) brightness(1.0) contrast(1.05)',
               }}
               src={`https://www.youtube-nocookie.com/embed/${heroTrailerKey}?autoplay=1&mute=${isHeroMuted ? 1 : 0}&controls=0&loop=1&playlist=${heroTrailerKey}&playsinline=1`}
               allow="autoplay; encrypted-media; picture-in-picture"
@@ -356,22 +390,22 @@ export default function LandingPage() {
                 Saiba exatamente onde assistir aos jogos do seu time, os lançamentos de cinema mais aguardados e as melhores séries em todas as plataformas de streaming.
               </p>
 
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
                 <a
-                  href={`https://wa.me/${whatsappConfig?.whatsapp_numero || '5511999999999'}?text=${encodeURIComponent(whatsappConfig?.whatsapp_mensagem || 'Olá! Vim pelo CinePlay e quero saber como assistir conteúdo.')}`}
+                  href={getMatchWhatsappUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 10,
                     padding: '14px 28px', borderRadius: 12,
-                    background: '#25D366', color: '#fff',
+                    background: activeCta?.cor_botao || '#25D366', color: '#fff',
                     fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 15,
                     textDecoration: 'none', boxShadow: '0 6px 20px rgba(37,211,102,0.35)',
                     transition: 'transform 0.2s'
                   }}
                   className="mobile-full-btn"
                 >
-                  <MessageCircle size={18} /> Saiba como Assistir no WhatsApp
+                  <MessageCircle size={18} /> {activeCta?.texto_botao || 'Saiba como Assistir no WhatsApp'}
                 </a>
 
                 <button
@@ -388,6 +422,24 @@ export default function LandingPage() {
                 >
                   <Film size={18} color="#E50914" /> Galeria de Trailers HD
                 </button>
+
+                {heroTrailerKey && (
+                  <button
+                    onClick={() => setIsHeroMuted(!isHeroMuted)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '14px 20px', borderRadius: 12,
+                      background: isHeroMuted ? 'rgba(255, 255, 255, 0.1)' : 'rgba(229, 9, 20, 0.25)',
+                      border: `1px solid ${isHeroMuted ? 'rgba(255, 255, 255, 0.2)' : '#E50914'}`,
+                      color: '#fff', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 13,
+                      cursor: 'pointer', backdropFilter: 'blur(12px)', transition: 'all 0.2s'
+                    }}
+                    title="Alternar Áudio do Trailer"
+                  >
+                    <Volume2 size={16} color={isHeroMuted ? '#A0A0B5' : '#E50914'} />
+                    {isHeroMuted ? '🔊 Ativar Áudio' : '🔇 Mutar Áudio'}
+                  </button>
+                )}
               </div>
             </div>
 

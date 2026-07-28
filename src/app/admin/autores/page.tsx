@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { DEFAULT_AUTHORS } from '@/lib/authors/service';
 import type { Author } from '@/lib/types';
-import { User, Plus, ExternalLink, CheckCircle2, Award, Edit, Trash2 } from 'lucide-react';
+import { User, Plus, ExternalLink, CheckCircle2, Award, Edit3, Trash2, X } from 'lucide-react';
+
+const LOCAL_STORAGE_KEY = 'cineplay_admin_autores';
 
 export default function AdminAutoresPage() {
   const [authors, setAuthors] = useState<Author[]>(DEFAULT_AUTHORS);
   const [showModal, setShowModal] = useState(false);
+  const [editingAuthorId, setEditingAuthorId] = useState<string | null>(null);
 
   const [nome, setNome] = useState('');
   const [cargo, setCargo] = useState('');
@@ -17,26 +20,95 @@ export default function AdminAutoresPage() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [especialidades, setEspecialidades] = useState('');
 
-  const handleAddAuthor = (e: React.FormEvent) => {
+  // Carrega autores salvos no localStorage no carregamento inicial
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAuthors(parsed);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao ler autores do localStorage:', err);
+    }
+  }, []);
+
+  // Persiste autores no localStorage
+  const saveAuthors = (updated: Author[]) => {
+    setAuthors(updated);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    } catch (err) {
+      console.error('Erro ao salvar autores no localStorage:', err);
+    }
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingAuthorId(null);
+    setNome(''); setCargo(''); setBio(''); setAvatarUrl(''); setEspecialidades('');
+    setShowModal(true);
+  };
+
+  const handleOpenEditModal = (author: Author) => {
+    setEditingAuthorId(author.id);
+    setNome(author.nome);
+    setCargo(author.cargo);
+    setBio(author.bio);
+    setAvatarUrl(author.avatar_url);
+    setEspecialidades(author.especialidades ? author.especialidades.join(', ') : '');
+    setShowModal(true);
+  };
+
+  const handleSaveAuthor = (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome || !cargo || !bio) return;
 
     const slug = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
-    
-    const newAuthor: Author = {
-      id: `autor-${Date.now()}`,
-      nome,
-      cargo,
-      bio,
-      avatar_url: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-      slug,
-      especialidades: especialidades.split(',').map(s => s.trim()).filter(Boolean),
-      ativo: true,
-    };
+    const espList = especialidades.split(',').map(s => s.trim()).filter(Boolean);
 
-    setAuthors([newAuthor, ...authors]);
+    if (editingAuthorId) {
+      // Atualiza autor existente
+      const updated = authors.map(a => {
+        if (a.id === editingAuthorId) {
+          return {
+            ...a,
+            nome,
+            cargo,
+            bio,
+            avatar_url: avatarUrl || a.avatar_url,
+            slug,
+            especialidades: espList,
+          };
+        }
+        return a;
+      });
+      saveAuthors(updated);
+    } else {
+      // Cria novo autor
+      const newAuthor: Author = {
+        id: `autor-${Date.now()}`,
+        nome,
+        cargo,
+        bio,
+        avatar_url: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+        slug,
+        especialidades: espList,
+        ativo: true,
+      };
+      saveAuthors([newAuthor, ...authors]);
+    }
+
     setShowModal(false);
-    setNome(''); setCargo(''); setBio(''); setAvatarUrl(''); setEspecialidades('');
+    setEditingAuthorId(null);
+  };
+
+  const handleDeleteAuthor = (id: string, authorName: string) => {
+    if (confirm(`Tem certeza de que deseja excluir o autor "${authorName}" da redação?`)) {
+      const updated = authors.filter(a => a.id !== id);
+      saveAuthors(updated);
+    }
   };
 
   return (
@@ -46,18 +118,18 @@ export default function AdminAutoresPage() {
       <main style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
         
         {/* Top Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
           <div>
             <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: 0 }}>
               Gestão de Autores da Redação
             </h1>
             <p style={{ color: '#A0A0B5', fontSize: 14, margin: '4px 0 0' }}>
-              Cadastre e gerencie os autores da redação CinePlay. Os agentes de IA sorteiam aleatoriamente os créditos de cada post entre os autores ativos.
+              Cadastre, edite fotos/bios ou exclua autores da redação CinePlay. Os agentes de IA sorteiam aleatoriamente os créditos de cada post entre os autores ativos.
             </p>
           </div>
 
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handleOpenAddModal}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '12px 20px', borderRadius: 10, background: '#E50914',
@@ -70,23 +142,33 @@ export default function AdminAutoresPage() {
           </button>
         </div>
 
-        {/* Form Modal */}
+        {/* Modal de Cadastro / Edição de Autor */}
         {showModal && (
           <div style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 999, padding: 20
           }}>
             <div style={{
-              background: '#0F0F1A', border: '1px solid rgba(255,255,255,0.1)',
+              background: '#0F0F1A', border: '1px solid rgba(255,255,255,0.12)',
               borderRadius: 20, padding: 32, width: '100%', maxWidth: 540,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.9)'
+              boxShadow: '0 20px 60px rgba(0,0,0,0.95)', position: 'relative'
             }}>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  position: 'absolute', top: 20, right: 20, background: 'none',
+                  border: 'none', color: '#A0A0B5', cursor: 'pointer'
+                }}
+              >
+                <X size={20} />
+              </button>
+
               <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 20 }}>
-                Cadastrar Autor da Redação
+                {editingAuthorId ? '✏️ Editar Autor da Redação' : '👤 Cadastrar Novo Autor'}
               </h2>
 
-              <form onSubmit={handleAddAuthor} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <form onSubmit={handleSaveAuthor} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#A0A0B5', marginBottom: 6 }}>
                     Nome Completo
@@ -129,6 +211,12 @@ export default function AdminAutoresPage() {
                     value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#07070D', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14 }}
                   />
+                  {avatarUrl && (
+                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 11, color: '#A0A0B5' }}>Pré-visualização:</span>
+                      <img src={avatarUrl} alt="Preview" style={{ width: 36, height: 36, borderRadius: 99, objectFit: 'cover', border: '1px solid #E50914' }} />
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -143,8 +231,8 @@ export default function AdminAutoresPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 10 }}>
-                  <button type="submit" style={{ flex: 1, padding: 12, borderRadius: 8, background: '#E50914', color: '#fff', fontWeight: 800, border: 'none', cursor: 'pointer' }}>
-                    Salvar Autor
+                  <button type="submit" style={{ flex: 1, padding: 12, borderRadius: 8, background: '#E50914', color: '#fff', fontWeight: 800, border: 'none', cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
+                    {editingAuthorId ? 'Salvar Alterações' : 'Cadastrar Autor'}
                   </button>
                   <button type="button" onClick={() => setShowModal(false)} style={{ padding: 12, borderRadius: 8, background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', cursor: 'pointer' }}>
                     Cancelar
@@ -166,29 +254,28 @@ export default function AdminAutoresPage() {
                 justifyContent: 'space-between', gap: 16
               }}
             >
-              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                <div style={{ width: 64, height: 64, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
-                  <img src={aut.avatar_url} alt={aut.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 16, fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>
-                    {aut.nome}
-                  </h3>
-                  <div style={{ fontSize: 12, color: '#E50914', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Award size={13} /> {aut.cargo}
+              <div>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 12 }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
+                    <img src={aut.avatar_url} alt={aut.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 16, fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>
+                      {aut.nome}
+                    </h3>
+                    <div style={{ fontSize: 12, color: '#E50914', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Award size={13} /> {aut.cargo}
+                    </div>
                   </div>
                 </div>
+
+                <p style={{ color: '#A0A0B5', fontSize: 13, lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {aut.bio}
+                </p>
               </div>
 
-              <p style={{ color: '#A0A0B5', fontSize: 13, lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {aut.bio}
-              </p>
-
-              <div style={{ paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: '#10B981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <CheckCircle2 size={13} /> Ativo no Sorteio de IA
-                </span>
-
+              {/* Botões de Ação: Editar e Excluir */}
+              <div style={{ paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <Link
                   href={`/autor/${aut.slug}`}
                   target="_blank"
@@ -197,9 +284,38 @@ export default function AdminAutoresPage() {
                     display: 'flex', alignItems: 'center', gap: 4
                   }}
                 >
-                  Ver Perfil Público <ExternalLink size={13} />
+                  Perfil Público <ExternalLink size={12} />
                 </Link>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => handleOpenEditModal(aut)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.08)',
+                      color: '#fff', fontSize: 12, fontWeight: 700, border: 'none',
+                      cursor: 'pointer'
+                    }}
+                    title="Editar Autor"
+                  >
+                    <Edit3 size={13} /> Editar
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteAuthor(aut.id, aut.nome)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '6px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.15)',
+                      color: '#EF4444', fontSize: 12, fontWeight: 700, border: '1px solid rgba(239,68,68,0.3)',
+                      cursor: 'pointer'
+                    }}
+                    title="Excluir Autor"
+                  >
+                    <Trash2 size={13} /> Excluir
+                  </button>
+                </div>
               </div>
+
             </div>
           ))}
         </div>
