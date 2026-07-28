@@ -54,22 +54,38 @@ export interface PostGerado {
 
 // =====================
 // =====================
-// PROMPT JORNALÍSTICO ANTIALUCINAÇÃO & ESTILO EDITORIAL G1
+// PROMPT JORNALÍSTICO ANTIALUCINAÇÃO & FUNIL CINEPLAY
 // =====================
-const PROMPT_JORNALISTA_BASE = `Você é um jornalista sênior chefe de redação de grandes portais de notícias do Brasil (padrão G1, Globo Esporte e O Omelete), especializado em cobertura jornalística de futebol, cinema, séries e guias de mídia.
+const PROMPT_JORNALISTA_BASE = `Você é um jornalista sênior especializado em cobertura jornalística de futebol, cinema, séries e entretenimento. Você escreve para o portal CinePlay, cujo objetivo editorial é atrair leitores e direcioná-los para o atendimento via WhatsApp para adquirir o aplicativo CinePlay.
 
-REGRAS CRÍTICAS DE ESTILO, EXTENSÃO E INVIOLABILIDADE:
-1. EXTENSÃO E PROFUNDIDADE JORNALÍSTICA (900 a 1500 PALAVRAS): Desenvolva matérias jornalísticas completas, profundas e ricas em detalhes. Proibido resumos curtos ou genéricos.
-2. LINGUAGEM 100% HUMANA E FLUIDA: Escreva com estilo editorial humano de alta classe. NUNCA use clichês robóticos de IA (como "No entanto o status é de adiamento", "Em suma", "Fique ligado").
-3. ESTRUTURA VISUAL EDITORIAL OBRIGATÓRIA:
-   - DESTAQUES INICIAIS: Insira uma caixa de destaques no início: <div class="key-takeaways-box"><h4>📌 Destaques Principais da Matéria</h4><ul><li>...</li></ul></div>.
-   - SEÇÕES PRINCIPAIS: Divida em pelo menos 4 seções usando <h2> e <h3> bem estruturados.
-   - TABELA EDITORIAL: Insira obrigatoriamente uma tabela informativa: <table class="editorial-table"><thead><tr><th>Item</th><th>Detalhe</th></tr></thead><tbody>...</tbody></table>.
-   - CITAÇÃO CTA CINEPLAY: Insira um bloco <blockquote> com convite profissional para o leitor consultar o guia de transmissão ao vivo em HD no WhatsApp.
-   - SEÇÃO FAQ AO FINAL: Inclua uma seção <h2>Perguntas Frequentes (FAQ)</h2> com 3 perguntas e respostas diretas sobre onde e como assistir.
-4. INTEGRAÇÃO NATURAL DE "ONDE ASSISTIR" (SEO DE ELITE): Use "onde assistir" no título, subtítulo e introdução para ranqueamento de topo no Google Discover.
-5. PROIBIÇÃO ABSOLUTA DE MARCAS CONCORRENTES: NUNCA mencione marcas concorrentes (como Netflix, Globoplay, Premiere, HBO Max, Disney+, Paramount+).
-6. PROIBIÇÃO DAS PALAVRAS "GRÁTIS" OU "GRATUITO": Use sempre "Ao Vivo em HD", "Transmissão Oficial" ou "Acesso em Alta Definição".`;
+REGRAS ABSOLUTAS E INVIOLÁVEIS:
+
+1. EXTENSÃO (800 a 1200 palavras): Matérias completas, profundas, com informações reais e detalhadas.
+
+2. LINGUAGEM HUMANA: Estilo editorial de portal de notícias brasileiro. NUNCA use clichês robóticos ("Em suma", "Fique ligado", "Desfrute da partida", "No entanto o status é de adiamento").
+
+3. ESTRUTURA VISUAL HTML:
+   - Caixa de destaques: <div class="key-takeaways-box"><h4>📌 Destaques da Matéria</h4><ul><li>...</li></ul></div>
+   - Pelo menos 4 seções com <h2> e <h3> bem estruturados.
+   - Tabela informativa: <table class="editorial-table"><thead><tr><th>...</th></tr></thead><tbody>...</tbody></table>
+   - FAQ com 3 perguntas e respostas no final: <h2>Perguntas Frequentes</h2>
+
+4. SEO: Use "onde assistir" naturalmente no título, subtítulo e introdução.
+
+5. REGRA DE OURO — FUNIL CINEPLAY:
+   - O ÚNICO objetivo do texto é levar o leitor para o WhatsApp.
+   - Use CTAs como: "Fale conosco no WhatsApp e saiba como assistir" ou "Solicite um teste grátis pelo WhatsApp".
+   - Insira pelo menos 2 blocos <blockquote> ao longo do texto com CTAs para WhatsApp.
+   - JAMAIS escreva passo a passo como "Acesse nosso site", "Selecione o esporte", "Clique em assistir". O site NÃO transmite jogos. O site VENDE o app CinePlay.
+
+6. PROIBIÇÃO TOTAL DE CANAIS DE TV: NUNCA informe em qual canal de TV o evento será transmitido (ex: Globo, Band, SBT, Record, SporTV, ESPN, Premiere, CazéTV). A resposta para "onde assistir" é SEMPRE o aplicativo CinePlay via WhatsApp.
+
+7. PROIBIÇÃO DE MARCAS CONCORRENTES: NUNCA mencione Netflix, Globoplay, HBO Max, Disney+, Amazon Prime, Paramount+.
+
+8. USO DA PALAVRA "GRÁTIS": A palavra "grátis" SÓ pode ser usada na expressão "solicitar um teste grátis". JAMAIS dê a entender que o conteúdo (jogo/filme/série) é gratuito.
+
+9. ANTI-ALUCINAÇÃO: Use APENAS os dados fornecidos no contexto. NÃO invente jogos, datas, horários, escalações ou resultados. Se não tiver dados concretos, escreva um guia editorial genérico sobre a competição/gênero.`;
+
 
 // =====================
 // GERAÇÃO GENÉRICA COM IA
@@ -219,18 +235,35 @@ export function agenteRevisor(post: PostGerado): PostGerado {
     conteudoHtml = conteudoHtml.replace(regex, '');
   });
 
-  // 4. Garantia do Bloco de Conversão CinePlay (WhatsApp CTA)
+  // 4. Remoção de Passo a Passo Falso (o site NÃO transmite, ele VENDE o app)
+  const PASSOS_FALSOS = [
+    /acesse\s+(nosso\s+)?site/gi,
+    /selecione\s+o\s+esporte/gi,
+    /clique\s+em\s+assistir/gi,
+    /selecione\s+o\s+(jogo|filme|canal)/gi,
+    /passo\s+\d+\s*:/gi,
+    /etapa\s+\d+\s*:/gi,
+  ];
+  PASSOS_FALSOS.forEach(regex => {
+    conteudoHtml = conteudoHtml.replace(regex, '');
+  });
+
+  // 5. Remoção de Canais de TV Tradicionais como resposta para "onde assistir"
+  const CANAIS_TV = [
+    /(?:transmit\w+\s+(?:pela?|na?|no)\s+)(globo|band|sbt|record|sportv|espn|premiere|cazétv|cazetv|redetv|fox sports)/gi,
+    /(?:ao\s+vivo\s+(?:na?|no)\s+)(globo|band|sbt|record|sportv|espn|premiere|cazétv)/gi,
+  ];
+  CANAIS_TV.forEach(regex => {
+    conteudoHtml = conteudoHtml.replace(regex, 'disponível exclusivamente no aplicativo CinePlay');
+  });
+
+  // 6. Garantia do Bloco de Conversão CinePlay (WhatsApp CTA)
   if (!conteudoHtml.includes('CinePlay') || !conteudoHtml.includes('WhatsApp')) {
     conteudoHtml += `
-      <div class="key-takeaways-box" style="margin-top: 36px; border-color: #E50914;">
-        <h4>📱 Como Assistir com Qualidade 4K no CinePlay</h4>
-        <p style="color: #D0D0DB; margin-bottom: 14px;">
-          Para desfrutar desta transmissão completa e de milhares de filmes, séries e esportes ao vivo na sua Smart TV ou smartphone sem qualquer travamento, entre em contato agora com a nossa equipe oficial.
-        </p>
-        <p style="margin: 0; font-weight: 800; color: #FFF;">
-          👉 <strong>Dúvidas sobre como instalar ou testar o aplicativo CinePlay? Fale conosco pelo atendimento no WhatsApp ao final desta página!</strong>
-        </p>
-      </div>
+      <blockquote>
+        <strong>📱 Quer assistir a esse e outros conteúdos em HD na sua Smart TV ou celular?</strong><br/>
+        Fale conosco no WhatsApp e solicite um teste grátis do aplicativo CinePlay. Nossa equipe está pronta para te atender!
+      </blockquote>
     `;
   }
 

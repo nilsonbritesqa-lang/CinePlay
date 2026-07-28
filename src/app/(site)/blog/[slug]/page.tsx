@@ -246,348 +246,179 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <article style={{ minHeight: '100vh', background: '#07070D', color: '#fff', padding: '40px 16px 80px' }}>
       <ViewCounter postId={post.id} slug={post.slug} />
-      
-      {/* Schema.org JSON-LD para SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'NewsArticle',
-            headline: post.titulo,
-            image: [post.imagem_capa_url || 'https://cine-play-seven.vercel.app/og-default.jpg'],
-            datePublished: post.publicado_em || new Date().toISOString(),
-            dateModified: post.publicado_em || new Date().toISOString(),
-            author: {
-              '@type': 'Person',
-              name: authorName,
-              jobTitle: authorCargo,
-              url: `https://cine-play-seven.vercel.app/autor/${authorSlug}`,
-            },
-            publisher: {
-              '@type': 'Organization',
-              name: 'CinePlay',
-              logo: {
-                '@type': 'ImageObject',
-                url: 'https://cine-play-seven.vercel.app/logo-cineplay.png',
-              },
-            },
-            description: post.resumo,
-            mainEntityOfPage: {
-              '@type': 'WebPage',
-              '@id': shareUrl,
-            },
-          }),
-        }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: post.titulo, image: [post.imagem_capa_url || '/og-default.jpg'], datePublished: post.publicado_em || new Date().toISOString(), author: { '@type': 'Person', name: authorName }, publisher: { '@type': 'Organization', name: 'CinePlay' }, description: post.resumo }) }} />
 
-      <div style={{ maxWidth: 880, margin: '0 auto' }}>
-        
-        {/* Breadcrumbs Navigation */}
+      <div className="blog-layout-container" style={{ maxWidth: 1120, margin: '0 auto' }}>
+        {/* Breadcrumbs */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#A0A0B5', marginBottom: 24, flexWrap: 'wrap' }}>
           <Link href="/" style={{ color: '#A0A0B5', textDecoration: 'none' }}>Início</Link>
           <ChevronRight size={12} color="#555" />
           <Link href="/blog" style={{ color: '#A0A0B5', textDecoration: 'none' }}>Blog</Link>
           <ChevronRight size={12} color="#555" />
           <span style={{ color: '#E50914', textTransform: 'capitalize', fontWeight: 700 }}>{post.categoria.replace('-', ' ')}</span>
-          <ChevronRight size={12} color="#555" />
-          <span style={{ color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 260 }}>{post.titulo}</span>
         </div>
 
-        {/* Categoria Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-          <span style={{
-            padding: '5px 14px', borderRadius: 6, fontSize: 11, fontWeight: 900,
-            background: 'rgba(229, 9, 20, 0.2)', color: '#E50914',
-            border: '1px solid rgba(229, 9, 20, 0.4)', textTransform: 'uppercase',
-            letterSpacing: '0.06em'
-          }}>
-            <Flame size={12} style={{ display: 'inline', marginRight: 4 }} /> {post.categoria.toUpperCase()}
-          </span>
-        </div>
+        {/* 2-Column Grid: Content + Sidebar */}
+        <div className="blog-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start' }}>
+          
+          {/* === MAIN CONTENT COLUMN === */}
+          <div style={{ minWidth: 0 }}>
+            {/* Category Badge */}
+            <span style={{ display: 'inline-block', padding: '5px 14px', borderRadius: 6, fontSize: 11, fontWeight: 900, background: 'rgba(229,9,20,0.2)', color: '#E50914', border: '1px solid rgba(229,9,20,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
+              <Flame size={12} style={{ display: 'inline', marginRight: 4 }} /> {post.categoria.toUpperCase()}
+            </span>
 
-        {/* Título Principal de Notícia (H1) */}
-        <h1 style={{
-          fontFamily: 'Outfit, sans-serif',
-          fontSize: 'clamp(2.2rem, 5vw, 3.4rem)',
-          fontWeight: 900,
-          lineHeight: 1.15,
-          marginBottom: 18,
-          color: '#FFFFFF',
-          letterSpacing: '-0.025em'
-        }}>
-          {post.titulo}
-        </h1>
+            {/* H1 Title */}
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, lineHeight: 1.15, marginBottom: 16, color: '#FFF', letterSpacing: '-0.02em' }}>
+              {post.titulo}
+            </h1>
 
-        {/* Subtítulo Jornalístico / Excerpt */}
-        <p style={{
-          fontSize: 'clamp(1.1rem, 2.2vw, 1.3rem)',
-          lineHeight: 1.6,
-          color: '#D0D0DB',
-          marginBottom: 28,
-          fontWeight: 500,
-          borderLeft: '4px solid #E50914',
-          paddingLeft: 18
-        }}>
-          {post.resumo}
-        </p>
-
-        {/* Bloco de Autor, Data e Leitura */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 14, fontSize: 13, color: '#8E8EA8',
-          background: 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 16,
-          padding: '16px 20px', marginBottom: 36
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Link
-              href={`/autor/${authorSlug}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
-                <img
-                  src={authorAvatar}
-                  alt={authorName}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, color: '#fff', fontSize: 14 }}>
-                  <span>Por {authorName}</span>
-                  <CheckCircle2 size={14} color="#10B981" />
-                </div>
-                <span style={{ fontSize: 11, color: '#E50914', fontWeight: 600 }}>
-                  {authorCargo}
-                </span>
-              </div>
-            </Link>
-            <span style={{ color: '#444' }}>•</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Calendar size={14} color="#8B5CF6" /> {dateFormatted} às {timeFormatted}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#D0D0DB' }}>
-            <Clock size={14} color="#F59E0B" /> {post.tempo_leitura_min || 5} min de leitura
-          </div>
-        </div>
-
-        {/* Imagem de Capa HD sem Flash / Layout Shift */}
-        <div style={{
-          position: 'relative',
-          borderRadius: 24,
-          overflow: 'hidden',
-          marginBottom: 40,
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 16px 50px rgba(0,0,0,0.7)',
-          background: '#0F0F1A',
-          width: '100%',
-          aspectRatio: '16 / 9',
-          maxHeight: 520
-        }}>
-          <img
-            src={post.imagem_capa_url || '/og-default.jpg'}
-            alt={post.titulo}
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'block',
-              objectFit: 'cover',
-              transition: 'opacity 0.4s ease-in-out',
-            }}
-          />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(7,7,13,0.92)', backdropFilter: 'blur(8px)', padding: '12px 20px', fontSize: 12, color: '#A0A0B5', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>📷</span>
-            <span>Foto Oficial: {post.titulo} — Redação CinePlay</span>
-          </div>
-        </div>
-
-        {/* Estilos CSS para o Conteúdo Editorial */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          .editorial-body {
-            font-size: 1.12rem;
-            line-height: 1.85;
-            color: #E0E0EC;
-          }
-          .editorial-body p {
-            margin-bottom: 24px;
-            color: #D8D8E5;
-          }
-          .editorial-body h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.7rem;
-            font-weight: 800;
-            color: #FFFFFF;
-            margin: 40px 0 20px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid rgba(229, 9, 20, 0.4);
-          }
-          .editorial-body h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #FFFFFF;
-            margin: 28px 0 14px;
-          }
-          .editorial-body blockquote {
-            background: rgba(229, 9, 20, 0.08);
-            border-left: 4px solid #E50914;
-            border-radius: 0 16px 16px 0;
-            padding: 20px 24px;
-            margin: 32px 0;
-            font-style: italic;
-            color: #F0F0FF;
-            font-size: 1.15rem;
-            line-height: 1.7;
-          }
-          .key-takeaways-box {
-            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(229,9,20,0.08) 100%);
-            border: 1px solid rgba(229,9,20,0.3);
-            border-radius: 18px;
-            padding: 24px;
-            margin-bottom: 36px;
-          }
-          .key-takeaways-box h4 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: #FFF;
-            margin: 0 0 14px;
-          }
-          .key-takeaways-box ul {
-            margin: 0;
-            padding-left: 20px;
-          }
-          .key-takeaways-box li {
-            margin-bottom: 8px;
-            color: #D0D0DB;
-            font-size: 0.98rem;
-          }
-          .editorial-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 28px 0;
-            background: rgba(255,255,255,0.02);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.08);
-          }
-          .editorial-table th {
-            background: rgba(229,9,20,0.2);
-            color: #FFF;
-            font-weight: 800;
-            text-align: left;
-            padding: 12px 16px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-          }
-          .editorial-table td {
-            padding: 12px 16px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            color: #D0D0DB;
-            font-size: 0.95rem;
-          }
-        ` }} />
-
-        {/* Conteúdo Renderizado */}
-        <div
-          className="editorial-body"
-          dangerouslySetInnerHTML={{ __html: rawContent }}
-        />
-
-        {/* Caixa de Conversão Direta via WhatsApp do Patrocinador Ativo */}
-        <div style={{
-          padding: '32px 36px', borderRadius: 24,
-          background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.16) 0%, rgba(15, 15, 26, 0.98) 100%)',
-          border: '1px solid rgba(229, 9, 20, 0.4)', textAlign: 'center', margin: '48px 0',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
-        }}>
-          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.45rem', fontWeight: 900, color: '#fff', marginBottom: 10 }}>
-            🚀 Transmissão Exclusiva em Alta Definição
-          </h3>
-          <p style={{ color: '#A0A0B5', fontSize: 14, maxWidth: 640, margin: '0 auto 24px', lineHeight: 1.6 }}>
-            {activeCta.texto_pre}
-          </p>
-          <a
-            href={activeCta.url_destino}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10,
-              padding: '16px 36px', borderRadius: 99, background: activeCta.cor_botao || '#E50914',
-              color: '#fff', fontWeight: 900, fontSize: 16, textDecoration: 'none',
-              boxShadow: '0 8px 25px rgba(229, 9, 20, 0.5)', transition: 'transform 0.2s ease',
-              fontFamily: 'Outfit, sans-serif'
-            }}
-          >
-            <MessageCircle size={20} /> {activeCta.texto_botao}
-          </a>
-        </div>
-
-        {/* Componente Interativo de Compartilhamento & Reações */}
-        <PostInteractiveSection postTitle={post.titulo} shareUrl={shareUrl} />
-
-        {/* Card do Autor */}
-        <div style={{
-          background: 'linear-gradient(145deg, #0F0F1A 0%, #090912 100%)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 24, padding: '28px 32px', marginTop: 48, marginBottom: 48,
-          display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-        }}>
-          <div style={{ width: 76, height: 76, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
-            <img
-              src={authorAvatar}
-              alt={authorName}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
-
-          <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#E50914', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                SOBRE O AUTOR
-              </span>
-            </div>
-            <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>
-              {authorName}
-            </h4>
-            <div style={{ fontSize: 12, color: '#A0A0B5', fontWeight: 600, marginBottom: 8 }}>
-              {authorCargo}
-            </div>
-            <p style={{ color: '#D0D0DB', fontSize: 13, lineHeight: 1.55, margin: 0 }}>
-              {authorBio}
+            {/* Subtitle / Resumo */}
+            <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', lineHeight: 1.6, color: '#C8C8DA', marginBottom: 24, fontWeight: 500, borderLeft: '4px solid #E50914', paddingLeft: 18 }}>
+              {post.resumo}
             </p>
-          </div>
 
-          <Link
-            href={`/autor/${authorSlug}`}
-            style={{
-              padding: '10px 20px', borderRadius: 99, background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: 13,
-              fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap'
-            }}
-          >
-            Ver todos os artigos →
-          </Link>
-        </div>
+            {/* Author + Date Bar */}
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 14, fontSize: 13, color: '#8E8EA8', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '14px 18px', marginBottom: 32 }}>
+              <Link href={`/autor/${authorSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
+                  <img src={authorAvatar} alt={authorName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: 800, color: '#fff', fontSize: 13 }}>
+                    {authorName} <CheckCircle2 size={13} color="#10B981" />
+                  </div>
+                  <span style={{ fontSize: 10, color: '#E50914', fontWeight: 600 }}>{authorCargo}</span>
+                </div>
+              </Link>
+              <span style={{ color: '#444' }}>•</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Calendar size={13} color="#8B5CF6" /> {dateFormatted} às {timeFormatted}</span>
+              <span style={{ color: '#444' }}>•</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Clock size={13} color="#F59E0B" /> {post.tempo_leitura_min || 5} min</span>
+            </div>
 
-        {/* Posts Relacionados */}
-        {relatedPosts.length > 0 && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 44 }}>
-            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.45rem', fontWeight: 800, color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
-              📰 Leia também — Notícias Relacionadas
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-              {relatedPosts.map(rel => (
-                <PostCardComponent key={rel.id} post={rel} />
-              ))}
+            {/* Cover Image */}
+            <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', background: '#0F0F1A', aspectRatio: '16/9' }}>
+              <img src={post.imagem_capa_url || '/og-default.jpg'} alt={post.titulo} style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }} />
+            </div>
+
+            {/* Editorial CSS */}
+            <style dangerouslySetInnerHTML={{ __html: `
+              .editorial-body { font-size: 1.08rem; line-height: 1.85; color: #D8D8E5; }
+              .editorial-body p { margin-bottom: 22px; }
+              .editorial-body h2 { font-family: 'Outfit', sans-serif; font-size: 1.55rem; font-weight: 800; color: #FFF; margin: 36px 0 16px; padding-bottom: 8px; border-bottom: 2px solid rgba(229,9,20,0.35); }
+              .editorial-body h3 { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: #FFF; margin: 24px 0 12px; }
+              .editorial-body blockquote { background: rgba(229,9,20,0.08); border-left: 4px solid #E50914; border-radius: 0 14px 14px 0; padding: 18px 22px; margin: 28px 0; font-style: italic; color: #F0F0FF; font-size: 1.05rem; line-height: 1.65; }
+              .editorial-body ul, .editorial-body ol { margin: 0 0 22px 20px; }
+              .editorial-body li { margin-bottom: 8px; color: #D0D0DB; }
+              .key-takeaways-box { background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(229,9,20,0.08)); border: 1px solid rgba(229,9,20,0.3); border-radius: 16px; padding: 22px; margin-bottom: 32px; }
+              .key-takeaways-box h4 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; color: #FFF; margin: 0 0 12px; }
+              .key-takeaways-box li { margin-bottom: 6px; color: #D0D0DB; font-size: 0.95rem; }
+              .editorial-table { width: 100%; border-collapse: collapse; margin: 24px 0; background: rgba(255,255,255,0.02); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+              .editorial-table th { background: rgba(229,9,20,0.2); color: #FFF; font-weight: 800; text-align: left; padding: 11px 14px; font-size: 0.88rem; text-transform: uppercase; }
+              .editorial-table td { padding: 11px 14px; border-top: 1px solid rgba(255,255,255,0.05); color: #D0D0DB; font-size: 0.92rem; }
+              .blog-grid { display: grid; grid-template-columns: 1fr 340px; gap: 40px; }
+              @media (max-width: 900px) { .blog-grid { grid-template-columns: 1fr !important; } }
+            ` }} />
+
+            {/* Rendered Content */}
+            <div className="editorial-body" dangerouslySetInnerHTML={{ __html: rawContent }} />
+
+            {/* Bottom CTA Box */}
+            <div style={{ padding: '28px 32px', borderRadius: 20, background: 'linear-gradient(135deg, rgba(229,9,20,0.16), rgba(15,15,26,0.98))', border: '1px solid rgba(229,9,20,0.4)', textAlign: 'center', margin: '40px 0', boxShadow: '0 10px 35px rgba(0,0,0,0.5)' }}>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.35rem', fontWeight: 900, color: '#fff', marginBottom: 8 }}>
+                📱 Onde Assistir? No CinePlay!
+              </h3>
+              <p style={{ color: '#A0A0B5', fontSize: 14, maxWidth: 580, margin: '0 auto 20px', lineHeight: 1.6 }}>
+                {activeCta.texto_pre}
+              </p>
+              <a href={activeCta.url_destino} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '14px 32px', borderRadius: 99, background: '#25D366', color: '#fff', fontWeight: 900, fontSize: 15, textDecoration: 'none', boxShadow: '0 6px 20px rgba(37,211,102,0.4)', fontFamily: 'Outfit, sans-serif' }}>
+                <MessageCircle size={18} /> Solicitar Teste Grátis via WhatsApp
+              </a>
+            </div>
+
+            <PostInteractiveSection postTitle={post.titulo} shareUrl={shareUrl} />
+
+            {/* Author Card */}
+            <div style={{ background: 'linear-gradient(145deg, #0F0F1A, #090912)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '24px 28px', marginTop: 40, display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ width: 64, height: 64, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
+                <img src={authorAvatar} alt={authorName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: '#E50914', textTransform: 'uppercase' }}>SOBRE O AUTOR</span>
+                <h4 style={{ fontFamily: 'Outfit', fontSize: 16, fontWeight: 800, color: '#fff', margin: '2px 0' }}>{authorName}</h4>
+                <div style={{ fontSize: 11, color: '#A0A0B5', marginBottom: 6 }}>{authorCargo}</div>
+                <p style={{ color: '#D0D0DB', fontSize: 12, lineHeight: 1.5, margin: 0 }}>{authorBio}</p>
+              </div>
             </div>
           </div>
-        )}
 
+          {/* === SIDEBAR COLUMN === */}
+          <aside className="blog-sidebar" style={{ position: 'sticky', top: 100 }}>
+            {/* CTA Widget — FIRST THING IN SIDEBAR */}
+            <div style={{ background: 'linear-gradient(180deg, rgba(229,9,20,0.15), rgba(15,15,26,0.95))', border: '1px solid rgba(229,9,20,0.35)', borderRadius: 20, padding: '28px 24px', textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ fontSize: 28, marginBottom: 10 }}>📺</div>
+              <h3 style={{ fontFamily: 'Outfit', fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 8, lineHeight: 1.3 }}>
+                Onde Assistir?
+              </h3>
+              <p style={{ color: '#B0B0C5', fontSize: 13, lineHeight: 1.5, marginBottom: 18 }}>
+                Assista a filmes, séries e esportes ao vivo em HD/4K na sua Smart TV ou celular. Solicite um teste grátis agora!
+              </p>
+              <a href={activeCta.url_destino} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 20px', borderRadius: 99, background: '#25D366', color: '#fff', fontWeight: 800, fontSize: 14, textDecoration: 'none', boxShadow: '0 6px 20px rgba(37,211,102,0.35)', fontFamily: 'Outfit' }}>
+                <MessageCircle size={16} /> Falar no WhatsApp
+              </a>
+            </div>
+
+            {/* Categorias Widget */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px', marginBottom: 28 }}>
+              <h4 style={{ fontFamily: 'Outfit', fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                📂 Categorias
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {['futebol', 'cinema', 'series', 'canais'].map(cat => (
+                  <Link key={cat} href={`/blog?categoria=${cat}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: cat === post.categoria ? 'rgba(229,9,20,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${cat === post.categoria ? 'rgba(229,9,20,0.3)' : 'rgba(255,255,255,0.05)'}`, color: cat === post.categoria ? '#E50914' : '#B0B0C5', textDecoration: 'none', fontSize: 13, fontWeight: 700, textTransform: 'capitalize' }}>
+                    <span>{cat === 'series' ? 'Séries' : cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                    <ChevronRight size={14} />
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Related Posts Widget */}
+            {relatedPosts.length > 0 && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '20px', marginBottom: 28 }}>
+                <h4 style={{ fontFamily: 'Outfit', fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  📰 Leia Também
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {relatedPosts.map(rel => (
+                    <Link key={rel.id} href={`/blog/${rel.slug}`} style={{ display: 'flex', gap: 12, textDecoration: 'none', alignItems: 'center' }}>
+                      <div style={{ width: 70, height: 48, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: '#0F0F1A' }}>
+                        <img src={rel.imagem_capa_url || '/og-default.jpg'} alt={rel.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: 12, fontWeight: 700, color: '#E0E0F0', lineHeight: 1.35, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, overflow: 'hidden' }}>
+                          {rel.titulo}
+                        </h5>
+                        <span style={{ fontSize: 10, color: '#888' }}>{rel.publicado_em ? new Date(rel.publicado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : ''}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Second CTA Widget */}
+            <div style={{ background: '#0F0F1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '20px', textAlign: 'center' }}>
+              <p style={{ fontSize: 13, color: '#B0B0C5', lineHeight: 1.5, marginBottom: 14 }}>
+                <strong style={{ color: '#fff' }}>Dúvidas?</strong> Fale conosco no WhatsApp e solicite um teste grátis do CinePlay.
+              </p>
+              <a href={activeCta.url_destino} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 99, background: 'rgba(229,9,20,0.15)', border: '1px solid rgba(229,9,20,0.3)', color: '#E50914', fontWeight: 700, fontSize: 12, textDecoration: 'none', fontFamily: 'Outfit' }}>
+                <MessageCircle size={14} /> WhatsApp CinePlay
+              </a>
+            </div>
+          </aside>
+        </div>
       </div>
     </article>
   );

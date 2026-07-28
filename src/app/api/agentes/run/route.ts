@@ -54,12 +54,12 @@ export async function POST(request: NextRequest) {
           nome: ag.nome,
           tipo: ag.tipo as any,
           provider_ia: (ag.provider_ia as any) || getDefaultProvider(),
-          temperatura: 0.7,
+          temperatura: 0.35,
           auto_publicar: true,
           requer_aprovacao: false,
-          posts_por_dia: 1,
-          dias_antecipacao: 2,
-          keywords_seo: ['onde assistir', 'streaming', 'ao vivo'],
+          posts_por_dia: 2,
+          dias_antecipacao: 7,
+          keywords_seo: ['onde assistir', 'teste grátis cineplay', 'ao vivo'],
         });
       }
     } else {
@@ -70,11 +70,11 @@ export async function POST(request: NextRequest) {
         tipo: config?.tipo ?? found?.tipo ?? 'onde-assistir',
         provider_ia: config?.provider_ia ?? found?.provider_ia ?? getDefaultProvider(),
         modelo_ia: config?.modelo_ia,
-        temperatura: config?.temperatura ?? 0.7,
+        temperatura: config?.temperatura ?? 0.35,
         auto_publicar: config?.auto_publicar ?? true,
         requer_aprovacao: config?.requer_aprovacao ?? false,
-        posts_por_dia: config?.posts_por_dia ?? 1,
-        dias_antecipacao: config?.dias_antecipacao ?? 2,
+        posts_por_dia: config?.posts_por_dia ?? 2,
+        dias_antecipacao: config?.dias_antecipacao ?? 7,
         prompt_sistema_custom: config?.prompt_sistema_custom,
         keywords_seo: config?.keywords_seo ?? ['onde assistir', 'streaming', 'futebol ao vivo'],
       });
