@@ -239,6 +239,27 @@ export default function AdminPostsPage() {
 
             <div style={{ display: 'flex', gap: 12 }}>
               <button
+                onClick={async () => {
+                  if (confirm('Tem certeza que deseja EXCLUIR TODOS OS POSTS para recomeçar com matérias novas e ricas?')) {
+                    setLoading(true);
+                    for (const p of posts) {
+                      await fetch(`/api/posts?id=${p.id}`, { method: 'DELETE' }).catch(() => {});
+                    }
+                    await fetchPosts();
+                    alert('✨ Todos os posts antigos foram zerados com sucesso! Agora você pode rodar os agentes para gerar conteúdos ultra ricos.');
+                  }
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '10px 16px', borderRadius: 10, background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)', color: '#EF4444', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                <Trash2 size={14} /> Zerar / Limpar Posts
+              </button>
+
+              <button
                 onClick={fetchPosts}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,

@@ -62,6 +62,18 @@ const INICIAL_AGENTES = [
     apis: ['Google Trends RSS', 'TMDB'],
     keywords: ['canais disponíveis', 'guia de canais', 'como assistir canal', 'onde assistir'],
   },
+  {
+    id: '5', nome: 'Agente Onde Assistir (SEO Conversão)', tipo: '🔍', categoria: 'onde-assistir',
+    provider_ia: 'openai' as AIProvider, modelo: 'gpt-4o-mini',
+    ativo: true, posts_por_dia: 4, dias_antecipacao: 1,
+    temperatura: 0.7, auto_publicar: true, requer_aprovacao: false,
+    ultima_execucao: '2026-07-17T20:00:00Z', proxima_execucao: '2026-07-17T22:00:00Z',
+    total_posts: 215, logs: [
+      { status: 'sucesso', msg: 'Gerou: Onde assistir Futebol e Séries ao vivo em HD', ago: '15min' },
+    ],
+    apis: ['TMDB', 'Google Trends'],
+    keywords: ['onde assistir', 'ao vivo em hd', 'transmissão oficial', 'whatsapp'],
+  },
 ];
 
 export default function AdminAgentesPage() {

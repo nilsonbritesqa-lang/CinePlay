@@ -170,7 +170,7 @@ export default function BlogPage() {
                         Por {featuredPost.autor_nome || 'CinePlay Editorial'}
                       </span>
                       <span>•</span>
-                      <span>{featuredPost.publicado_em ? new Date(featuredPost.publicado_em).toLocaleDateString('pt-BR') : '2026-07-23'}</span>
+                      <span>{featuredPost.publicado_em ? new Date(featuredPost.publicado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'Hoje'}</span>
                       <span>•</span>
                       <span>{featuredPost.tempo_leitura_min || 5} min de leitura</span>
                     </div>
@@ -218,7 +218,7 @@ export default function BlogPage() {
 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 11, color: '#6B6B85' }}>
                         <span>Por {post.autor_nome || 'CinePlay Editorial'}</span>
-                        <span>{post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR') : '2026-07-23'}</span>
+                        <span>{post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'Hoje'}</span>
                       </div>
                     </div>
                   </article>
