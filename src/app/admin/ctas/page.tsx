@@ -76,13 +76,21 @@ export default function AdminCTAsPage() {
     return form.url_destino;
   };
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingCtaId, setEditingCtaId] = useState<string | null>(null);
+
   const handleSave = async () => {
     const finalUrl = getFinalUrl();
+    const isEdit = !!editingId;
+    const method = isEdit ? 'PUT' : 'POST';
+
     try {
       const res = await fetch('/api/ctas', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: editingId,
+          cta_id: editingCtaId,
           nome: form.patrocinador_nome || 'Patrocinador Oficial',
           texto_pre: form.texto_pre,
           texto_botao: form.texto_botao,
@@ -94,9 +102,11 @@ export default function AdminCTAsPage() {
         })
       });
       const data = await res.json();
-      if (data.success && data.patrocinador) {
-        setPatrocinadores([data.patrocinador, ...patrocinadores]);
+      if (data.success) {
+        await fetchCTAs();
         setShowForm(false);
+        setEditingId(null);
+        setEditingCtaId(null);
       } else {
         alert('Erro ao salvar CTA: ' + (data.error || 'Erro desconhecido'));
       }
@@ -153,6 +163,8 @@ export default function AdminCTAsPage() {
           </div>
           <button
             onClick={() => {
+              setEditingId(null);
+              setEditingCtaId(null);
               setForm({
                 patrocinador_nome: '',
                 texto_pre: 'Assista agora em:',
@@ -468,6 +480,8 @@ export default function AdminCTAsPage() {
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => {
+                          setEditingId(pat.id);
+                          setEditingCtaId(cta.id);
                           const isWa = cta.url_destino.includes('wa.me');
                           setLinkType(isWa ? 'whatsapp' : 'url');
                           if (isWa) {
@@ -487,9 +501,9 @@ export default function AdminCTAsPage() {
                             url_destino: isWa ? '' : cta.url_destino,
                             cor_botao: cta.cor_botao,
                             cor_texto_botao: cta.cor_texto_botao,
-                            categorias: cta.categorias,
-                            tipo_exibicao: cta.tipo_exibicao,
-                            data_inicio: cta.data_inicio.split('T')[0],
+                            categorias: cta.categorias || [],
+                            tipo_exibicao: cta.tipo_exibicao || 'inline',
+                            data_inicio: cta.data_inicio ? cta.data_inicio.split('T')[0] : new Date().toISOString().split('T')[0],
                             data_fim: cta.data_fim ? cta.data_fim.split('T')[0] : '',
                           });
                           setShowForm(true);

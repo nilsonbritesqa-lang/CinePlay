@@ -43,10 +43,25 @@ export default function LandingPage() {
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [showTrailerGallery, setShowTrailerGallery] = useState(false);
 
-  // Estados do Trailer de Fundo Total
+  // Estados do Trailer de Fundo Total (Inicia com áudio ativado por padrão)
   const [heroTrailerKey, setHeroTrailerKey] = useState<string | null>(null);
   const [heroBackdrop, setHeroBackdrop] = useState<string | null>(null);
-  const [isHeroMuted, setIsHeroMuted] = useState<boolean>(true);
+  const [isHeroMuted, setIsHeroMuted] = useState<boolean>(false);
+
+  // Garante que o áudio seja liberado no primeiro clique/toque caso o navegador exija interação
+  useEffect(() => {
+    const unlockAudio = () => {
+      setIsHeroMuted(false);
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
 
   const [movieItems, setMovieItems] = useState<any[]>([
     {

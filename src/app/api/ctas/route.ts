@@ -14,7 +14,7 @@ function getSupabaseService() {
 export async function GET() {
   const supabase = getSupabaseService();
   if (!supabase) {
-    return NextResponse.json({ success: false, patrocinadores: [] });
+    return NextResponse.json({ success: false, patrocinadores: [], ctas: [] });
   }
 
   try {
@@ -36,10 +36,14 @@ export async function GET() {
       ctas: (ctas || []).filter(c => c.patrocinador_id === p.id)
     }));
 
-    return NextResponse.json({ success: true, patrocinadores: resultado });
+    return NextResponse.json({
+      success: true,
+      patrocinadores: resultado,
+      ctas: ctas || []
+    });
   } catch (error: any) {
     console.error('[API /ctas GET]', error);
-    return NextResponse.json({ success: false, error: error.message, patrocinadores: [] });
+    return NextResponse.json({ success: false, error: error.message, patrocinadores: [], ctas: [] });
   }
 }
 
@@ -96,6 +100,68 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('[API /ctas POST]', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  const supabase = getSupabaseService();
+  if (!supabase) {
+    return NextResponse.json({ success: false, error: 'Supabase não configurado' }, { status: 500 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, cta_id, nome, plano, prioridade, texto_pre, texto_botao, url_destino, cor_botao, cor_texto_botao, categorias, tipo_exibicao } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'ID do patrocinador é obrigatório' }, { status: 400 });
+    }
+
+    // Update Patrocinador
+    const { data: pat, error: patErr } = await supabase
+      .from('patrocinadores')
+      .update({
+        nome: nome || 'Patrocinador Oficial',
+        plano: plano || 'premium',
+        prioridade: prioridade || 1
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (patErr) throw patErr;
+
+    // Update CTA
+    let ctaQuery = supabase.from('ctas').update({
+      texto_pre: texto_pre || 'Assista agora em alta definição:',
+      texto_botao: texto_botao || 'Falar no WhatsApp',
+      url_destino: url_destino,
+      cor_botao: cor_botao || '#25D366',
+      cor_texto_botao: cor_texto_botao || '#ffffff',
+      categorias: categorias || ['futebol', 'cinema', 'series', 'canais', 'onde-assistir'],
+      tipo_exibicao: tipo_exibicao || 'inline',
+    });
+
+    if (cta_id) {
+      ctaQuery = ctaQuery.eq('id', cta_id);
+    } else {
+      ctaQuery = ctaQuery.eq('patrocinador_id', id);
+    }
+
+    const { data: ctaData, error: ctaErr } = await ctaQuery.select();
+
+    if (ctaErr) throw ctaErr;
+
+    return NextResponse.json({
+      success: true,
+      patrocinador: {
+        ...pat,
+        ctas: ctaData || []
+      }
+    });
+  } catch (error: any) {
+    console.error('[API /ctas PUT]', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

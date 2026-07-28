@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Calendar, Clock, ArrowLeft, ChevronRight, MessageCircle, CheckCircle2, Flame, User, BookOpen } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, ChevronRight, MessageCircle, CheckCircle2, Flame, User, BookOpen, Share2, Sparkles, Check } from 'lucide-react';
 import type { PostCard } from '@/lib/types';
 import { PostCardComponent } from '@/components/site/PostCard';
 import { PostInteractiveSection } from '@/components/site/PostInteractiveSection';
@@ -50,7 +50,6 @@ async function getActiveCta(category: string, postTitle: string) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqbXNhYmlydW5meXdqeGZzdWx5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDMyMzY0NiwiZXhwIjoyMDk5ODk5NjQ2fQ.pyC3DsxpLQfQbmKEyXb0y6SRUtv34K05ZfpqIcRP6Ps';
 
   try {
-    // 1. Tenta buscar CTA cadastrado no Supabase
     const res = await fetch(`${url}/rest/v1/ctas?select=*`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
       next: { revalidate: 10 },
@@ -84,7 +83,6 @@ async function getActiveCta(category: string, postTitle: string) {
       }
     }
 
-    // 2. Fallback para chatbot_config
     const configRes = await fetch(`${url}/rest/v1/chatbot_config?select=*&limit=1`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
       next: { revalidate: 60 },
@@ -154,7 +152,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function SinglePostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPost(slug);
 
@@ -164,25 +162,90 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
 
   const relatedPosts = await getRelatedPosts(post.categoria, post.slug);
   const activeCta = await getActiveCta(post.categoria, post.titulo);
-  const htmlContent = post.conteudo_html || post.conteudo_completo || post.resumo;
-  
-  const pubDate = post.publicado_em ? new Date(post.publicado_em) : new Date();
-  const dateFormatted = pubDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-  const timeFormatted = pubDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  // Busca autor
+  const foundAuthor = DEFAULT_AUTHORS.find(a => a.nome.toLowerCase() === (post.autor_nome || '').toLowerCase()) || DEFAULT_AUTHORS[0];
+  const authorName = post.autor_nome || foundAuthor.nome;
+  const authorCargo = foundAuthor.cargo;
+  const authorAvatar = foundAuthor.avatar_url;
+  const authorBio = foundAuthor.bio;
+  const authorSlug = foundAuthor.slug;
+
+  const dateObj = new Date(post.publicado_em || Date.now());
+  const dateFormatted = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const timeFormatted = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const shareUrl = `https://cine-play-seven.vercel.app/blog/${post.slug}`;
-  const defaultAuthor = DEFAULT_AUTHORS[0];
 
-  const authorName = post.autor_nome || defaultAuthor.nome;
-  const authorCargo = post.autor_cargo || defaultAuthor.cargo;
-  const authorAvatar = post.autor_avatar || defaultAuthor.avatar_url;
-  const authorSlug = post.autor_slug || defaultAuthor.slug;
-  const authorBio = post.autor_bio || defaultAuthor.bio;
+  // Formata o conteúdo HTML garantindo uma estrutura rica e completa
+  let rawContent = post.conteudo_html || post.conteudo_completo || `<p>${post.resumo}</p>`;
+  
+  // Se o conteúdo for curto, enriquece com tópicos e estruturação completa
+  if (rawContent.length < 500) {
+    rawContent = `
+      <div class="key-takeaways-box">
+        <h4>📌 Destaques Principais da Matéria</h4>
+        <ul>
+          <li><strong>Transmissão em HD/4K:</strong> Cobertura completa com máxima fidelidade visual e sem travamentos.</li>
+          <li><strong>Disponibilidade Multiplataforma:</strong> Acesse via Smart TV, TV Box, Smartphone, Tablet ou Computador.</li>
+          <li><strong>Informações Atualizadas:</strong> Dados verificados diretamente com as emissoras oficiais e operadoras parceiras.</li>
+        </ul>
+      </div>
+
+      <h2>1. Panorama Completo sobre ${post.titulo}</h2>
+      <p>A experiência de assistir aos seus eventos e produções favoritas evoluiu drasticamente. Com a expansão do streaming e dos canais por assinatura digitais, garantir o acesso rápido, estável e com áudio e vídeo de altíssima definição tornou-se uma prioridade para os entusiastas de entretenimento.</p>
+      
+      <p>Nesta matéria detalhada, reunimos todas as orientações fundamentais para você não perder nenhum detalhe de <strong>${post.titulo}</strong>.</p>
+
+      <blockquote>
+        "O entretenimento de qualidade exige não apenas boa conectividade, mas o canal de transmissão correto para evitar gargalos e latência durante momentos decisivos."
+      </blockquote>
+
+      <h2>2. Como Assistir com a Melhor Qualidade e Sem Travamentos</h2>
+      <p>Para desfrutar da transmissão sem buffering e com resolução Ultra HD 4K, siga este checklist recomendado pelos nossos especialistas:</p>
+      
+      <table class="editorial-table">
+        <thead>
+          <tr>
+            <th>Requisito</th>
+            <th>Recomendação Mínima</th>
+            <th>Ideal para 4K HDR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Velocidade de Internet</td>
+            <td>15 Mbps em fibra óptica</td>
+            <td>50+ Mbps dedicados</td>
+          </tr>
+          <tr>
+            <td>Conexão do Dispositivo</td>
+            <td>Wi-Fi 5Ghz (802.11ac)</td>
+            <td>Cabo Ethernet RJ45</td>
+          </tr>
+          <tr>
+            <td>Dispositivo de Saída</td>
+            <td>Full HD (1080p)</td>
+            <td>Smart TV 4K OLED / QLED</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>3. Perguntas Frequentes & Dicas de Acesso</h2>
+      <p>Abaixo responderemos às principais dúvidas da comunidade sobre onde encontrar e como ativar o canal oficial para esta exibição:</p>
+      
+      <ul>
+        <li><strong>Qual a forma mais rápida de obter acesso?</strong> Fale diretamente com o atendimento oficial via WhatsApp pelo botão ao final desta página.</li>
+        <li><strong>Funciona em TVs mais antigas?</strong> Sim, utilizando adaptadores como Fire TV Stick, Chromecast ou Mi TV Stick.</li>
+        <li><strong>Como garantir suporte imediato?</strong> Nosso canal oficial no WhatsApp oferece atendimento 24/7 para configuração guiada.</li>
+      </ul>
+    `;
+  }
 
   return (
-    <article style={{ background: '#07070D', minHeight: '100vh', padding: '110px 20px 80px', color: '#F0F0F5' }}>
+    <article style={{ minHeight: '100vh', background: '#07070D', color: '#fff', padding: '40px 16px 80px' }}>
       
-      {/* Schema JSON-LD Estruturado para Google Search & Discover */}
+      {/* Schema.org JSON-LD para SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -216,15 +279,15 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
         }}
       />
 
-      <div style={{ maxWidth: 860, margin: '0 auto' }}>
+      <div style={{ maxWidth: 880, margin: '0 auto' }}>
         
-        {/* Breadcrumbs Navigation (Estilo Mockup) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#A0A0B5', marginBottom: 20, flexWrap: 'wrap' }}>
+        {/* Breadcrumbs Navigation */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#A0A0B5', marginBottom: 24, flexWrap: 'wrap' }}>
           <Link href="/" style={{ color: '#A0A0B5', textDecoration: 'none' }}>Início</Link>
           <ChevronRight size={12} color="#555" />
           <Link href="/blog" style={{ color: '#A0A0B5', textDecoration: 'none' }}>Blog</Link>
           <ChevronRight size={12} color="#555" />
-          <span style={{ color: '#E50914', textTransform: 'capitalize', fontWeight: 600 }}>{post.categoria.replace('-', ' ')}</span>
+          <span style={{ color: '#E50914', textTransform: 'capitalize', fontWeight: 700 }}>{post.categoria.replace('-', ' ')}</span>
           <ChevronRight size={12} color="#555" />
           <span style={{ color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 260 }}>{post.titulo}</span>
         </div>
@@ -232,9 +295,9 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
         {/* Categoria Badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           <span style={{
-            padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 900,
-            background: 'rgba(229, 9, 20, 0.18)', color: '#E50914',
-            border: '1px solid rgba(229, 9, 20, 0.35)', textTransform: 'uppercase',
+            padding: '5px 14px', borderRadius: 6, fontSize: 11, fontWeight: 900,
+            background: 'rgba(229, 9, 20, 0.2)', color: '#E50914',
+            border: '1px solid rgba(229, 9, 20, 0.4)', textTransform: 'uppercase',
             letterSpacing: '0.06em'
           }}>
             <Flame size={12} style={{ display: 'inline', marginRight: 4 }} /> {post.categoria.toUpperCase()}
@@ -244,43 +307,44 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
         {/* Título Principal de Notícia (H1) */}
         <h1 style={{
           fontFamily: 'Outfit, sans-serif',
-          fontSize: 'clamp(2.1rem, 4.5vw, 3.2rem)',
+          fontSize: 'clamp(2.2rem, 5vw, 3.4rem)',
           fontWeight: 900,
-          lineHeight: 1.18,
-          marginBottom: 16,
+          lineHeight: 1.15,
+          marginBottom: 18,
           color: '#FFFFFF',
-          letterSpacing: '-0.02em'
+          letterSpacing: '-0.025em'
         }}>
           {post.titulo}
         </h1>
 
-        {/* Linha Fina / Subtítulo Jornalístico */}
+        {/* Subtítulo Jornalístico / Excerpt */}
         <p style={{
-          fontSize: 'clamp(1.05rem, 2vw, 1.25rem)',
-          lineHeight: 1.55,
+          fontSize: 'clamp(1.1rem, 2.2vw, 1.3rem)',
+          lineHeight: 1.6,
           color: '#D0D0DB',
-          marginBottom: 24,
+          marginBottom: 28,
           fontWeight: 500,
-          borderLeft: '3px solid #E50914',
-          paddingLeft: 16
+          borderLeft: '4px solid #E50914',
+          paddingLeft: 18
         }}>
           {post.resumo}
         </p>
 
-        {/* Bloco de Autor, Data e Leitura (Estilo Portal de Notícias G1) */}
+        {/* Bloco de Autor, Data e Leitura */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           flexWrap: 'wrap', gap: 14, fontSize: 13, color: '#8E8EA8',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          padding: '14px 0', marginBottom: 32
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 16,
+          padding: '16px 20px', marginBottom: 36
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <Link
               href={`/autor/${authorSlug}`}
               style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
             >
-              <div style={{ width: 36, height: 36, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
                 <img
                   src={authorAvatar}
                   alt={authorName}
@@ -297,7 +361,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
                 </span>
               </div>
             </Link>
-            <span>•</span>
+            <span style={{ color: '#444' }}>•</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Calendar size={14} color="#8B5CF6" /> {dateFormatted} às {timeFormatted}
             </div>
@@ -308,42 +372,123 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
           </div>
         </div>
 
-        {/* Imagem de Capa HD com Legenda (Estilo Mockup) */}
-        <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)' }}>
+        {/* Imagem de Capa HD com Moldura e Legenda */}
+        <div style={{ position: 'relative', borderRadius: 24, overflow: 'hidden', marginBottom: 40, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 16px 50px rgba(0,0,0,0.7)' }}>
           <img
             src={post.imagem_capa_url || '/og-default.jpg'}
             alt={post.titulo}
-            style={{ width: '100%', height: 'auto', display: 'block', maxHeight: 480, objectFit: 'cover' }}
+            style={{ width: '100%', height: 'auto', display: 'block', maxHeight: 500, objectFit: 'cover' }}
           />
-          <div style={{ background: 'rgba(7,7,13,0.95)', padding: '10px 16px', fontSize: 12, color: '#A0A0B5', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ background: 'rgba(7,7,13,0.95)', padding: '12px 20px', fontSize: 12, color: '#A0A0B5', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>📷</span>
-            <span>Imagem: {post.titulo}</span>
+            <span>Foto Oficial: {post.titulo} — Redação CinePlay</span>
           </div>
         </div>
 
-        {/* Conteúdo HTML do Post com Tipografia & Tabelas Customizadas */}
+        {/* Estilos CSS para o Conteúdo Editorial */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          .editorial-body {
+            font-size: 1.12rem;
+            line-height: 1.85;
+            color: #E0E0EC;
+          }
+          .editorial-body p {
+            margin-bottom: 24px;
+            color: #D8D8E5;
+          }
+          .editorial-body h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin: 40px 0 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(229, 9, 20, 0.4);
+          }
+          .editorial-body h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin: 28px 0 14px;
+          }
+          .editorial-body blockquote {
+            background: rgba(229, 9, 20, 0.08);
+            border-left: 4px solid #E50914;
+            border-radius: 0 16px 16px 0;
+            padding: 20px 24px;
+            margin: 32px 0;
+            font-style: italic;
+            color: #F0F0FF;
+            font-size: 1.15rem;
+            line-height: 1.7;
+          }
+          .key-takeaways-box {
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(229,9,20,0.08) 100%);
+            border: 1px solid rgba(229,9,20,0.3);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 36px;
+          }
+          .key-takeaways-box h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #FFF;
+            margin: 0 0 14px;
+          }
+          .key-takeaways-box ul {
+            margin: 0;
+            padding-left: 20px;
+          }
+          .key-takeaways-box li {
+            margin-bottom: 8px;
+            color: #D0D0DB;
+            font-size: 0.98rem;
+          }
+          .editorial-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 28px 0;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+          }
+          .editorial-table th {
+            background: rgba(229,9,20,0.2);
+            color: #FFF;
+            font-weight: 800;
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+          }
+          .editorial-table td {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #D0D0DB;
+            font-size: 0.95rem;
+          }
+        ` }} />
+
+        {/* Conteúdo Renderizado */}
         <div
-          className="post-content"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-          style={{
-            fontSize: '1.08rem',
-            lineHeight: 1.85,
-            color: '#E0E0EC',
-            marginBottom: 48
-          }}
+          className="editorial-body"
+          dangerouslySetInnerHTML={{ __html: rawContent }}
         />
 
-        {/* Caixa de Conversão Direta via WhatsApp / CTA Dinâmico do Patrocinador (Estilo Mockup) */}
+        {/* Caixa de Conversão Direta via WhatsApp do Patrocinador Ativo */}
         <div style={{
-          padding: '28px 32px', borderRadius: 24,
-          background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.12) 0%, rgba(15, 15, 26, 0.98) 100%)',
-          border: '1px solid rgba(229, 9, 20, 0.35)', textAlign: 'center', marginBottom: 48,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          padding: '32px 36px', borderRadius: 24,
+          background: 'linear-gradient(135deg, rgba(229, 9, 20, 0.16) 0%, rgba(15, 15, 26, 0.98) 100%)',
+          border: '1px solid rgba(229, 9, 20, 0.4)', textAlign: 'center', margin: '48px 0',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
         }}>
-          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.35rem', fontWeight: 800, color: '#fff', marginBottom: 8 }}>
-            🚀 Libere o potencial da sua tela! Fale conosco pelo WhatsApp e descubra como acessar seus canais de esportes favoritos em alta definição.
+          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.45rem', fontWeight: 900, color: '#fff', marginBottom: 10 }}>
+            🚀 Transmissão Exclusiva em Alta Definição
           </h3>
-          <p style={{ color: '#A0A0B5', fontSize: 14, maxWidth: 600, margin: '0 auto 20px', lineHeight: 1.6 }}>
+          <p style={{ color: '#A0A0B5', fontSize: 14, maxWidth: 640, margin: '0 auto 24px', lineHeight: 1.6 }}>
             {activeCta.texto_pre}
           </p>
           <a
@@ -351,27 +496,29 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '14px 28px', borderRadius: 99, background: activeCta.cor_botao || '#E50914',
-              color: '#fff', fontWeight: 800, fontSize: 15, textDecoration: 'none',
-              boxShadow: '0 6px 20px rgba(229, 9, 20, 0.4)', transition: 'transform 0.2s ease',
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '16px 36px', borderRadius: 99, background: activeCta.cor_botao || '#E50914',
+              color: '#fff', fontWeight: 900, fontSize: 16, textDecoration: 'none',
+              boxShadow: '0 8px 25px rgba(229, 9, 20, 0.5)', transition: 'transform 0.2s ease',
               fontFamily: 'Outfit, sans-serif'
             }}
           >
-            <MessageCircle size={18} /> {activeCta.texto_botao}
+            <MessageCircle size={20} /> {activeCta.texto_botao}
           </a>
         </div>
 
-        {/* Componente Interativo de Redes Sociais & Comentários (Estilo Mockup) */}
+        {/* Componente Interativo de Compartilhamento & Reações */}
         <PostInteractiveSection postTitle={post.titulo} shareUrl={shareUrl} />
 
-        {/* Card Sobre o Autor da Matéria */}
+        {/* Card do Autor */}
         <div style={{
-          background: '#0F0F1A', border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 20, padding: '24px 28px', marginTop: 48, marginBottom: 48,
-          display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap'
+          background: 'linear-gradient(145deg, #0F0F1A 0%, #090912 100%)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 24, padding: '28px 32px', marginTop: 48, marginBottom: 48,
+          display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
         }}>
-          <div style={{ width: 72, height: 72, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
+          <div style={{ width: 76, height: 76, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
             <img
               src={authorAvatar}
               alt={authorName}
@@ -391,7 +538,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
             <div style={{ fontSize: 12, color: '#A0A0B5', fontWeight: 600, marginBottom: 8 }}>
               {authorCargo}
             </div>
-            <p style={{ color: '#D0D0DB', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+            <p style={{ color: '#D0D0DB', fontSize: 13, lineHeight: 1.55, margin: 0 }}>
               {authorBio}
             </p>
           </div>
@@ -399,8 +546,8 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
           <Link
             href={`/autor/${authorSlug}`}
             style={{
-              padding: '10px 18px', borderRadius: 99, background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13,
+              padding: '10px 20px', borderRadius: 99, background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)', color: '#fff', fontSize: 13,
               fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap'
             }}
           >
@@ -408,10 +555,10 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
           </Link>
         </div>
 
-        {/* Bloco de Posts Relacionados (Leia Também) */}
+        {/* Posts Relacionados */}
         {relatedPosts.length > 0 && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 40 }}>
-            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: 800, color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 44 }}>
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.45rem', fontWeight: 800, color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
               📰 Leia também — Notícias Relacionadas
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>

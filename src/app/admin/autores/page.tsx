@@ -204,17 +204,51 @@ export default function AdminAutoresPage() {
 
                 <div>
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#A0A0B5', marginBottom: 6 }}>
-                    URL da Foto de Perfil (Avatar HD)
+                    Foto de Perfil do Autor (URL ou Upload do Computador)
                   </label>
-                  <input
-                    type="url" placeholder="https://..."
-                    value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)}
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#07070D', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14 }}
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <input
+                      type="url" placeholder="Cole a URL da foto (https://...)"
+                      value={avatarUrl.startsWith('data:') ? '' : avatarUrl} onChange={e => setAvatarUrl(e.target.value)}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: '#07070D', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14 }}
+                    />
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 12, color: '#888', fontWeight: 600 }}>OU Fazer Upload:</span>
+                      <label style={{
+                        padding: '8px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 12,
+                        fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6
+                      }}>
+                        📁 Escolher Foto do Computador
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                if (typeof reader.result === 'string') {
+                                  setAvatarUrl(reader.result);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
                   {avatarUrl && (
-                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 11, color: '#A0A0B5' }}>Pré-visualização:</span>
-                      <img src={avatarUrl} alt="Preview" style={{ width: 36, height: 36, borderRadius: 99, objectFit: 'cover', border: '1px solid #E50914' }} />
+                    <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, padding: 10, background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <img src={avatarUrl} alt="Preview" style={{ width: 44, height: 44, borderRadius: 99, objectFit: 'cover', border: '2px solid #E50914' }} />
+                      <div>
+                        <span style={{ fontSize: 12, color: '#fff', fontWeight: 700, display: 'block' }}>Foto Carregada</span>
+                        <span style={{ fontSize: 11, color: '#A0A0B5' }}>{avatarUrl.startsWith('data:') ? 'Imagem via Upload Local' : 'Imagem via Link URL'}</span>
+                      </div>
                     </div>
                   )}
                 </div>
