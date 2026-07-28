@@ -6,13 +6,14 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, FileText, Bot, Megaphone, Settings,
-  BarChart2, MessageCircle, Menu, X, LogOut, ExternalLink,
+  BarChart2, MessageCircle, Menu, X, LogOut, ExternalLink, User,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/admin',           icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/posts',     icon: FileText,        label: 'Posts' },
   { href: '/admin/agentes',   icon: Bot,             label: 'Agentes IA' },
+  { href: '/admin/autores',   icon: User,            label: 'Autores & Redação' },
   { href: '/admin/ctas',      icon: Megaphone,       label: 'CTAs / Patrocinadores' },
   { href: '/admin/chatbot',   icon: MessageCircle,   label: 'Chatbot' },
   { href: '/admin/analytics', icon: BarChart2,       label: 'Analytics' },

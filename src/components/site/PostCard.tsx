@@ -180,7 +180,9 @@ export function PostCardComponent({ post, featured = false }: PostCardProps) {
             {post.resumo}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-disabled)' }}>
-            <span>{formatDate(post.publicado_em)}</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>
+              {post.autor_nome ? `Por ${post.autor_nome}` : formatDate(post.publicado_em)}
+            </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {post.tempo_leitura_min && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>

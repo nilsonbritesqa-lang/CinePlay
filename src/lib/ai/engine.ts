@@ -11,6 +11,7 @@
 
 import { generateAIWithFallback, type AIProvider } from '@/lib/ai/providers';
 import { tmdb, footballData, getPostImage } from '@/lib/images/service';
+import { getRandomAuthor } from '@/lib/authors/service';
 import type { Categoria } from '@/lib/types';
 
 // =====================
@@ -44,6 +45,11 @@ export interface PostGerado {
   gerado_por_ia: boolean;
   agente_tipo: string;
   tempo_leitura_min: number;
+  autor_nome?: string;
+  autor_cargo?: string;
+  autor_avatar?: string;
+  autor_slug?: string;
+  autor_bio?: string;
 }
 
 // =====================
@@ -137,6 +143,9 @@ Retorne APENAS o código JSON válido, sem qualquer texto fora do JSON.
   const palavras = String(parsed.conteudo_html ?? '').split(/\s+/).length;
   const tempoLeitura = Math.max(1, Math.round(palavras / 200));
 
+  // Seleciona um autor sorteado para dar os créditos da matéria
+  const autorSorteado = getRandomAuthor(metadados.categoria || (config.tipo as string));
+
   return {
     titulo,
     resumo: String(parsed.resumo ?? ''),
@@ -150,6 +159,11 @@ Retorne APENAS o código JSON válido, sem qualquer texto fora do JSON.
     gerado_por_ia: true,
     agente_tipo: config.tipo,
     tempo_leitura_min: tempoLeitura,
+    autor_nome: autorSorteado.nome,
+    autor_cargo: autorSorteado.cargo,
+    autor_avatar: autorSorteado.avatar_url,
+    autor_slug: autorSorteado.slug,
+    autor_bio: autorSorteado.bio,
   };
 }
 

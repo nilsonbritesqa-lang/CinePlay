@@ -17,6 +17,22 @@ export type TipoExibicaoCTA = 'inline' | 'banner' | 'sidebar';
 export type PlanoCTA = 'basico' | 'premium' | 'destaque';
 
 /* =====================
+   AUTOR EDITORIAL
+   ===================== */
+export interface Author {
+  id: string;
+  nome: string;
+  cargo: string;
+  bio: string;
+  avatar_url: string;
+  slug: string;
+  social_twitter?: string;
+  social_instagram?: string;
+  especialidades?: string[];
+  ativo?: boolean;
+}
+
+/* =====================
    POST
    ===================== */
 export interface Post {
@@ -29,6 +45,10 @@ export interface Post {
   categoria: Categoria;
   tags: string[];
   autor_nome: string;
+  autor_cargo?: string;
+  autor_avatar?: string;
+  autor_slug?: string;
+  autor_bio?: string;
   status: StatusPost;
   publicado_em: string | null;
   atualizado_em: string;
@@ -50,6 +70,11 @@ export interface PostCard {
   visualizacoes: number;
   tempo_leitura_min?: number;
   gerado_por_ia: boolean;
+  autor_nome?: string;
+  autor_cargo?: string;
+  autor_avatar?: string;
+  autor_slug?: string;
+  autor_bio?: string;
 }
 
 /* =====================

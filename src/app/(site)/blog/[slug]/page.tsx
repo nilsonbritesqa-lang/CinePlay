@@ -213,7 +213,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
           {post.resumo}
         </p>
 
-        {/* Bloco de Autor, Data e Leitura (Estilo Portal de Notícias) */}
+        {/* Bloco de Autor, Data e Leitura (Estilo Portal de Notícias G1) */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           flexWrap: 'wrap', gap: 14, fontSize: 13, color: '#8E8EA8',
@@ -222,13 +222,27 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
           padding: '14px 0', marginBottom: 32
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: '#fff' }}>
-              <div style={{ width: 28, height: 28, borderRadius: 99, background: '#E50914', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900 }}>
-                CP
+            <Link
+              href={`/autor/${post.autor_slug || 'carlos-eduardo'}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
+                <img
+                  src={post.autor_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'}
+                  alt={post.autor_nome || 'Redação CinePlay'}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               </div>
-              <span>Por Redação CinePlay</span>
-              <CheckCircle2 size={14} color="#10B981" />
-            </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800, color: '#fff', fontSize: 14 }}>
+                  <span>Por {post.autor_nome || 'Carlos Eduardo'}</span>
+                  <CheckCircle2 size={14} color="#10B981" />
+                </div>
+                <span style={{ fontSize: 11, color: '#E50914', fontWeight: 600 }}>
+                  {post.autor_cargo || 'Editor-Chefe de Esportes'}
+                </span>
+              </div>
+            </Link>
             <span>•</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Calendar size={14} color="#8B5CF6" /> {dateFormatted} às {timeFormatted}
@@ -291,6 +305,49 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
           >
             <MessageCircle size={18} /> Falar no WhatsApp Oficial
           </a>
+        </div>
+
+        {/* Card Sobre o Autor da Matéria */}
+        <div style={{
+          background: '#0F0F1A', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 20, padding: '24px 28px', marginBottom: 48,
+          display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap'
+        }}>
+          <div style={{ width: 72, height: 72, borderRadius: 99, overflow: 'hidden', border: '2px solid #E50914', flexShrink: 0 }}>
+            <img
+              src={post.autor_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'}
+              alt={post.autor_nome || 'Redação CinePlay'}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#E50914', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                SOBRE O AUTOR
+              </span>
+            </div>
+            <h4 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>
+              {post.autor_nome || 'Carlos Eduardo'}
+            </h4>
+            <div style={{ fontSize: 12, color: '#A0A0B5', fontWeight: 600, marginBottom: 8 }}>
+              {post.autor_cargo || 'Editor-Chefe de Esportes'}
+            </div>
+            <p style={{ color: '#D0D0DB', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+              {post.autor_bio || 'Jornalista especializado em entretenimento, futebol e guia de transmissões de streaming.'}
+            </p>
+          </div>
+
+          <Link
+            href={`/autor/${post.autor_slug || 'carlos-eduardo'}`}
+            style={{
+              padding: '10px 18px', borderRadius: 99, background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13,
+              fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap'
+            }}
+          >
+            Ver Perfil do Autor →
+          </Link>
         </div>
 
         {/* Bloco de Posts Relacionados (Aumenta o tempo de permanência no site) */}

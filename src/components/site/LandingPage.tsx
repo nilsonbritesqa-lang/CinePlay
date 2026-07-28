@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import HeroShowcase from './HeroShowcase';
 import MatchDetailsModal from './MatchDetailsModal';
+import TrailerGalleryModal from './TrailerGalleryModal';
 import {
   Calendar, Flame, Sparkles, ChevronRight, Play, ExternalLink, ShieldAlert, Zap,
-  CheckCircle2, ArrowRight, MessageCircle, Volume2, Star, Clock, Trophy, ChevronDown, ChevronUp
+  CheckCircle2, ArrowRight, MessageCircle, Volume2, Star, Clock, Trophy, ChevronDown, ChevronUp, Film
 } from 'lucide-react';
 
 interface MatchItem {
@@ -40,6 +41,7 @@ export default function LandingPage() {
   const [showAllLeagues, setShowAllLeagues] = useState(false);
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
+  const [showTrailerGallery, setShowTrailerGallery] = useState(false);
 
   // Estados do Trailer de Fundo Total
   const [heroTrailerKey, setHeroTrailerKey] = useState<string | null>(null);
@@ -264,7 +266,7 @@ export default function LandingPage() {
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.85) 35%, rgba(7,7,13,0.4) 65%, rgba(7,7,13,0.9) 100%), linear-gradient(to bottom, #07070D 0%, transparent 20%, transparent 80%, #07070D 100%)',
+              background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.6) 35%, rgba(7,7,13,0.25) 65%, rgba(7,7,13,0.75) 100%), linear-gradient(to bottom, #07070D 0%, transparent 20%, transparent 80%, #07070D 100%)',
               zIndex: 1,
             }} />
             <iframe
@@ -278,7 +280,7 @@ export default function LandingPage() {
                 minHeight: '100%',
                 minWidth: '177.77vh',
                 transform: 'translate(-50%, -50%) scale(1.15)',
-                filter: 'saturate(1.2) brightness(0.65)',
+                filter: 'saturate(1.25) brightness(0.92) contrast(1.05)',
               }}
               src={`https://www.youtube-nocookie.com/embed/${heroTrailerKey}?autoplay=1&mute=${isHeroMuted ? 1 : 0}&controls=0&loop=1&playlist=${heroTrailerKey}&playsinline=1`}
               allow="autoplay; encrypted-media; picture-in-picture"
@@ -298,7 +300,7 @@ export default function LandingPage() {
             <div style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.85) 35%, rgba(7,7,13,0.4) 65%, rgba(7,7,13,0.9) 100%), linear-gradient(to bottom, #07070D 0%, transparent 20%, transparent 80%, #07070D 100%)',
+              background: 'linear-gradient(to right, #07070D 0%, rgba(7,7,13,0.6) 35%, rgba(7,7,13,0.25) 65%, rgba(7,7,13,0.75) 100%), linear-gradient(to bottom, #07070D 0%, transparent 20%, transparent 80%, #07070D 100%)',
               zIndex: 1,
             }} />
             <div style={{
@@ -306,7 +308,7 @@ export default function LandingPage() {
               backgroundImage: `url(${heroBackdrop})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              filter: 'blur(10px) brightness(0.4)',
+              filter: 'blur(3px) brightness(0.75)',
             }} />
           </div>
         ) : null}
@@ -371,6 +373,21 @@ export default function LandingPage() {
                 >
                   <MessageCircle size={18} /> Saiba como Assistir no WhatsApp
                 </a>
+
+                <button
+                  onClick={() => setShowTrailerGallery(true)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 10,
+                    padding: '14px 24px', borderRadius: 12,
+                    background: 'rgba(255, 255, 255, 0.08)', color: '#fff',
+                    fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 14,
+                    border: '1px solid rgba(255, 255, 255, 0.18)', cursor: 'pointer',
+                    backdropFilter: 'blur(12px)', transition: 'background 0.2s'
+                  }}
+                  className="mobile-full-btn"
+                >
+                  <Film size={18} color="#E50914" /> Galeria de Trailers HD
+                </button>
               </div>
             </div>
 
@@ -711,6 +728,13 @@ export default function LandingPage() {
           match={selectedMatch}
           whatsappUrl={getMatchWhatsappUrl(`${selectedMatch.time1} x ${selectedMatch.time2}`)}
           onClose={() => setSelectedMatch(null)}
+        />
+      )}
+
+      {/* Modal de Galeria de Trailers HD */}
+      {showTrailerGallery && (
+        <TrailerGalleryModal
+          onClose={() => setShowTrailerGallery(false)}
         />
       )}
 
