@@ -296,14 +296,12 @@ export async function getPostImage(params: {
   const isEsporteOuFutebol = categoria === 'futebol' || tituloLower.includes('futebol') || tituloLower.includes(' ao vivo') || tituloLower.includes(' x ') || tituloLower.includes(' vs ');
 
   if (isEsporteOuFutebol) {
-    const matchPoster = await openaiImage.generateImage(`Match day poster banner for soccer game ${titulo}`);
-    if (matchPoster) return matchPoster;
-
     const stadiumImages = [
       'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85',
       'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85',
       'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1200&q=85',
       'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=1200&q=85',
+      'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?w=1200&q=85',
     ];
     return stadiumImages[Math.floor(Math.random() * stadiumImages.length)];
   }

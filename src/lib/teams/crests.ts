@@ -1,6 +1,6 @@
 /**
  * Banco de Dados de Escudos Oficiais dos Times de Futebol
- * URLs limpas de alta qualidade (PNG/SVG transparentes) via Wikimedia Commons
+ * URLs limpas de alta qualidade (SVG / PNG transparente via Wikimedia Commons)
  */
 
 export interface TeamCrest {
@@ -11,7 +11,7 @@ export interface TeamCrest {
 }
 
 export const TEAMS_CRESTS: TeamCrest[] = [
-  // BRASIL - SÉRIE A & B
+  // BRASIL - SÉRIE A, B e PRINCIPAIS CLUBES
   {
     name: 'Flamengo',
     shortName: 'FLA',
@@ -41,6 +41,12 @@ export const TEAMS_CRESTS: TeamCrest[] = [
     shortName: 'SAN',
     aliases: ['santos', 'peixe', 'santos fc'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/15/Santos_Logo.png',
+  },
+  {
+    name: 'Vitória',
+    shortName: 'VIT',
+    aliases: ['vitória', 'vitoria', 'leão da barra', 'ec vitoria', 'vitoria-ba', 'vitória-ba'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Esporte_Clube_Vit%C3%B3ria_logo.svg',
   },
   {
     name: 'Botafogo',
@@ -75,7 +81,7 @@ export const TEAMS_CRESTS: TeamCrest[] = [
   {
     name: 'Atlético Mineiro',
     shortName: 'CAM',
-    aliases: ['atlético mineiro', 'atletico mineiro', 'atlético-mg', 'galodoido', 'galo'],
+    aliases: ['atlético mineiro', 'atletico mineiro', 'atlético-mg', 'atletico-mg', 'galodoido', 'galo'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/29/Clube_Atl%C3%A9tico_Mineiro_logo.svg',
   },
   {
@@ -99,7 +105,7 @@ export const TEAMS_CRESTS: TeamCrest[] = [
   {
     name: 'Athletico Paranaense',
     shortName: 'CAP',
-    aliases: ['athletico', 'athletico-pr', 'atletico paranaense', 'furacão', 'furacao'],
+    aliases: ['athletico', 'athletico-pr', 'atletico paranaense', 'atletico-pr', 'furacão', 'furacao'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c2/Athletico_Paranaense_logo.svg',
   },
   {
@@ -109,16 +115,28 @@ export const TEAMS_CRESTS: TeamCrest[] = [
     crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Red_Bull_Bragantino_logo.svg',
   },
   {
-    name: 'Vitória',
-    shortName: 'VIT',
-    aliases: ['vitória', 'vitoria', 'leão da barra', 'ec vitoria'],
-    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Esporte_Clube_Vit%C3%B3ria_logo.svg',
-  },
-  {
     name: 'Juventude',
     shortName: 'JUV',
     aliases: ['juventude', 'papo', 'ec juventude'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/EC_Juventude_logo.svg',
+  },
+  {
+    name: 'Criciúma',
+    shortName: 'CRI',
+    aliases: ['criciúma', 'criciuma', 'tigre'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/14/Crici%C3%BAma_Esporte_Clube.svg',
+  },
+  {
+    name: 'Atlético Goianiense',
+    shortName: 'ACG',
+    aliases: ['atlético goianiense', 'atletico goianiense', 'atlético-go', 'atletico-go', 'dragão'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/Atl%C3%A9tico_Goianiense_logo.svg',
+  },
+  {
+    name: 'Cuiabá',
+    shortName: 'CUI',
+    aliases: ['cuiabá', 'cuiaba', 'dourado'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/df/Cuiab%C3%A1_EC.svg',
   },
   {
     name: 'Sport Recife',
@@ -132,12 +150,48 @@ export const TEAMS_CRESTS: TeamCrest[] = [
     aliases: ['ceará', 'ceara', 'vovô', 'vovo'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Cear%C3%A1_Sporting_Club_logo.svg',
   },
+  {
+    name: 'Coritiba',
+    shortName: 'CFC',
+    aliases: ['coritiba', 'coxa'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/29/Coritiba_Foot_Ball_Club_logo.svg',
+  },
+  {
+    name: 'Goiás',
+    shortName: 'GOI',
+    aliases: ['goiás', 'goias', 'esmeraldino'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/87/Goi%C3%A1s_Esporte_Clube_logo.svg',
+  },
+  {
+    name: 'Chapecoense',
+    shortName: 'CHA',
+    aliases: ['chapecoense', 'chape'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Chapecoense_logo.svg',
+  },
+  {
+    name: 'Novorizontino',
+    shortName: 'NOV',
+    aliases: ['novorizontino', 'gremio novorizontino'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/07/Gr%C3%Aamio_Novorizontino_logo.svg',
+  },
+  {
+    name: 'Mirassol',
+    shortName: 'MIR',
+    aliases: ['mirassol'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Mirassol_FC_logo.svg',
+  },
+  {
+    name: 'América Mineiro',
+    shortName: 'AME',
+    aliases: ['américa mineiro', 'america mineiro', 'américa-mg', 'coelho'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/ac/America_Futebol_Clube_MG.svg',
+  },
 
-  // INTERNACIONAIS DE ELITE
+  // CLUBES INTERNACIONAIS
   {
     name: 'Real Madrid',
     shortName: 'RMA',
-    aliases: ['real madrid', 'merengues', 'real madrid cf'],
+    aliases: ['real madrid', 'merengues'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg',
   },
   {
@@ -149,13 +203,13 @@ export const TEAMS_CRESTS: TeamCrest[] = [
   {
     name: 'Manchester City',
     shortName: 'MCI',
-    aliases: ['manchester city', 'city', 'citizens'],
+    aliases: ['manchester city', 'man city', 'citizens'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
   },
   {
     name: 'Liverpool',
     shortName: 'LIV',
-    aliases: ['liverpool', 'reds', 'liverpool fc'],
+    aliases: ['liverpool', 'reds'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg',
   },
   {
@@ -167,27 +221,70 @@ export const TEAMS_CRESTS: TeamCrest[] = [
   {
     name: 'Bayern de Munique',
     shortName: 'BAY',
-    aliases: ['bayern', 'bayern de munique', 'bayern munich', 'fc bayern'],
+    aliases: ['bayern', 'bayern de munique', 'bayern munich'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg',
   },
   {
     name: 'Arsenal',
     shortName: 'ARS',
-    aliases: ['arsenal', 'gunners', 'arsenal fc'],
+    aliases: ['arsenal', 'gunners'],
     crestUrl: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
   },
+  {
+    name: 'Chelsea',
+    shortName: 'CHE',
+    aliases: ['chelsea', 'blues'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg',
+  },
+  {
+    name: 'Manchester United',
+    shortName: 'MUN',
+    aliases: ['manchester united', 'man united', 'red devils'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg',
+  },
+  {
+    name: 'Juventus',
+    shortName: 'JUV',
+    aliases: ['juventus', 'juve'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/bc/Juventus_FC_2017_icon_%28black%29.svg',
+  },
+  {
+    name: 'Inter de Milão',
+    shortName: 'INT',
+    aliases: ['inter de milão', 'inter de milao', 'inter milan', 'nerazzurri'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg',
+  },
+  {
+    name: 'Al-Nassr',
+    shortName: 'NAS',
+    aliases: ['al-nassr', 'al nassr'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/en/c/c5/Al_Nassr_FC.svg',
+  },
+  {
+    name: 'Al-Hilal',
+    shortName: 'HIL',
+    aliases: ['al-hilal', 'al hilal'],
+    crestUrl: 'https://upload.wikimedia.org/wikipedia/en/9/9f/Al_Hilal_SFC_Logo.svg',
+  },
 ];
+
+/**
+ * Normaliza strings para busca sem acentos
+ */
+function normalizeText(str: string): string {
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
 /**
  * Encontra o escudo de um time pelo nome ou sinônimo
  */
 export function findTeamCrest(teamNameStr: string): TeamCrest | null {
   if (!teamNameStr) return null;
-  const clean = teamNameStr.toLowerCase().trim();
+  const norm = normalizeText(teamNameStr);
   
   for (const team of TEAMS_CRESTS) {
-    if (team.name.toLowerCase() === clean) return team;
-    if (team.aliases.some(alias => clean.includes(alias) || alias.includes(clean))) {
+    if (normalizeText(team.name) === norm) return team;
+    if (team.aliases.some(alias => norm.includes(normalizeText(alias)) || normalizeText(alias).includes(norm))) {
       return team;
     }
   }
@@ -195,24 +292,42 @@ export function findTeamCrest(teamNameStr: string): TeamCrest | null {
 }
 
 /**
- * Extrai até 2 times mencionados em um título de post (ex: "Flamengo x Palmeiras ao vivo")
+ * Extrai times mencionados no texto do título ou conteúdo ordenados estritamente pela Posição no Texto
  */
-export function extractTeamsFromTitle(title: string): { home: TeamCrest | null; away: TeamCrest | null } {
-  let home: TeamCrest | null = null;
-  let away: TeamCrest | null = null;
+export function extractTeamsFromTitle(text: string): { home: TeamCrest | null; away: TeamCrest | null } {
+  if (!text) return { home: null, away: null };
+  const textNorm = normalizeText(text);
 
-  const titleLower = title.toLowerCase();
+  interface FoundMatch {
+    team: TeamCrest;
+    index: number;
+  }
+
+  const matches: FoundMatch[] = [];
 
   for (const team of TEAMS_CRESTS) {
-    if (team.aliases.some(alias => titleLower.includes(alias))) {
-      if (!home) {
-        home = team;
-      } else if (!away && team.name !== home.name) {
-        away = team;
-        break;
+    let lowestIndex = -1;
+
+    for (const alias of team.aliases) {
+      const aliasNorm = normalizeText(alias);
+      const idx = textNorm.indexOf(aliasNorm);
+      if (idx !== -1) {
+        if (lowestIndex === -1 || idx < lowestIndex) {
+          lowestIndex = idx;
+        }
       }
     }
+
+    if (lowestIndex !== -1) {
+      matches.push({ team, index: lowestIndex });
+    }
   }
+
+  // Ordena os times pela posição onde foram encontrados no texto (da esquerda para a direita)
+  matches.sort((a, b) => a.index - b.index);
+
+  const home = matches[0] ? matches[0].team : null;
+  const away = matches[1] && matches[1].team.name !== home?.name ? matches[1].team : null;
 
   return { home, away };
 }
