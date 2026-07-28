@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Calendar, Clock, ArrowLeft, ChevronRight, MessageCircle, CheckCircle2, Flame, User, BookOpen, Share2, Sparkles, Check } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, ChevronRight, MessageCircle, CheckCircle2, Flame, User, BookOpen, Share2, Sparkles, Check, Eye } from 'lucide-react';
 import type { PostCard } from '@/lib/types';
 import { PostCardComponent } from '@/components/site/PostCard';
 import { PostInteractiveSection } from '@/components/site/PostInteractiveSection';
+import { ViewCounter } from '@/components/site/ViewCounter';
 import { DEFAULT_AUTHORS } from '@/lib/authors/service';
 
 interface PostDetail extends PostCard {
@@ -244,6 +245,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <article style={{ minHeight: '100vh', background: '#07070D', color: '#fff', padding: '40px 16px 80px' }}>
+      <ViewCounter postId={post.id} slug={post.slug} />
       
       {/* Schema.org JSON-LD para SEO */}
       <script
@@ -372,14 +374,31 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
         </div>
 
-        {/* Imagem de Capa HD com Moldura e Legenda */}
-        <div style={{ position: 'relative', borderRadius: 24, overflow: 'hidden', marginBottom: 40, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 16px 50px rgba(0,0,0,0.7)' }}>
+        {/* Imagem de Capa HD sem Flash / Layout Shift */}
+        <div style={{
+          position: 'relative',
+          borderRadius: 24,
+          overflow: 'hidden',
+          marginBottom: 40,
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 16px 50px rgba(0,0,0,0.7)',
+          background: '#0F0F1A',
+          width: '100%',
+          aspectRatio: '16 / 9',
+          maxHeight: 520
+        }}>
           <img
             src={post.imagem_capa_url || '/og-default.jpg'}
             alt={post.titulo}
-            style={{ width: '100%', height: 'auto', display: 'block', maxHeight: 500, objectFit: 'cover' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              objectFit: 'cover',
+              transition: 'opacity 0.4s ease-in-out',
+            }}
           />
-          <div style={{ background: 'rgba(7,7,13,0.95)', padding: '12px 20px', fontSize: 12, color: '#A0A0B5', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(7,7,13,0.92)', backdropFilter: 'blur(8px)', padding: '12px 20px', fontSize: 12, color: '#A0A0B5', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>📷</span>
             <span>Foto Oficial: {post.titulo} — Redação CinePlay</span>
           </div>

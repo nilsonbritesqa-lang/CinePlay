@@ -15,7 +15,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; color: string; emoji: str
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString('pt-BR', {
-    day: '2-digit', month: 'short', year: 'numeric',
+    day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/Sao_Paulo',
   });
 }
 

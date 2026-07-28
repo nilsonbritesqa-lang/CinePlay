@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Calendar, Clock, ArrowRight, Sparkles, Flame, User } from 'lucide-react';
+import { Search, Calendar, Clock, ArrowRight, Sparkles, Flame, User, Eye } from 'lucide-react';
 import type { PostCard } from '@/lib/types';
 
 const CAT_COLORS: Record<string, string> = {
@@ -218,7 +218,14 @@ export default function BlogPage() {
 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 11, color: '#6B6B85' }}>
                         <span>Por {post.autor_nome || 'CinePlay Editorial'}</span>
-                        <span>{post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'Hoje'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span>{post.publicado_em ? new Date(post.publicado_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'Hoje'}</span>
+                          {post.visualizacoes !== undefined && post.visualizacoes > 0 && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#A0A0B5' }}>
+                              <Eye size={11} /> {post.visualizacoes.toLocaleString('pt-BR')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </article>

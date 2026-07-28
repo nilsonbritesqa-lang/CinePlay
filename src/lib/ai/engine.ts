@@ -145,7 +145,7 @@ Retorne APENAS o código JSON válido, sem qualquer texto fora do JSON.
   // Seleciona um autor sorteado para dar os créditos da matéria
   const autorSorteado = getRandomAuthor(metadados.categoria || (config.tipo as string));
 
-  return {
+  const rawPost: PostGerado = {
     titulo,
     resumo: String(parsed.resumo ?? ''),
     conteudo_html: String(parsed.conteudo_html ?? ''),
@@ -163,6 +163,83 @@ Retorne APENAS o código JSON válido, sem qualquer texto fora do JSON.
     autor_avatar: autorSorteado.avatar_url,
     autor_slug: autorSorteado.slug,
     autor_bio: autorSorteado.bio,
+  };
+
+  return agenteRevisor(rawPost);
+}
+
+// =====================
+// AGENTE REVISOR (Pipeline de Qualidade, Funil CinePlay e Sanitização)
+// =====================
+export function agenteRevisor(post: PostGerado): PostGerado {
+  let titulo = post.titulo.trim();
+  let resumo = post.resumo.trim();
+  let conteudoHtml = post.conteudo_html.trim();
+
+  // 1. Sanitização de Títulos Bizarros / Hallucinated Strings
+  if (
+    /canal [a-z] futebol/i.test(titulo) ||
+    /estrela \d/i.test(titulo) ||
+    /episode \d/i.test(titulo) ||
+    titulo.length < 12 ||
+    titulo.includes('undefined')
+  ) {
+    if (post.categoria === 'futebol') {
+      titulo = `Onde Assistir aos Jogos do Campeonato Ao Vivo em HD: Guia de Transmissão`;
+    } else if (post.categoria === 'cinema') {
+      titulo = `Onde Assistir às Principais Estreias de Filmes em 4K no CinePlay`;
+    } else if (post.categoria === 'series') {
+      titulo = `Lançamentos de Séries da Semana: Onde Assistir Todos os Episódios em HD`;
+    } else {
+      titulo = `Guia Completo de Canais e Transmissões de Esportes Ao Vivo em Alta Definição`;
+    }
+  }
+
+  // 2. Remoção Estrita de Marcas Concorrentes (Regra de Ouro do Funil CinePlay)
+  const CONCORRENTES = [
+    /netflix/gi, /globoplay/gi, /premiere/gi, /hbo max/gi, /hbomax/gi, /disney\+/gi,
+    /paramount\+/gi, /cazétv/gi, /cazetv/gi, /espn/gi, /sportv/gi, /sky brasil/gi, /claro tv/gi
+  ];
+
+  CONCORRENTES.forEach(regex => {
+    conteudoHtml = conteudoHtml.replace(regex, 'Aplicativo CinePlay');
+    resumo = resumo.replace(regex, 'Aplicativo CinePlay');
+    titulo = titulo.replace(regex, 'CinePlay');
+  });
+
+  // 3. Remoção de Linguagem Robótica
+  const ROBOTICOS = [
+    /no entanto o status é de adiamento/gi,
+    /desfrute da partida/gi,
+    /fique ligado/gi,
+    /em suma,/gi,
+    /aviso de transmissão/gi
+  ];
+  ROBOTICOS.forEach(regex => {
+    conteudoHtml = conteudoHtml.replace(regex, '');
+  });
+
+  // 4. Garantia do Bloco de Conversão CinePlay (WhatsApp CTA)
+  if (!conteudoHtml.includes('CinePlay') || !conteudoHtml.includes('WhatsApp')) {
+    conteudoHtml += `
+      <div class="key-takeaways-box" style="margin-top: 36px; border-color: #E50914;">
+        <h4>📱 Como Assistir com Qualidade 4K no CinePlay</h4>
+        <p style="color: #D0D0DB; margin-bottom: 14px;">
+          Para desfrutar desta transmissão completa e de milhares de filmes, séries e esportes ao vivo na sua Smart TV ou smartphone sem qualquer travamento, entre em contato agora com a nossa equipe oficial.
+        </p>
+        <p style="margin: 0; font-weight: 800; color: #FFF;">
+          👉 <strong>Dúvidas sobre como instalar ou testar o aplicativo CinePlay? Fale conosco pelo atendimento no WhatsApp ao final desta página!</strong>
+        </p>
+      </div>
+    `;
+  }
+
+  return {
+    ...post,
+    titulo,
+    resumo,
+    conteudo_html: conteudoHtml,
+    slug: post.slug || gerarSlug(titulo),
   };
 }
 

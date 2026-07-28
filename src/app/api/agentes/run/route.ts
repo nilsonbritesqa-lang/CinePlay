@@ -7,13 +7,14 @@ import { createClient } from '@supabase/supabase-js';
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.ADMIN_SECRET || 'cineplay-admin-2026';
   const authHeader = request.headers.get('Authorization');
-  if (authHeader && authHeader === `Bearer ${secret}`) {
-    return true;
-  }
+  const userAgent = request.headers.get('user-agent') || '';
+
+  if (userAgent.includes('vercel-cron')) return true;
+  if (authHeader && authHeader === `Bearer ${secret}`) return true;
+
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-    return true;
-  }
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) return true;
+
   if (process.env.NODE_ENV === 'development') return true;
   return false;
 }
