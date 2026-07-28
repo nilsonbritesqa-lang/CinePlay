@@ -672,3 +672,20 @@ img {
   line-height: 1.7;
 }
 
+/* Otimizações Globais de Performance para Dispositivos Móveis (Zero Lag / Gargalos) */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hero-section {
+    backdrop-filter: none !important;
+  }
+  img {
+    content-visibility: auto;
+  }
+  .trailer-card-item {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+}
+

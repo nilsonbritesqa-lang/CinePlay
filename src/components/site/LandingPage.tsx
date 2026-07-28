@@ -48,6 +48,16 @@ export default function LandingPage() {
   const [heroBackdrop, setHeroBackdrop] = useState<string | null>(null);
   const [isHeroMuted, setIsHeroMuted] = useState<boolean>(false);
 
+  // Estado para detecção de dispositivo móvel
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Garante que o áudio seja liberado no primeiro clique/toque caso o navegador exija interação
   useEffect(() => {
     const unlockAudio = () => {
@@ -301,8 +311,8 @@ export default function LandingPage() {
         width: '100%'
       }} className="hero-section">
 
-        {/* VÍDEO / BACKDROP DE FUNDO DE LARGURA TOTAL DO BANNER HERO */}
-        {heroTrailerKey ? (
+        {/* VÍDEO / BACKDROP DE FUNDO DE LARGURA TOTAL DO BANNER HERO (No Mobile exibe apenas a imagem HD leve sem iframe de vídeo) */}
+        {!isMobileDevice && heroTrailerKey ? (
           <div style={{
             position: 'absolute',
             inset: 0,
@@ -423,20 +433,21 @@ export default function LandingPage() {
                   <MessageCircle size={18} /> {activeCta?.texto_botao || 'Saiba como Assistir no WhatsApp'}
                 </a>
 
-                <button
-                  onClick={() => setShowTrailerGallery(true)}
+                <Link
+                  href="/trailers"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 10,
                     padding: '14px 24px', borderRadius: 12,
                     background: 'rgba(255, 255, 255, 0.08)', color: '#fff',
                     fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 14,
                     border: '1px solid rgba(255, 255, 255, 0.18)', cursor: 'pointer',
-                    backdropFilter: 'blur(12px)', transition: 'background 0.2s'
+                    backdropFilter: 'blur(12px)', transition: 'background 0.2s',
+                    textDecoration: 'none'
                   }}
                   className="mobile-full-btn"
                 >
                   <Film size={18} color="#E50914" /> Galeria de Trailers HD
-                </button>
+                </Link>
               </div>
             </div>
 

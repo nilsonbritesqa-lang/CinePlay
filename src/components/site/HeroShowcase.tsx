@@ -81,15 +81,18 @@ export default function HeroShowcase({ onTrailerChange, isMuted = true, onToggle
     loadData();
   }, []);
 
-  // Rotação contínua e suave para a esquerda (a cada 3.5 segundos)
+  // Rotação contínua e suave para a esquerda (a cada 5.5s no mobile e 4.5s no desktop para rotação natural sem travamentos)
   useEffect(() => {
     if (pool.length === 0) return;
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const intervalTime = isMobile ? 5500 : 4500;
 
     const interval = setInterval(() => {
       if (!isDraggingRef.current && !isHoveredRef.current) {
         targetProgressRef.current = (targetProgressRef.current + 1) % pool.length;
       }
-    }, 3500);
+    }, intervalTime);
 
     return () => clearInterval(interval);
   }, [pool]);
@@ -117,8 +120,10 @@ export default function HeroShowcase({ onTrailerChange, isMuted = true, onToggle
     return () => cancelAnimationFrame(animId);
   }, [pool.length]);
 
-  // Efeito Parallax Mouse
+  // Efeito Parallax Mouse (somente em telas desktop para evitar gargalo no mobile)
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) return;
+
     let animId: number;
     const update = () => {
       setMouse(prev => ({
@@ -307,6 +312,9 @@ export default function HeroShowcase({ onTrailerChange, isMuted = true, onToggle
                 top: '50%',
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
               }}
             >
               <div style={{ position: 'relative', width: '100%', height: '100%', userSelect: 'none' }}>
