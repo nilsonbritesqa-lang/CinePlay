@@ -81,7 +81,7 @@ export default function HeroShowcase({ onTrailerChange, isMuted = true, onToggle
     loadData();
   }, []);
 
-  // Rotação controlada a cada 8 segundos
+  // Rotação contínua e suave para a esquerda (a cada 3.5 segundos)
   useEffect(() => {
     if (pool.length === 0) return;
 
@@ -89,7 +89,7 @@ export default function HeroShowcase({ onTrailerChange, isMuted = true, onToggle
       if (!isDraggingRef.current && !isHoveredRef.current) {
         targetProgressRef.current = (targetProgressRef.current + 1) % pool.length;
       }
-    }, 8000);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [pool]);
@@ -107,7 +107,7 @@ export default function HeroShowcase({ onTrailerChange, isMuted = true, onToggle
             else diff += pool.length;
           }
           if (Math.abs(diff) < 0.001) return target;
-          const next = prev + diff * 0.08;
+          const next = prev + diff * 0.04;
           return (next + pool.length) % pool.length;
         });
       }

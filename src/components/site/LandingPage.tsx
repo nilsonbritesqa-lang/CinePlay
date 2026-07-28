@@ -422,24 +422,6 @@ export default function LandingPage() {
                 >
                   <Film size={18} color="#E50914" /> Galeria de Trailers HD
                 </button>
-
-                {heroTrailerKey && (
-                  <button
-                    onClick={() => setIsHeroMuted(!isHeroMuted)}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
-                      padding: '14px 20px', borderRadius: 12,
-                      background: isHeroMuted ? 'rgba(255, 255, 255, 0.1)' : 'rgba(229, 9, 20, 0.25)',
-                      border: `1px solid ${isHeroMuted ? 'rgba(255, 255, 255, 0.2)' : '#E50914'}`,
-                      color: '#fff', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 13,
-                      cursor: 'pointer', backdropFilter: 'blur(12px)', transition: 'all 0.2s'
-                    }}
-                    title="Alternar Áudio do Trailer"
-                  >
-                    <Volume2 size={16} color={isHeroMuted ? '#A0A0B5' : '#E50914'} />
-                    {isHeroMuted ? '🔊 Ativar Áudio' : '🔇 Mutar Áudio'}
-                  </button>
-                )}
               </div>
             </div>
 

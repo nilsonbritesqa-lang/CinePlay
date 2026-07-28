@@ -51,9 +51,9 @@ async function getActiveCta(category: string, postTitle: string) {
 
   try {
     // 1. Tenta buscar CTA cadastrado no Supabase
-    const res = await fetch(`${url}/rest/v1/ctas?ativo=eq.true&order=created_at.desc`, {
+    const res = await fetch(`${url}/rest/v1/ctas?select=*`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
-      next: { revalidate: 60 },
+      next: { revalidate: 10 },
     });
 
     if (res.ok) {

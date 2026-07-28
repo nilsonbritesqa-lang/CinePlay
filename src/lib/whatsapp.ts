@@ -10,9 +10,7 @@ export async function fetchActiveCtaOrWhatsapp(category?: string, defaultMsg?: s
     // 1. Busca CTAs Ativos
     const { data: ctas } = await supabase
       .from('ctas')
-      .select('*')
-      .eq('ativo', true)
-      .order('criado_em', { ascending: false });
+      .select('*');
 
     if (ctas && ctas.length > 0) {
       const match = ctas.find(c => {
