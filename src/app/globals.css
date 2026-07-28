@@ -619,23 +619,27 @@ img {
 }
 
 .post-content th, .article-content th {
-  background: linear-gradient(135deg, rgba(229, 9, 20, 0.3) 0%, rgba(20, 20, 32, 0.95) 100%);
+  background: #3B0E12;
   color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 0.95rem;
+  font-weight: 900;
+  font-size: 0.9rem;
   padding: 14px 18px;
   text-align: left;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid #E50914;
 }
 
 .post-content td, .article-content td {
   padding: 14px 18px;
-  color: #D0D0DB;
+  color: #E0E0EC;
   font-size: 0.95rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.post-content tr:nth-child(even), .article-content tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .post-content tr:last-child td, .article-content tr:last-child td {
