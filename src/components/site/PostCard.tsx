@@ -24,10 +24,7 @@ function getSafeCoverUrl(rawUrl: string | undefined | null, categoria: string): 
     if (categoria === 'cinema') return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=85';
     if (categoria === 'series') return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&q=85';
     if (categoria === 'canais') return 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=1200&q=85';
-    return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
-  }
-  if (rawUrl.startsWith('http')) {
-    return `/api/proxy-image?url=${encodeURIComponent(rawUrl)}`;
+    return 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85';
   }
   return rawUrl;
 }

@@ -15,9 +15,11 @@ interface PostDetail extends PostCard {
   conteudo_completo?: string;
 }
 
+const ANON_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqbXNhYmlydW5meXdqeGZzdWx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMjM2NDYsImV4cCI6MjA5OTg5OTY0Nn0.g1EejLqnCBwZkmT1djSiB3TWzpv5mtNtDfPnI4REhlw';
+
 async function getPost(slug: string): Promise<PostDetail | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hjmsabirunfywjxfsuly.supabase.co';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const key = ANON_KEY;
 
   try {
     const res = await fetch(`${url}/rest/v1/posts?slug=eq.${encodeURIComponent(slug)}`, {
@@ -34,7 +36,7 @@ async function getPost(slug: string): Promise<PostDetail | null> {
 
 async function getRelatedPosts(category: string, currentSlug: string): Promise<PostCard[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hjmsabirunfywjxfsuly.supabase.co';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const key = ANON_KEY;
 
   try {
     const res = await fetch(`${url}/rest/v1/posts?categoria=eq.${category}&slug=neq.${encodeURIComponent(currentSlug)}&limit=3&order=publicado_em.desc`, {
@@ -50,7 +52,7 @@ async function getRelatedPosts(category: string, currentSlug: string): Promise<P
 
 async function getActiveCta(category: string, postTitle: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hjmsabirunfywjxfsuly.supabase.co';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const key = ANON_KEY;
 
   try {
     const res = await fetch(`${url}/rest/v1/ctas?select=*`, {
@@ -330,9 +332,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             {(() => {
               let coverSrc = post.imagem_capa_url || '';
               if (!coverSrc || coverSrc.includes('blob.core.windows.net') || coverSrc.includes('undefined')) {
-                coverSrc = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
-              } else if (coverSrc.startsWith('http')) {
-                coverSrc = `/api/proxy-image?url=${encodeURIComponent(coverSrc)}`;
+                coverSrc = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85';
               }
               return (
                 <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', background: '#0F0F1A', aspectRatio: '16/9' }}>
@@ -340,7 +340,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     src={coverSrc}
                     alt={post.titulo}
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85';
                     }}
                     style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
                   />
