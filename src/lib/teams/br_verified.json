@@ -1,0 +1,27 @@
+{
+  "Flamengo": {
+    "id": 127,
+    "name": "Flamengo",
+    "logo": "https://media.api-sports.io/football/teams/127.png"
+  },
+  "Palmeiras": {
+    "id": 121,
+    "name": "Palmeiras",
+    "logo": "https://media.api-sports.io/football/teams/121.png"
+  },
+  "Sao Paulo": {
+    "id": 126,
+    "name": "Sao Paulo",
+    "logo": "https://media.api-sports.io/football/teams/126.png"
+  },
+  "Corinthians": {
+    "id": 131,
+    "name": "Corinthians",
+    "logo": "https://media.api-sports.io/football/teams/131.png"
+  },
+  "Santos": {
+    "id": 128,
+    "name": "Santos",
+    "logo": "https://media.api-sports.io/football/teams/128.png"
+  }
+}
