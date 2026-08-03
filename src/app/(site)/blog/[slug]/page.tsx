@@ -375,9 +375,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   <img
                     src={coverSrc}
                     alt={post.titulo}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&q=85';
-                    }}
                     style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
                   />
                 </div>
