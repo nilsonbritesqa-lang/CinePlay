@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cine-play-seven.vercel.app';
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hjmsabirunfywjxfsuly.supabase.co';
@@ -9,7 +11,7 @@ export async function GET() {
   try {
     const res = await fetch(`${url}/rest/v1/posts?select=*&order=publicado_em.desc&limit=30`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
-      next: { revalidate: 1800 },
+      cache: 'no-store',
     });
     if (res.ok) {
       posts = await res.json();

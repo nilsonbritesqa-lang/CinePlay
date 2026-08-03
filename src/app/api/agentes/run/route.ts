@@ -4,6 +4,8 @@ import { runAgente, type AgentConfig, type PostGerado } from '@/lib/ai/engine';
 import { getDefaultProvider } from '@/lib/ai/providers';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.ADMIN_SECRET || 'cineplay-admin-2026';
   const authHeader = request.headers.get('Authorization');

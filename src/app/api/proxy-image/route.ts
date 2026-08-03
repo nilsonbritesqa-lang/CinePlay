@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Proxy de Imagens do CinePlay
  * Bypassa bloqueios de CORS e Hotlinking (ex: Wikimedia, API-Sports, CDN externas)
@@ -19,7 +21,6 @@ export async function GET(request: Request) {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
       },
-      next: { revalidate: 86400 }, // Cache de 24h
     });
 
     if (!response.ok) {
@@ -32,12 +33,12 @@ export async function GET(request: Request) {
     return new NextResponse(buffer, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400',
+        'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
         'Access-Control-Allow-Origin': '*',
       },
     });
   } catch (error) {
-    console.error('Erro no Proxy de Imagem:', error);
-    return new NextResponse('Falha ao processar imagem', { status: 500 });
+    console.error('Erro no proxy de imagem:', error);
+    return new NextResponse('Erro interno ao processar a imagem', { status: 500 });
   }
 }
