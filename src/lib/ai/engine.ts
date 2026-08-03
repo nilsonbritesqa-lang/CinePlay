@@ -277,23 +277,26 @@ export function agenteRevisor(post: PostGerado): PostGerado {
 }
 
 // =====================
-// AGENTE: FUTEBOL (Com Trava Antialucinação)
+// AGENTE: FUTEBOL (Com Trava Antialucinação & Cobertura Completa de Copa do Brasil / Brasileirão)
 // =====================
 export async function runAgenteFutebol(config: AgentConfig): Promise<PostGerado[]> {
   const posts: PostGerado[] = [];
 
-  // Busca dados de partidas confirmadas
-  const jogosHoje = await footballData.upcomingMatches(0).catch(() => []);
-  const jogosProximos = await footballData.upcomingMatches(config.dias_antecipacao).catch(() => []);
-  // Times e competições de grande torcida no Brasil para máxima atração de tráfego
+  // Busca dados de partidas confirmadas (hoje e próximas datas configuradas)
+  const diasBusca = Math.max(3, config.dias_antecipacao || 7);
+  const jogosProximos = await footballData.upcomingMatches(diasBusca).catch(() => []);
+
+  // Times de grande torcida e engajamento no Brasil e exterior
   const TIMES_POPULARES = [
     'flamengo', 'palmeiras', 'sao paulo', 'são paulo', 'corinthians', 'santos',
     'gremio', 'grêmio', 'internacional', 'botafogo', 'fluminense', 'vasco',
-    'atletico mineiro', 'atlético-mg', 'cruzeiro', 'bahia', 'fortaleza', 'sport',
-    'real madrid', 'barcelona', 'manchester city', 'liverpool', 'psg', 'bayern'
+    'atletico mineiro', 'atlético-mg', 'atletico-mg', 'cruzeiro', 'bahia', 'fortaleza',
+    'sport', 'juventude', 'vitoria', 'vitória', 'remo', 'athletico', 'atletico paranaense',
+    'coritiba', 'ceara', 'ceará', 'cuiaba', 'cuiabá', 'criciuma', 'criciúma', 'goias', 'goiás',
+    'bragantino', 'red bull bragantino', 'real madrid', 'barcelona', 'manchester city', 'liverpool', 'psg', 'bayern'
   ];
 
-  function prioridadePartida(j: typeof jogosHoje[0]): number {
+  function prioridadePartida(j: typeof jogosProximos[0]): number {
     let score = 0;
     const home = (j.homeTeam?.name || '').toLowerCase();
     const away = (j.awayTeam?.name || '').toLowerCase();
@@ -302,26 +305,46 @@ export async function runAgenteFutebol(config: AgentConfig): Promise<PostGerado[
     if (TIMES_POPULARES.some(t => home.includes(t))) score += 20;
     if (TIMES_POPULARES.some(t => away.includes(t))) score += 20;
 
-    if (comp.includes('brasileir') || comp.includes('serie a') || comp.includes('bsa')) score += 30;
-    if (comp.includes('libertadores') || comp.includes('cli')) score += 30;
-    if (comp.includes('copa do brasil')) score += 25;
+    // Prioridade altíssima para Copa do Brasil, Brasileirão e Libertadores
+    if (comp.includes('copa do brasil') || comp.includes('cdb')) score += 40;
+    if (comp.includes('brasileir') || comp.includes('serie a') || comp.includes('bsa')) score += 35;
+    if (comp.includes('libertadores') || comp.includes('cli')) score += 35;
+    if (comp.includes('serie b') || comp.includes('bsb')) score += 25;
     if (comp.includes('champions league') || comp.includes('cl')) score += 20;
-    if (comp.includes('sudamericana') || comp.includes('sul-americana')) score += 15;
+    if (comp.includes('sudamericana') || comp.includes('sul-americana')) score += 20;
+
+    // Bônus de urgência se o jogo for hoje ou amanhã
+    if (j.utcDate) {
+      const matchTime = new Date(j.utcDate).getTime();
+      const diffHours = (matchTime - Date.now()) / (1000 * 60 * 60);
+      if (diffHours >= -3 && diffHours <= 48) {
+        score += 25; // Urgência temporal
+      }
+    }
 
     return score;
   }
 
-  // Filtra jogos ativos e ordena priorizando grandes clássicos e times populares do Brasil
-  const todosJogos = [...jogosHoje, ...jogosProximos]
-    .filter(j => j.status !== 'POSTPONED' && j.status !== 'CANCELLED' && j.status !== 'SUSPENDED')
-    .sort((a, b) => prioridadePartida(b) - prioridadePartida(a))
-    .slice(0, config.posts_por_dia);
+  // Deduplica jogos por ID
+  const seenIds = new Set<number>();
+  const jogosValidos = jogosProximos.filter(j => {
+    if (!j.id || seenIds.has(j.id)) return false;
+    seenIds.add(j.id);
+    return j.status !== 'POSTPONED' && j.status !== 'CANCELLED' && j.status !== 'SUSPENDED';
+  });
+
+  // Ordena por pontuação de prioridade
+  jogosValidos.sort((a, b) => prioridadePartida(b) - prioridadePartida(a));
+
+  // Garante diversidade de competições se houver múltiplos posts
+  const maxPosts = Math.max(1, config.posts_por_dia || 3);
+  const todosJogos = jogosValidos.slice(0, maxPosts);
 
   // SE NÃO HOUVER JOGOS CONFIRMADOS: NÃO ALUCINA! Faz fallback para Guia Editorial de Futebol
   if (todosJogos.length === 0) {
     const contextoFallback = `
 TEMA: Guia Completo de Transmissões dos Jogos de Futebol esta Semana.
-CAMPEONATOS COBERTOS: Brasileirão Série A, Copa do Brasil, Libertadores, Sul-Americana e Ligas Europeias.
+CAMPEONATOS COBERTOS: Copa do Brasil, Brasileirão Série A, Série B, Libertadores, Sul-Americana e Ligas Europeias.
 OBJETIVO: Informar o torcedor sobre os horários dos jogos e como assistir em HD na Smart TV ou celular.
 FOCO DE CONVERSÃO EXCLUSIVO: Explicar como tirar dúvidas sobre a grade de partidas e liberar o sinal ao vivo entrando em contato no atendimento oficial via WhatsApp.
 NÃO MENCIONE MARCAS OU PLATAFORMAS CONCORRENTES.
@@ -361,7 +384,7 @@ STATUS: ${jogo.status}
 
 TAREFA:
 Crie um artigo jornalístico pré-jogo detalhado e atraente para atração de tráfego orgânico no Google e IAs.
-Palavras-chave obrigatórias: "onde assistir ${jogo.homeTeam.name} x ${jogo.awayTeam.name}", "ao vivo", "transmissão ${jogo.homeTeam.name}".
+Palavras-chave obrigatórias: "onde assistir ${jogo.homeTeam.name} x ${jogo.awayTeam.name}", "ao vivo", "transmissão ${jogo.homeTeam.name}", "${jogo.competition.name}".
 SEÇÃO ONDE ASSISTIR: Explique que o torcedor pode assistir à transmissão ao vivo sem travamentos no celular ou Smart TV. Direcione o leitor a clicar no botão de WhatsApp para solicitar seu teste ou liberação de sinal imediata.
 IMPORTANTE: NUNCA MENCIONE NOMES DE CONCORRENTES OU OUTROS STREAMINGS.
     `.trim();
@@ -369,6 +392,7 @@ IMPORTANTE: NUNCA MENCIONE NOMES DE CONCORRENTES OU OUTROS STREAMINGS.
     try {
       const post = await gerarPostComIA(config, contexto, {
         categoria: 'futebol',
+        publicar_em: jogo.utcDate || new Date().toISOString(),
         schema_json: {
           '@context': 'https://schema.org',
           '@type': 'NewsArticle',

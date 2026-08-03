@@ -190,14 +190,68 @@ export const footballApi = {
 };
 
 // =====================
-// FOOTBALL-DATA.ORG
+// FOOTBALL DATA SERVICE (API-FOOTBALL + FOOTBALL-DATA.ORG FALLBACK)
 // =====================
 export const footballData = {
   async upcomingMatches(days = 3): Promise<SimpleMatch[]> {
+    const apiFootballKey = process.env.API_FOOTBALL_KEY;
+    if (apiFootballKey) {
+      try {
+        const now = new Date();
+        const promises: Promise<any>[] = [];
+        const numDays = Math.max(0, days);
+        for (let i = 0; i <= numDays; i++) {
+          const d = new Date(now.getTime() + i * 86400000);
+          const dateStr = d.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+          promises.push(
+            fetch(`https://v3.football.api-sports.io/fixtures?date=${dateStr}&timezone=America/Sao_Paulo`, {
+              headers: { 'x-apisports-key': apiFootballKey },
+              next: { revalidate: 900 }
+            }).then(res => res.ok ? res.json() : { response: [] }).catch(() => ({ response: [] }))
+          );
+        }
+
+        const results = await Promise.all(promises);
+        const matches: SimpleMatch[] = [];
+        const seenIds = new Set<number>();
+
+        // 71: Serie A, 72: Serie B, 73: Copa do Brasil, 13: Libertadores, 11: Sul-Americana, 2: Champions, 3: Europa League
+        const majorLeagues = [71, 72, 73, 13, 11, 2, 3];
+
+        results.forEach(resData => {
+          if (Array.isArray(resData?.response)) {
+            resData.response.forEach((f: any) => {
+              const id = f.fixture?.id;
+              if (!id || seenIds.has(id)) return;
+
+              const leagueId = f.league?.id;
+              const isMajorLeague = majorLeagues.includes(leagueId);
+
+              if (isMajorLeague) {
+                seenIds.add(id);
+                matches.push({
+                  id,
+                  utcDate: f.fixture?.date,
+                  status: f.fixture?.status?.short || 'NS',
+                  homeTeam: { name: f.teams?.home?.name || 'Home', crest: f.teams?.home?.logo },
+                  awayTeam: { name: f.teams?.away?.name || 'Away', crest: f.teams?.away?.logo },
+                  competition: { name: f.league?.name || 'Futebol' }
+                });
+              }
+            });
+          }
+        });
+
+        if (matches.length > 0) return matches;
+      } catch (err) {
+        console.warn('[footballData] API-Football error, falling back:', err);
+      }
+    }
+
     const token = process.env.FOOTBALL_DATA_TOKEN || process.env.FOOTBALL_DATA_API_KEY;
     if (!token) return [];
     const from = new Date().toISOString().split('T')[0];
-    const to = new Date(Date.now() + days * 86400000).toISOString().split('T')[0];
+    const to = new Date(Date.now() + Math.max(1, days) * 86400000).toISOString().split('T')[0];
     try {
       const res = await fetch(
         `https://api.football-data.org/v4/matches?dateFrom=${from}&dateTo=${to}&competitions=BSA,BSB,CL,EL,PL,PD,FL1,BL1,SA`,
