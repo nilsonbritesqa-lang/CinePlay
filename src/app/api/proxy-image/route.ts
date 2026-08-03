@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 /**
- * Proxy de Imagens do CinePlay
- * Bypassa bloqueios de CORS e Hotlinking (ex: Wikimedia, API-Sports, CDN externas)
- * permitindo que escudos de futebol e imagens de parceiros carreguem com 100% de estabilidade.
+ * Proxy de Imagens do CinePlay com Failsafe e Caching de Longa Duração
+ * Garante que nenhuma requisição de imagem responda com 404 ou 500 para o cliente.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -18,27 +17,74 @@ export async function GET(request: Request) {
   try {
     const response = await fetch(imageUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'CinePlayBot/1.0 (https://cineplay.com.br; contact@cineplay.com.br) Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
       },
     });
 
-    if (!response.ok) {
-      return new NextResponse(`Erro ao buscar imagem: ${response.status}`, { status: response.status });
+    if (response.ok) {
+      const contentType = response.headers.get('content-type') || 'image/png';
+      const buffer = await response.arrayBuffer();
+
+      return new NextResponse(buffer, {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     }
 
-    const contentType = response.headers.get('content-type') || 'image/png';
-    const buffer = await response.arrayBuffer();
+    // Se o servidor de origem retornar 404/429/500, aciona o fallback gracioso para UI-Avatars
+    return await generateFallbackAvatar(imageUrl);
 
-    return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
   } catch (error) {
-    console.error('Erro no proxy de imagem:', error);
-    return new NextResponse('Erro interno ao processar a imagem', { status: 500 });
+    console.warn('Erro ao proxiar imagem, acionando fallback:', error);
+    return await generateFallbackAvatar(imageUrl);
   }
+}
+
+async function generateFallbackAvatar(imageUrl: string) {
+  try {
+    // Tenta extrair um nome legível da URL (ex: Sport_Club_do_Recife -> Sport Club Recife)
+    const urlParts = imageUrl.split('/');
+    const lastPart = urlParts[urlParts.length - 1] || 'CinePlay';
+    const cleanName = decodeURIComponent(lastPart)
+      .replace(/\.(svg|png|jpg|jpeg|webp)$/i, '')
+      .replace(/[^a-zA-Z0-9]/g, ' ')
+      .trim() || 'CP';
+
+    const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=E50914&color=fff&size=128&bold=true`;
+    const fallbackRes = await fetch(fallbackUrl);
+
+    if (fallbackRes.ok) {
+      const buffer = await fallbackRes.arrayBuffer();
+      return new NextResponse(buffer, {
+        status: 200,
+        headers: {
+          'Content-Type': fallbackRes.headers.get('content-type') || 'image/png',
+          'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+  } catch {
+    // Ignora erro no fallback
+  }
+
+  // Fallback final em SVG Inline estático caso até a API externa de avatar esteja indisponível
+  const svgInline = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+    <rect width="128" height="128" rx="64" fill="#E50914"/>
+    <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-size="44" font-weight="900">CP</text>
+  </svg>`;
+
+  return new NextResponse(svgInline, {
+    status: 200,
+    headers: {
+      'Content-Type': 'image/svg+xml',
+      'Cache-Control': 'public, max-age=604800',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }
