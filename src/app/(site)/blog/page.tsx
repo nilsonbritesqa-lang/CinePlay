@@ -158,7 +158,7 @@ export default function BlogPage() {
                         background: 'rgba(255,255,255,0.15)', color: '#fff', textTransform: 'uppercase',
                         letterSpacing: '0.06em', backdropFilter: 'blur(8px)'
                       }}>
-                        {featuredPost.categoria.toUpperCase()}
+                        {(featuredPost.categoria || 'geral').toUpperCase()}
                       </span>
                     </div>
 

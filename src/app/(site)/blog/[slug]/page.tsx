@@ -162,8 +162,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     notFound();
   }
 
-  const relatedPosts = await getRelatedPosts(post.categoria, post.slug);
-  const activeCta = await getActiveCta(post.categoria, post.titulo);
+  const category = (post.categoria || 'geral').toLowerCase();
+  const postTitle = post.titulo || 'Matéria CinePlay';
+  const postResumo = post.resumo || '';
+
+  const relatedPosts = await getRelatedPosts(category, post.slug);
+  const activeCta = await getActiveCta(category, postTitle);
 
   // Busca autor
   const foundAuthor = DEFAULT_AUTHORS.find(a => a.nome.toLowerCase() === (post.autor_nome || '').toLowerCase()) || DEFAULT_AUTHORS[0];
@@ -173,17 +177,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const authorBio = foundAuthor.bio;
   const authorSlug = foundAuthor.slug;
 
-  const dateObj = new Date(post.publicado_em || Date.now());
+  const rawDate = post.publicado_em ? new Date(post.publicado_em) : new Date();
+  const dateObj = isNaN(rawDate.getTime()) ? new Date() : rawDate;
   const dateFormatted = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' });
   const timeFormatted = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
 
   const shareUrl = `https://cine-play-seven.vercel.app/blog/${post.slug}`;
 
   // Busca os escudos dos times mencionados no título
-  const { home: teamHome, away: teamAway } = extractTeamsFromTitle(post.titulo);
+  const { home: teamHome, away: teamAway } = extractTeamsFromTitle(postTitle);
 
   // Formata o conteúdo HTML garantindo uma estrutura rica e completa
-  let rawContent = post.conteudo_html || post.conteudo_completo || `<p>${post.resumo}</p>`;
+  let rawContent = post.conteudo_html || post.conteudo_completo || `<p>${postResumo}</p>`;
   
   // Se o conteúdo for curto, enriquece com tópicos e estruturação completa
   if (rawContent.length < 500) {
@@ -197,10 +202,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </ul>
       </div>
 
-      <h2>1. Panorama Completo sobre ${post.titulo}</h2>
+      <h2>1. Panorama Completo sobre ${postTitle}</h2>
       <p>A experiência de assistir aos seus eventos e produções favoritas evoluiu drasticamente. Com a expansão do streaming e dos canais por assinatura digitais, garantir o acesso rápido, estável e com áudio e vídeo de altíssima definição tornou-se uma prioridade para os entusiastas de entretenimento.</p>
       
-      <p>Nesta matéria detalhada, reunimos todas as orientações fundamentais para você não perder nenhum detalhe de <strong>${post.titulo}</strong>.</p>
+      <p>Nesta matéria detalhada, reunimos todas as orientações fundamentais para você não perder nenhum detalhe de <strong>${postTitle}</strong>.</p>
 
       <blockquote>
         "O entretenimento de qualidade exige não apenas boa conectividade, mas o canal de transmissão correto para evitar gargalos e latência durante momentos decisivos."
@@ -249,8 +254,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <article style={{ minHeight: '100vh', background: '#07070D', color: '#fff', padding: '40px 16px 80px' }}>
-      <ViewCounter postId={post.id} slug={post.slug} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: post.titulo, image: [post.imagem_capa_url || '/og-default.jpg'], datePublished: post.publicado_em || new Date().toISOString(), author: { '@type': 'Person', name: authorName }, publisher: { '@type': 'Organization', name: 'CinePlay' }, description: post.resumo }) }} />
+      <ViewCounter postId={post.id || post.slug} slug={post.slug} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: postTitle, image: [post.imagem_capa_url || '/og-default.jpg'], datePublished: post.publicado_em || new Date().toISOString(), author: { '@type': 'Person', name: authorName }, publisher: { '@type': 'Organization', name: 'CinePlay' }, description: postResumo }) }} />
 
       <div className="blog-layout-container" style={{ maxWidth: 1120, margin: '0 auto' }}>
         {/* Breadcrumbs */}
@@ -259,7 +264,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <ChevronRight size={12} color="#555" />
           <Link href="/blog" style={{ color: '#A0A0B5', textDecoration: 'none' }}>Blog</Link>
           <ChevronRight size={12} color="#555" />
-          <span style={{ color: '#E50914', textTransform: 'capitalize', fontWeight: 700 }}>{post.categoria.replace('-', ' ')}</span>
+          <span style={{ color: '#E50914', textTransform: 'capitalize', fontWeight: 700 }}>{category.replace('-', ' ')}</span>
         </div>
 
         {/* 2-Column Grid: Content + Sidebar */}
@@ -269,17 +274,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div style={{ minWidth: 0 }}>
             {/* Category Badge */}
             <span style={{ display: 'inline-block', padding: '5px 14px', borderRadius: 6, fontSize: 11, fontWeight: 900, background: 'rgba(229,9,20,0.2)', color: '#E50914', border: '1px solid rgba(229,9,20,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
-              <Flame size={12} style={{ display: 'inline', marginRight: 4 }} /> {post.categoria.toUpperCase()}
+              <Flame size={12} style={{ display: 'inline', marginRight: 4 }} /> {category.toUpperCase()}
             </span>
 
             {/* H1 Title */}
             <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, lineHeight: 1.15, marginBottom: 16, color: '#FFF', letterSpacing: '-0.02em' }}>
-              {post.titulo}
+              {postTitle}
             </h1>
 
             {/* Subtitle / Resumo */}
             <p style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', lineHeight: 1.6, color: '#C8C8DA', marginBottom: 24, fontWeight: 500, borderLeft: '4px solid #E50914', paddingLeft: 18 }}>
-              {post.resumo}
+              {postResumo}
             </p>
 
             {/* Author + Date Bar */}
@@ -467,7 +472,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {['futebol', 'cinema', 'series', 'canais'].map(cat => (
-                  <Link key={cat} href={`/blog?categoria=${cat}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: cat === post.categoria ? 'rgba(229,9,20,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${cat === post.categoria ? 'rgba(229,9,20,0.3)' : 'rgba(255,255,255,0.05)'}`, color: cat === post.categoria ? '#E50914' : '#B0B0C5', textDecoration: 'none', fontSize: 13, fontWeight: 700, textTransform: 'capitalize' }}>
+                  <Link key={cat} href={`/blog?categoria=${cat}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: cat === category ? 'rgba(229,9,20,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${cat === category ? 'rgba(229,9,20,0.3)' : 'rgba(255,255,255,0.05)'}`, color: cat === category ? '#E50914' : '#B0B0C5', textDecoration: 'none', fontSize: 13, fontWeight: 700, textTransform: 'capitalize' }}>
                     <span>{cat === 'series' ? 'Séries' : cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
                     <ChevronRight size={14} />
                   </Link>
