@@ -10,6 +10,9 @@ import { DEFAULT_AUTHORS } from '@/lib/authors/service';
 import { extractTeamsFromTitle } from '@/lib/teams/crests';
 import { TeamMatchBanner } from '@/components/site/TeamMatchBanner';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PostDetail extends PostCard {
   conteudo_html?: string;
   conteudo_completo?: string;
