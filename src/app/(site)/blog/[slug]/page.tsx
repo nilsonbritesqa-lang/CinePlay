@@ -24,7 +24,7 @@ async function getPost(slug: string): Promise<PostDetail | null> {
   try {
     const res = await fetch(`${url}/rest/v1/posts?slug=eq.${encodeURIComponent(slug)}`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
-      next: { revalidate: 60 },
+      cache: 'no-store',
     });
     if (!res.ok) return null;
     const posts = await res.json();
@@ -41,7 +41,7 @@ async function getRelatedPosts(category: string, currentSlug: string): Promise<P
   try {
     const res = await fetch(`${url}/rest/v1/posts?categoria=eq.${category}&slug=neq.${encodeURIComponent(currentSlug)}&limit=3&order=publicado_em.desc`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
-      next: { revalidate: 300 },
+      cache: 'no-store',
     });
     if (!res.ok) return [];
     return await res.json();
@@ -57,7 +57,7 @@ async function getActiveCta(category: string, postTitle: string) {
   try {
     const res = await fetch(`${url}/rest/v1/ctas?select=*`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
-      next: { revalidate: 10 },
+      cache: 'no-store',
     });
 
     if (res.ok) {
@@ -119,8 +119,9 @@ async function getActiveCta(category: string, postTitle: string) {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getPost(slug);
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams?.slug;
+  const post = slug ? await getPost(slug) : null;
 
   if (!post) {
     return {
@@ -158,8 +159,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = await getPost(slug);
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams?.slug;
+  const post = slug ? await getPost(slug) : null;
 
   if (!post) {
     notFound();
