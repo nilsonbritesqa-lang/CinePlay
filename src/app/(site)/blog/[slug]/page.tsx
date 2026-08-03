@@ -135,6 +135,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const title = `${post.titulo} | Guia CinePlay`;
   const description = post.resumo || `Confira a matéria completa sobre ${post.titulo} com informações atualizadas.`;
   const imageUrl = post.imagem_capa_url || `${baseUrl}/og-default.jpg`;
+  let safeIsoDate = new Date().toISOString();
+  if (post.publicado_em) {
+    const parsed = new Date(post.publicado_em);
+    if (!isNaN(parsed.getTime())) {
+      safeIsoDate = parsed.toISOString();
+    }
+  }
 
   return {
     title,
@@ -147,7 +154,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       siteName: 'CinePlay Portal',
       images: [{ url: imageUrl, width: 1200, height: 630, alt: post.titulo }],
       type: 'article',
-      publishedTime: post.publicado_em || new Date().toISOString(),
+      publishedTime: safeIsoDate,
     },
     twitter: {
       card: 'summary_large_image',
@@ -165,6 +172,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) {
     notFound();
+  }
+
+  let safeIsoDate = new Date().toISOString();
+  if (post.publicado_em) {
+    const parsed = new Date(post.publicado_em);
+    if (!isNaN(parsed.getTime())) {
+      safeIsoDate = parsed.toISOString();
+    }
   }
 
   const category = (post.categoria || 'geral').toLowerCase();
