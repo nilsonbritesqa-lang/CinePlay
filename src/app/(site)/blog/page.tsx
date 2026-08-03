@@ -27,6 +27,17 @@ export default function BlogPage() {
         const data = await res.json();
         if (data.success && data.posts) {
           setPosts(data.posts);
+
+          // Geração Autônoma em Segundo Plano: Se não houver posts ou o último post for mais antigo que 18h
+          if (Array.isArray(data.posts) && data.posts.length > 0) {
+            const lastPostDate = new Date(data.posts[0].publicado_em || 0).getTime();
+            const hoursOld = (Date.now() - lastPostDate) / (1000 * 60 * 60);
+            if (hoursOld > 18) {
+              fetch('/api/agentes/run?run=true').catch(() => {});
+            }
+          } else {
+            fetch('/api/agentes/run?run=true').catch(() => {});
+          }
         }
       } catch (err) {
         console.error('Erro ao carregar posts:', err);

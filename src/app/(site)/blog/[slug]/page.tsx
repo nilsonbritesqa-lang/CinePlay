@@ -324,7 +324,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 return (
                   <div style={{ background: 'linear-gradient(135deg, rgba(15,15,26,0.95), rgba(229,9,20,0.18))', border: '1px solid rgba(229,9,20,0.3)', borderRadius: 20, padding: '24px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.6)' }}>
                     <div style={{ textAlign: 'center', flex: 1 }}>
-                      <img src={home.crestUrl} alt={home.name} style={{ width: 68, height: 68, objectFit: 'contain', margin: '0 auto 8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
+                      <img
+                        src={home.crestUrl}
+                        alt={home.name}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(home.shortName)}&background=E50914&color=fff`;
+                        }}
+                        style={{ width: 68, height: 68, objectFit: 'contain', margin: '0 auto 8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }}
+                      />
                       <div style={{ fontWeight: 900, fontSize: 16, color: '#FFF', fontFamily: 'Outfit, sans-serif' }}>{home.name}</div>
                     </div>
 
@@ -338,7 +345,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     </div>
 
                     <div style={{ textAlign: 'center', flex: 1 }}>
-                      <img src={away.crestUrl} alt={away.name} style={{ width: 68, height: 68, objectFit: 'contain', margin: '0 auto 8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
+                      <img
+                        src={away.crestUrl}
+                        alt={away.name}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(away.shortName)}&background=10B981&color=fff`;
+                        }}
+                        style={{ width: 68, height: 68, objectFit: 'contain', margin: '0 auto 8px', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }}
+                      />
                       <div style={{ fontWeight: 900, fontSize: 16, color: '#FFF', fontFamily: 'Outfit, sans-serif' }}>{away.name}</div>
                     </div>
                   </div>
@@ -351,7 +365,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
               return (
                 <div style={{ background: 'linear-gradient(135deg, rgba(15,15,26,0.95), rgba(229,9,20,0.18))', border: '1px solid rgba(229,9,20,0.3)', borderRadius: 20, padding: '20px 24px', marginBottom: 32, display: 'flex', alignItems: 'center', gap: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.6)' }}>
-                  <img src={mainTeam.crestUrl} alt={mainTeam.name} style={{ width: 64, height: 64, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }} />
+                  <img
+                    src={mainTeam.crestUrl}
+                    alt={mainTeam.name}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(mainTeam.shortName)}&background=E50914&color=fff`;
+                    }}
+                    style={{ width: 64, height: 64, objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.6))' }}
+                  />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 11, color: '#10B981', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
                       ● TRANSMISSÃO AO VIVO NO CINEPLAY
