@@ -11,7 +11,7 @@ export interface TeamCrest {
 }
 
 function getCrestProxyUrl(url: string): string {
-  return '/api/proxy-image?url=' + encodeURIComponent(url);
+  return url;
 }
 
 export const TEAMS_CRESTS: TeamCrest[] = [

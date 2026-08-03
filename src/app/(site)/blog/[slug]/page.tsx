@@ -182,8 +182,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const rawDate = post.publicado_em ? new Date(post.publicado_em) : new Date();
   const dateObj = isNaN(rawDate.getTime()) ? new Date() : rawDate;
-  const dateFormatted = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' });
-  const timeFormatted = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  let dateFormatted = '';
+  let timeFormatted = '';
+  try {
+    dateFormatted = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' });
+    timeFormatted = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+  } catch {
+    dateFormatted = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    timeFormatted = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
 
   const shareUrl = `https://cine-play-seven.vercel.app/blog/${post.slug}`;
 
