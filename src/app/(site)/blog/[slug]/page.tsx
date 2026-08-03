@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import { Calendar, Clock, ArrowLeft, ChevronRight, MessageCircle, CheckCircle2, Flame, User, BookOpen, Share2, Sparkles, Check, Eye } from 'lucide-react';
 import type { PostCard } from '@/lib/types';
 import { PostCardComponent } from '@/components/site/PostCard';
@@ -63,13 +64,7 @@ async function getActiveCta(category: string, postTitle: string) {
     if (res.ok) {
       const ctas = await res.json();
       if (Array.isArray(ctas) && ctas.length > 0) {
-        const matchingCta = ctas.find(c => {
-          if (!c.categorias) return true;
-          if (Array.isArray(c.categorias)) {
-            return c.categorias.includes(category) || c.categorias.includes('*') || c.categorias.length === 0;
-          }
-          return true;
-        }) || ctas[0];
+        const matchingCta = ctas.find((c: any) => c.ativo) || ctas[0];
 
         let targetUrl = matchingCta.url_destino || '';
         if (targetUrl && !targetUrl.startsWith('http') && !targetUrl.startsWith('https')) {
