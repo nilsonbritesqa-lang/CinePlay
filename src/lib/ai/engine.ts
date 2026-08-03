@@ -144,7 +144,7 @@ Retorne APENAS o código JSON válido, sem qualquer texto fora do JSON.
     }
     clean = clean.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
     parsed = JSON.parse(clean);
-  } catch (err) {
+  } catch {
     throw new Error(`A IA gerou uma resposta malformada. Tente novamente ou ajuste a temperatura. Detalhes: ${resultado.content.slice(0, 200)}`);
   }
 
