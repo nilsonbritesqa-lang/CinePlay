@@ -19,6 +19,19 @@ function formatDate(dateStr: string | null) {
   });
 }
 
+function getSafeCoverUrl(rawUrl: string | undefined | null, categoria: string): string {
+  if (!rawUrl || rawUrl.includes('blob.core.windows.net') || rawUrl.includes('undefined')) {
+    if (categoria === 'cinema') return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=85';
+    if (categoria === 'series') return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&q=85';
+    if (categoria === 'canais') return 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=1200&q=85';
+    return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+  }
+  if (rawUrl.startsWith('http')) {
+    return `/api/proxy-image?url=${encodeURIComponent(rawUrl)}`;
+  }
+  return rawUrl;
+}
+
 interface PostCardProps {
   post: PostCard;
   featured?: boolean;
@@ -26,6 +39,7 @@ interface PostCardProps {
 
 export function PostCardComponent({ post, featured = false }: PostCardProps) {
   const cat = CATEGORY_CONFIG[post.categoria] ?? CATEGORY_CONFIG['canais'];
+  const coverUrl = getSafeCoverUrl(post.imagem_capa_url, post.categoria);
 
   if (featured) {
     return (
@@ -43,12 +57,13 @@ export function PostCardComponent({ post, featured = false }: PostCardProps) {
         >
           {/* Imagem */}
           <Image
-            src={post.imagem_capa_url || '/og-default.jpg'}
+            src={coverUrl}
             alt={post.titulo}
             fill
             style={{ objectFit: 'cover' }}
             priority
             sizes="(max-width: 768px) 100vw, 60vw"
+            unoptimized
           />
 
           {/* Overlay gradient */}
@@ -57,7 +72,7 @@ export function PostCardComponent({ post, featured = false }: PostCardProps) {
             background: 'linear-gradient(0deg, rgba(7,7,13,0.95) 0%, rgba(7,7,13,0.3) 60%, transparent 100%)',
           }} />
 
-          {/* Badge ao vivo (se for futebol de hoje) */}
+          {/* Badge ao vivo */}
           <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', gap: 8 }}>
             <span style={{
               padding: '4px 12px',
@@ -128,11 +143,12 @@ export function PostCardComponent({ post, featured = false }: PostCardProps) {
         {/* Thumb */}
         <div style={{ position: 'relative', height: 180, overflow: 'hidden' }}>
           <Image
-            src={post.imagem_capa_url || '/og-default.jpg'}
+            src={coverUrl}
             alt={post.titulo}
             fill
             style={{ objectFit: 'cover', transition: 'transform 0.4s ease' }}
             sizes="(max-width: 768px) 100vw, 350px"
+            unoptimized
           />
           <div style={{
             position: 'absolute', top: 12, left: 12,

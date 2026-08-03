@@ -327,9 +327,26 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             })()}
 
             {/* Cover Image */}
-            <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', background: '#0F0F1A', aspectRatio: '16/9' }}>
-              <img src={post.imagem_capa_url || '/og-default.jpg'} alt={post.titulo} style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }} />
-            </div>
+            {(() => {
+              let coverSrc = post.imagem_capa_url || '';
+              if (!coverSrc || coverSrc.includes('blob.core.windows.net') || coverSrc.includes('undefined')) {
+                coverSrc = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+              } else if (coverSrc.startsWith('http')) {
+                coverSrc = `/api/proxy-image?url=${encodeURIComponent(coverSrc)}`;
+              }
+              return (
+                <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', background: '#0F0F1A', aspectRatio: '16/9' }}>
+                  <img
+                    src={coverSrc}
+                    alt={post.titulo}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+                    }}
+                    style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
+                  />
+                </div>
+              );
+            })()}
 
             {/* Editorial CSS */}
             <style dangerouslySetInnerHTML={{ __html: `

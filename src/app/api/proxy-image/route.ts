@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 /**
- * Proxy de Imagens do CinePlay com Failsafe e Caching de Longa Duração
- * Garante que nenhuma requisição de imagem responda com 404 ou 500 para o cliente.
+ * Proxy de Imagens do CinePlay com Failsafe Inteligente e Caching
+ * Impede que QUALQUER imagem de capa ou escudo de futebol responda com 404/500 no cliente.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -36,18 +36,41 @@ export async function GET(request: Request) {
       });
     }
 
-    // Se o servidor de origem retornar 404/429/500, aciona o fallback gracioso para UI-Avatars
-    return await generateFallbackAvatar(imageUrl);
+    // Se o servidor de origem retornar 404/429/500/403, aciona o fallback adequado
+    return await generateSmartFallback(imageUrl);
 
   } catch (error) {
-    console.warn('Erro ao proxiar imagem, acionando fallback:', error);
-    return await generateFallbackAvatar(imageUrl);
+    console.warn('[Proxy Imagem] Erro ao buscar imagem externa, acionando fallback:', error);
+    return await generateSmartFallback(imageUrl);
   }
 }
 
-async function generateFallbackAvatar(imageUrl: string) {
+async function generateSmartFallback(imageUrl: string) {
+  const isCrestOrLogo = /teams|crest|logo|avatar|escudo|badge|\.svg$/i.test(imageUrl);
+
+  // Fallback 1: Imagem de capa / Banner do Post
+  if (!isCrestOrLogo) {
+    const stadiumFallback = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+    try {
+      const fallbackRes = await fetch(stadiumFallback);
+      if (fallbackRes.ok) {
+        const buffer = await fallbackRes.arrayBuffer();
+        return new NextResponse(buffer, {
+          status: 200,
+          headers: {
+            'Content-Type': 'image/jpeg',
+            'Cache-Control': 'public, max-age=604800',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+    } catch {
+      // ignora se a busca do Unsplash falhar
+    }
+  }
+
+  // Fallback 2: Escudo de Time / Avatar via UI-Avatars
   try {
-    // Tenta extrair um nome legível da URL (ex: Sport_Club_do_Recife -> Sport Club Recife)
     const urlParts = imageUrl.split('/');
     const lastPart = urlParts[urlParts.length - 1] || 'CinePlay';
     const cleanName = decodeURIComponent(lastPart)
@@ -64,16 +87,16 @@ async function generateFallbackAvatar(imageUrl: string) {
         status: 200,
         headers: {
           'Content-Type': fallbackRes.headers.get('content-type') || 'image/png',
-          'Cache-Control': 'public, max-age=86400, s-maxage=604800',
+          'Cache-Control': 'public, max-age=86400',
           'Access-Control-Allow-Origin': '*',
         },
       });
     }
   } catch {
-    // Ignora erro no fallback
+    // ignora se falhar
   }
 
-  // Fallback final em SVG Inline estático caso até a API externa de avatar esteja indisponível
+  // Fallback 3: SVG estático inline
   const svgInline = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
     <rect width="128" height="128" rx="64" fill="#E50914"/>
     <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-size="44" font-weight="900">CP</text>
