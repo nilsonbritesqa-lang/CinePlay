@@ -161,7 +161,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = await Promise.resolve(params);
+  try {
+  const resolvedParams = await Promise.resolve(params).catch(() => ({ slug: '' }));
   const slug = resolvedParams?.slug;
   const post = slug ? await getPost(slug) : null;
 
@@ -217,7 +218,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const shareUrl = `https://cine-play-seven.vercel.app/blog/${post.slug}`;
 
   // Busca os escudos dos times mencionados no título
-  const { home: teamHome, away: teamAway } = extractTeamsFromTitle(postTitle);
+  let teamHome = null;
+  let teamAway = null;
+  try {
+    const teams = extractTeamsFromTitle(postTitle);
+    teamHome = teams.home;
+    teamAway = teams.away;
+  } catch { /* ignora erro nos escudos */ }
 
   // Formata o conteúdo HTML garantindo uma estrutura rica e completa
   let rawContent = post.conteudo_html || post.conteudo_completo || `<p>${postResumo}</p>`;
@@ -497,4 +504,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </div>
     </article>
   );
+  } catch (err) {
+    console.error('[BlogPostPage] SSR Error:', err);
+    return (
+      <div style={{ minHeight: '70vh', background: '#07070D', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 480 }}>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 900, marginBottom: 12 }}>Erro ao Carregar</h1>
+          <p style={{ color: '#A0A0B5', fontSize: 15, marginBottom: 24 }}>Não foi possível carregar o artigo. Por favor, tente novamente.</p>
+          <Link href="/blog" style={{ background: '#E50914', color: '#FFF', padding: '12px 24px', borderRadius: 99, textDecoration: 'none', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <ArrowLeft size={16} /> Voltar para o Blog
+          </Link>
+        </div>
+      </div>
+    );
+  }
 }
