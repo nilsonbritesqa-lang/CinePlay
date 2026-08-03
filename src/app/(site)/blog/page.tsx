@@ -135,6 +135,9 @@ export default function BlogPage() {
                   <img
                     src={featuredPost.imagem_capa_url || '/og-default.jpg'}
                     alt={featuredPost.titulo}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+                    }}
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                   />
 
@@ -205,6 +208,9 @@ export default function BlogPage() {
                       <img
                         src={post.imagem_capa_url || '/og-default.jpg'}
                         alt={post.titulo}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+                        }}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                       <span style={{

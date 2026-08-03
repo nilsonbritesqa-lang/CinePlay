@@ -11,6 +11,19 @@ function getSupabaseService() {
   return null;
 }
 
+function sanitizeCoverUrl(rawUrl: string | undefined | null, categoria: string = 'futebol'): string {
+  if (!rawUrl || rawUrl.includes('blob.core.windows.net') || rawUrl.includes('undefined')) {
+    if (categoria === 'cinema') return 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=85';
+    if (categoria === 'series') return 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1200&q=85';
+    if (categoria === 'canais') return 'https://images.unsplash.com/photo-1593784991095-a205069470b6?w=1200&q=85';
+    return 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&q=85';
+  }
+  if (rawUrl.startsWith('http') && !rawUrl.includes('/api/proxy-image')) {
+    return `/api/proxy-image?url=${encodeURIComponent(rawUrl)}`;
+  }
+  return rawUrl;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get('slug');
@@ -32,6 +45,7 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ success: false, error: 'Post não encontrado' }, { status: 404 });
         }
 
+        data.imagem_capa_url = sanitizeCoverUrl(data.imagem_capa_url, data.categoria);
         return NextResponse.json({ success: true, post: data });
       } else {
         let query = supabase.from('posts').select('*').order('publicado_em', { ascending: false });
@@ -40,7 +54,11 @@ export async function GET(request: NextRequest) {
         }
         const { data, error } = await query;
         if (error) throw error;
-        return NextResponse.json({ success: true, posts: data || [] });
+        const sanitizedPosts = (data || []).map((p: any) => ({
+          ...p,
+          imagem_capa_url: sanitizeCoverUrl(p.imagem_capa_url, p.categoria)
+        }));
+        return NextResponse.json({ success: true, posts: sanitizedPosts });
       }
     } catch (e) {
       console.warn('[API /posts] Erro na busca do Supabase:', e);
