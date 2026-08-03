@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+
 import { Calendar, Clock, ArrowLeft, ChevronRight, MessageCircle, CheckCircle2, Flame, User, BookOpen, Share2, Sparkles, Check, Eye } from 'lucide-react';
 import type { PostCard } from '@/lib/types';
 import { PostCardComponent } from '@/components/site/PostCard';
@@ -10,8 +10,6 @@ import { DEFAULT_AUTHORS } from '@/lib/authors/service';
 import { extractTeamsFromTitle } from '@/lib/teams/crests';
 import { TeamMatchBanner } from '@/components/site/TeamMatchBanner';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface PostDetail extends PostCard {
   conteudo_html?: string;
@@ -87,7 +85,7 @@ async function getActiveCta(category: string, postTitle: string) {
 
     const configRes = await fetch(`${url}/rest/v1/chatbot_config?select=*&limit=1`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
-      next: { revalidate: 60 },
+      cache: 'no-store',
     });
     if (configRes.ok) {
       const configs = await configRes.json();
@@ -289,7 +287,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <article style={{ minHeight: '100vh', background: '#07070D', color: '#fff', padding: '40px 16px 80px' }}>
       <ViewCounter postId={post.id || post.slug} slug={post.slug} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: postTitle, image: [post.imagem_capa_url || '/og-default.jpg'], datePublished: post.publicado_em || new Date().toISOString(), author: { '@type': 'Person', name: authorName }, publisher: { '@type': 'Organization', name: 'CinePlay' }, description: postResumo }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: postTitle, image: [post.imagem_capa_url || '/og-default.jpg'], datePublished: safeIsoDate, author: { '@type': 'Person', name: authorName }, publisher: { '@type': 'Organization', name: 'CinePlay' }, description: postResumo }) }} />
 
       <div className="blog-layout-container" style={{ maxWidth: 1120, margin: '0 auto' }}>
         {/* Breadcrumbs */}
