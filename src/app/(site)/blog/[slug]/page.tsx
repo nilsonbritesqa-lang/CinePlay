@@ -165,7 +165,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const post = slug ? await getPost(slug) : null;
 
   if (!post) {
-    notFound();
+    return (
+      <div style={{ minHeight: '70vh', background: '#07070D', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 480 }}>
+          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '2rem', fontWeight: 900, marginBottom: 12 }}>Matéria Não Encontrada</h1>
+          <p style={{ color: '#A0A0B5', fontSize: 15, marginBottom: 24 }}>O artigo solicitado não está disponível ou pode ter sido movido.</p>
+          <Link href="/blog" style={{ background: '#E50914', color: '#FFF', padding: '12px 24px', borderRadius: 99, textDecoration: 'none', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <ArrowLeft size={16} /> Voltar para o Blog
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   let safeIsoDate = new Date().toISOString();
